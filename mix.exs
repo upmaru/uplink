@@ -14,13 +14,17 @@ defmodule Uplink.MixProject do
   # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      extra_applications: [:logger]
+      extra_applications: [:logger],
+      mod: {Uplink.Application, []}
     ]
   end
 
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
+      {:jason, "~> 1.0"},
+      {:ecto, "~> 3.7"},
+      
       {:que, "~> 0.10.1"},
       {:memento, "~> 0.3.2"},
       {:plug_cowboy, "~> 2.0"}
