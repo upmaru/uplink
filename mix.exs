@@ -24,6 +24,7 @@ defmodule Uplink.MixProject do
     [
       {:jason, "~> 1.0"},
       {:ecto, "~> 3.7"},
+      {:machinery, "~> 1.0.0"},
       
       {:que, "~> 0.10.1"},
       {:memento, "~> 0.3.2"},

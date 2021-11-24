@@ -1,3 +1,4 @@
 use Mix.Config
 
-config :mnesia, dir: 'mnesia/#{Mix.env}/#{node()}'
+config :mnesia, 
+  dir: '.mnesia/database'
