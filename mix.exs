@@ -26,6 +26,8 @@ defmodule Uplink.MixProject do
       {:ecto, "~> 3.7"},
       {:machinery, "~> 1.0.0"},
       
+      {:formation, "~> 0.1.2"},
+      
       {:que, "~> 0.10.1"},
       {:memento, "~> 0.3.2"},
       {:plug_cowboy, "~> 2.0"}
