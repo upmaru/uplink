@@ -7,13 +7,8 @@ defmodule Uplink.Router do
     parsers: [:urldecoder, :json],
     json_decoder: Jason
     
-  alias Uplink.Utils
   
-  alias Uplink.Deployments
+  alias Uplink.Packages.Deployment
   
-  post "/deployments" do
-    %{"deployment" => deployment_params} = conn.body_params
-    
-    deployment_entry = Utils.to_struct(Deployments.Entry, deployment_params)
-  end
+  forward "/deployments", to: Deployment.Router
 end

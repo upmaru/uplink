@@ -5,6 +5,7 @@ defmodule Uplink.Application do
   
   def start(_type, _args) do
     children = [
+      {Uplink.Repo, []},
       {Plug.Cowboy, scheme: :http, plug: Uplink.Router, port: 4040}
     ]
     
