@@ -1,5 +1,11 @@
 use Mix.Config
 
+config :uplink, Uplink.Cache,
+  primary: [
+    gc_interval: 3_600_000,
+    backend: :shards
+  ]
+
 config :uplink, Uplink.Packages.Deployment.Secret, 
   secret: System.get_env("UPLINK_DEPLOYMENT_SECRET")
 
