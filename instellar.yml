@@ -1,0 +1,47 @@
+dependencies:
+  build:
+    - elixir
+  runtime:
+    - nginx
+    - bash
+    - curl
+    - jq
+    - ca-certificates
+    - s6
+    - uplink-openrc
+    
+stack: alpine/3.14
+
+build:
+  destination: '_build/prod/rel/uplink'
+  command: |
+    export MIX_ENV=prod
+
+    mix local.hex --force
+    mix local.rebar --force
+    mix do deps.get --only prod
+
+    mix release
+
+run: 
+  name: uplink
+  start: 
+    call: 'start'
+  stop:
+    call: 'stop'
+
+hook:
+  post-install: |
+    rc-update add uplink
+
+  pre-upgrade: |
+    rc-service uplink stop
+
+  post-upgrade: |
+    rc-service uplink start
+
+  post-deinstall: |
+    rc-service uplink stop
+    rc-update del uplink
+
+

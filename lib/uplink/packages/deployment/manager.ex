@@ -4,13 +4,17 @@ defmodule Uplink.Packages.Deployment.Manager do
     Repo
   }
   
-  @spec get(integer()) :: %Packages.Deployment{}
+  alias Packages.Deployment
+  
+  @spec get(integer()) :: %Deployment{}
   def get(id) do
-    Repo.get(Packages.Deployment, id)
+    Repo.get(Deployment, id)
   end
   
-  @spec create(map) :: {:ok, %Packages.Deployment{}}
+  @spec create(map) :: {:ok, %Deployment{}}
   def create(params) do
-    
+    %Deployment{}
+    |> Deployment.changeset(params)
+    |> Repo.insert()
   end
 end
