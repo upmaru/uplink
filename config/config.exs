@@ -6,8 +6,7 @@ config :uplink, Uplink.Cache,
     backend: :shards
   ]
 
-config :uplink, Uplink.Packages.Deployment.Secret, 
-  secret: System.get_env("UPLINK_DEPLOYMENT_SECRET")
+config :uplink, Uplink.Secret, System.get_env("UPLINK_SECRET")
 
 config :uplink, ecto_repos: [Uplink.Repo]
 
