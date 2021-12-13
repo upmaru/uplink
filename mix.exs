@@ -26,6 +26,11 @@ defmodule Uplink.MixProject do
       {:ecto_sql, "~> 3.7.1"},
       {:postgrex, ">= 0.0.0"},
       
+      {:nebulex, "~> 2.3"},
+      {:shards, "~> 1.0"},
+      {:decorator, "~> 1.4"},
+      {:telemetry, "~> 1.0"},
+      
       {:formation, "~> 0.1.2"},
       
       {:plug_cowboy, "~> 2.0"}
