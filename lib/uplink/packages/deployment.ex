@@ -1,16 +1,20 @@
 defmodule Uplink.Packages.Deployment do
   use Ecto.Schema
   import Ecto.Changeset
-  
+
+  alias Uplink.Packages.Installation
+
   schema "deployments" do
-    field :current_state, :string, default: "created"
-    field :instellar_installation_id, :integer, null: false
-    
+    field(:hash, :string)
+    field(:current_state, :string, default: "created")
+
+    belongs_to(:installation, Installation)
+
     timestamps(type: :utc_datetime_usec)
   end
-  
+
   def changeset(deployment, params) do
     deployment
-    |> cast(params, [:instellar_installation_id])
+    |> cast(params, [])
   end
 end
