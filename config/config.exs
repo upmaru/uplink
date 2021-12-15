@@ -15,3 +15,5 @@ config :uplink, Uplink.Repo,
   username: System.get_env("UPLINK_DB_USERNAME"),
   password: System.get_env("UPLINK_DB_PASSWORD"),
   hostname: System.get_env("UPLINK_DB_HOST")
+
+import_config "#{Mix.env()}.exs"

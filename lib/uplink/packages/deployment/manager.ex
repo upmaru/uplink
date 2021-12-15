@@ -11,9 +11,9 @@ defmodule Uplink.Packages.Deployment.Manager do
     Repo.get(Deployment, id)
   end
 
-  @spec create(map) :: {:ok, %Deployment{}}
-  def create(params) do
-    %Deployment{}
+  @spec create(%Packages.Installation{}, map) :: {:ok, %Deployment{}}
+  def create(installation, params) do
+    %Deployment{installation_id: installation.id}
     |> Deployment.changeset(params)
     |> Repo.insert()
   end

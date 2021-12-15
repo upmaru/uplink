@@ -13,7 +13,9 @@ defmodule Uplink.Packages.Installation.Manager do
     |> case do
       nil ->
         %Installation{}
-        |> Instellar.changeset(%{instellar_installation_id: instellar_installation_id})
+        |> Installation.changeset(%{
+          instellar_installation_id: instellar_installation_id
+        })
         |> Repo.insert!()
 
       %Installation{} = installation ->

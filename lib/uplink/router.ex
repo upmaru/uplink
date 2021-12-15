@@ -1,13 +1,8 @@
 defmodule Uplink.Router do
   use Plug.Router
 
-  plug(:match)
-  plug(:dispatch)
-
-  plug(Plug.Parsers,
-    parsers: [:urldecoder, :json],
-    json_decoder: Jason
-  )
+  plug :match
+  plug :dispatch
 
   alias Uplink.Packages.Deployment
 

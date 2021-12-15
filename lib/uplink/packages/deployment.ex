@@ -15,6 +15,7 @@ defmodule Uplink.Packages.Deployment do
 
   def changeset(deployment, params) do
     deployment
-    |> cast(params, [])
+    |> cast(params, [:hash])
+    |> validate_required([:hash])
   end
 end
