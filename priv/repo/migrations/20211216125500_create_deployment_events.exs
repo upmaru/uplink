@@ -2,7 +2,7 @@ defmodule Uplink.Repo.Migrations.CreateDeploymentEvents do
   use Ecto.Migration
 
   def change do
-    crate table(:deployment_events) do
+    create table(:deployment_events) do
       add(:name, :string, null: false)
       add(:domain, :string, null: false)
       add(:metadata, :map, default: "{}")

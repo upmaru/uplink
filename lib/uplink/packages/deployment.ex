@@ -4,6 +4,9 @@ defmodule Uplink.Packages.Deployment do
 
   alias Uplink.Packages.Installation
 
+  use Eventful.Transitable,
+    transitions_module: __MODULE__.Transitions
+
   schema "deployments" do
     field :hash, :string
     field :metadata, :map, virtual: true

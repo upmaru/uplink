@@ -4,6 +4,8 @@ defmodule Uplink.Packages.Deployment.Secret do
   import Uplink.Secret.Signature,
     only: [compute_signature: 1]
 
+  use Uplink.Web
+
   def init(opts), do: opts
 
   def call(conn, _opts) do
@@ -17,12 +19,8 @@ defmodule Uplink.Packages.Deployment.Secret do
       conn
     else
       conn
-      |> put_resp_header("content-type", "application/json")
-      |> send_resp(:not_acceptable, render_error())
+      |> json(:not_acceptable, %{error: %{message: "invalid signature"}})
       |> halt()
     end
   end
-
-  defp render_error,
-    do: Jason.encode!(%{data: %{errors: %{detail: "invalid signature"}}})
 end

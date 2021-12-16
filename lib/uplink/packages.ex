@@ -14,4 +14,13 @@ defmodule Uplink.Packages do
   defdelegate create_deployment(installation, params),
     to: Deployment.Manager,
     as: :create
+
+  defdelegate transition_deployment_with(
+                deployment,
+                actor,
+                event_name,
+                opts \\ []
+              ),
+              to: Deployment.Manager,
+              as: :transition_with
 end
