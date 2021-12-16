@@ -3,6 +3,8 @@ defmodule Uplink.Packages.Deployment.Secret do
 
   alias Uplink.Secret
 
+  import Uplink.Secret.Signature, only: [compute_signature: 1]
+
   def init(opts), do: opts
 
   def call(conn, _opts) do
@@ -12,10 +14,7 @@ defmodule Uplink.Packages.Deployment.Secret do
 
     [request_signature] = get_req_header(conn, "x-uplink-signature-256")
 
-    signature =
-      :crypto.mac(:hmac, :sha256, secret, body)
-      |> Base.encode16()
-      |> String.downcase()
+    signature = compute_signature(body)
 
     if "sha256=#{signature}" == request_signature do
       conn

@@ -1,15 +1,20 @@
 defmodule Uplink.Packages.Deployment.Router do
   use Plug.Router
+  use Uplink.Web
 
   alias Uplink.{
     Members,
-    Packages
+    Packages,
+    Cache
   }
 
   alias Packages.{
     Installation,
     Deployment
   }
+
+  import Uplink.Secret.Signature,
+    only: [compute_signature: 1]
 
   plug :match
 
@@ -26,7 +31,8 @@ defmodule Uplink.Packages.Deployment.Router do
     %{
       "actor" => actor_params,
       "installation_id" => installation_id,
-      "deployment" => deployment_params
+      "deployment" => deployment_params,
+      "state" => state_params
     } = conn.body_params
 
     with %Members.Actor{} <- Members.get_actor(actor_params),
@@ -34,18 +40,13 @@ defmodule Uplink.Packages.Deployment.Router do
            Packages.get_or_create_installation(installation_id),
          {:ok, %Deployment{} = deployment} <-
            Packages.create_deployment(installation, deployment_params) do
-      send_resp(
-        conn,
-        :created,
-        Jason.encode!(%{data: %{deployment: %{id: deployment.id}}})
-      )
+      key_signature = compute_signature(deployment.hash)
+
+      Cache.put({:deployment, key_signature}, state_params)
+      json(conn, :created, %{data: %{deployment: %{id: deployment.id}}})
     else
       {:actor, :not_found} ->
-        send_resp(
-          conn,
-          :not_found,
-          Jason.encode!(%{data: %{error: %{message: "actor not found"}}})
-        )
+        json(conn, :not_found, %{data: %{error: %{message: "actor not found"}}})
     end
   end
 end
