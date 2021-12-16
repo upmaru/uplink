@@ -34,10 +34,18 @@ defmodule Uplink.Packages.Deployment.Router do
            Packages.get_or_create_installation(installation_id),
          {:ok, %Deployment{} = deployment} <-
            Packages.create_deployment(installation, deployment_params) do
-      send_resp(conn, :created, Jason.encode!(%{data: %{deployment: %{id: deployment.id}}}))
+      send_resp(
+        conn,
+        :created,
+        Jason.encode!(%{data: %{deployment: %{id: deployment.id}}})
+      )
     else
       {:actor, :not_found} ->
-        send_resp(conn, :not_found, Jason.encode!(%{data: %{error: %{message: "actor not found"}}}))
+        send_resp(
+          conn,
+          :not_found,
+          Jason.encode!(%{data: %{error: %{message: "actor not found"}}})
+        )
     end
   end
 end
