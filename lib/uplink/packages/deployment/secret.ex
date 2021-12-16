@@ -1,15 +1,12 @@
 defmodule Uplink.Packages.Deployment.Secret do
   import Plug.Conn
 
-  alias Uplink.Secret
-
-  import Uplink.Secret.Signature, only: [compute_signature: 1]
+  import Uplink.Secret.Signature,
+    only: [compute_signature: 1]
 
   def init(opts), do: opts
 
   def call(conn, _opts) do
-    secret = Secret.get()
-
     {:ok, body, _} = read_body(conn)
 
     [request_signature] = get_req_header(conn, "x-uplink-signature-256")

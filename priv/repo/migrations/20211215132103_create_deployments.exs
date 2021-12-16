@@ -11,5 +11,6 @@ defmodule Uplink.Repo.Migrations.CreateDeployments do
     end
     
     create index(:deployments, [:installation_id])
+    create index(:deployments, [:installation_id, :hash], unique: true)
   end
 end

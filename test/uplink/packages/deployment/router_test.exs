@@ -17,9 +17,9 @@ defmodule Uplink.Packages.Deployment.RouterTest do
           },
           "installation_id" => 1,
           "deployment" => %{
-            "hash" => "some-hash"
-          },
-          "state" => %{}
+            "hash" => "some-hash",
+            "metadata" => %{}
+          }
         })
 
   setup do

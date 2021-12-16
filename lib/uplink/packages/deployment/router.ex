@@ -31,8 +31,7 @@ defmodule Uplink.Packages.Deployment.Router do
     %{
       "actor" => actor_params,
       "installation_id" => installation_id,
-      "deployment" => deployment_params,
-      "state" => state_params
+      "deployment" => deployment_params
     } = conn.body_params
 
     with %Members.Actor{} <- Members.get_actor(actor_params),
@@ -42,11 +41,11 @@ defmodule Uplink.Packages.Deployment.Router do
            Packages.create_deployment(installation, deployment_params) do
       key_signature = compute_signature(deployment.hash)
 
-      Cache.put({:deployment, key_signature}, state_params)
-      json(conn, :created, %{data: %{deployment: %{id: deployment.id}}})
+      Cache.put({:deployment, key_signature}, deployment.metadata)
+      json(conn, :created, %{id: deployment.id})
     else
       {:actor, :not_found} ->
-        json(conn, :not_found, %{data: %{error: %{message: "actor not found"}}})
+        json(conn, :not_found, %{error: %{message: "actor not found"}})
     end
   end
 end
