@@ -18,7 +18,7 @@ defmodule Uplink.Packages.Deployment.Manager do
     |> Deployment.changeset(params)
     |> Repo.insert()
   end
-  
+
   def transition_with(deployment, actor, event_name, opts \\ []) do
     comment = Keyword.get(opts, :comment)
 

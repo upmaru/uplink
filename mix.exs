@@ -23,12 +23,12 @@ defmodule Uplink.MixProject do
   defp deps do
     [
       {:jason, "~> 1.0"},
-      
+
       # Data
       {:ecto_sql, "~> 3.7.1"},
       {:postgrex, ">= 0.0.0"},
       {:eventful, "~> 0.2.3"},
-      
+
       # Caching Layer
       {:nebulex, "~> 2.3"},
       {:shards, "~> 1.0"},
@@ -37,7 +37,7 @@ defmodule Uplink.MixProject do
 
       # Worker
       {:oban, "~> 2.10"},
-      
+
       # Infrastructure
       {:ex_aws, "~> 2.1"},
       {:ex_aws_s3, "~> 2.0"},
