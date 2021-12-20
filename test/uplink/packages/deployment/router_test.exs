@@ -4,7 +4,7 @@ defmodule Uplink.Packages.Deployment.RouterTest do
 
   alias Uplink.{
     Packages,
-    Members
+    Members,
   }
 
   alias Packages.Deployment.Router
@@ -24,7 +24,7 @@ defmodule Uplink.Packages.Deployment.RouterTest do
 
   setup do
     :ok = Ecto.Adapters.SQL.Sandbox.checkout(Uplink.Repo)
-
+        
     {:ok, _actor} =
       Members.create_actor(%{
         identifier: "zacksiri"
@@ -46,5 +46,6 @@ defmodule Uplink.Packages.Deployment.RouterTest do
       |> Router.call(@opts)
 
     assert conn.status == 201
+    assert %{"data" => %{"id" => _deployment_id}} = Jason.decode!(conn.resp_body)
   end
 end
