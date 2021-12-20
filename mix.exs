@@ -23,13 +23,26 @@ defmodule Uplink.MixProject do
   defp deps do
     [
       {:jason, "~> 1.0"},
+      
+      # Data
       {:ecto_sql, "~> 3.7.1"},
       {:postgrex, ">= 0.0.0"},
       {:eventful, "~> 0.2.3"},
+      
+      # Caching Layer
       {:nebulex, "~> 2.3"},
       {:shards, "~> 1.0"},
       {:decorator, "~> 1.4"},
       {:telemetry, "~> 1.0"},
+
+      # Worker
+      {:oban, "~> 2.10"},
+      
+      # Infrastructure
+      {:ex_aws, "~> 2.1"},
+      {:ex_aws_s3, "~> 2.0"},
+      {:hackney, "~> 1.9"},
+      {:sweet_xml, "~> 0.6"},
       {:formation, "~> 0.1.2"},
       {:plug_cowboy, "~> 2.0"}
       # {:dep_from_hexpm, "~> 0.3.0"},
