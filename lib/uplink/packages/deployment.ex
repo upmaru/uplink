@@ -24,4 +24,13 @@ defmodule Uplink.Packages.Deployment do
     |> validate_required([:hash])
     |> cast_embed(:metadata, require: true)
   end
+
+  def identifier(%Deployment{hash: hash, metadata: metadata}) do
+    Path.join([
+      ~s(deployments),
+      metadata.organization.slug,
+      metadata.package.slug,
+      hash
+    ])
+  end
 end
