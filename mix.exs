@@ -38,6 +38,9 @@ defmodule Uplink.MixProject do
       # Worker
       {:oban, "~> 2.10"},
 
+      # Rest
+      {:req, "~> 0.2.1"},
+
       # Infrastructure
       {:ex_aws, "~> 2.1"},
       {:ex_aws_s3, "~> 2.0"},

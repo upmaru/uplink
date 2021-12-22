@@ -3,21 +3,31 @@ defmodule Uplink.Packages.Deployment.Metadata do
   import Ecto.Changeset
 
   alias __MODULE__.{
-    Storage,
-    Organization,
-    Package
+    Storage
   }
 
   @primary_key false
   embedded_schema do
-    embeds_one :storage, Storage
-    embeds_one :package, Package
-    embeds_one :organization, Organization
+    embeds_one :package, Package do
+      field :slug
+    end
+
+    embeds_one :cluster, Cluster do
+      field :type, :string
+      field :credential, :map
+
+      embeds_one :organization, Organization do
+        field :slug
+
+        embeds_one :storage, Storage
+      end
+    end
   end
 
   def changeset(%__MODULE__{} = metadata, params) do
     metadata
     |> cast(params, [])
-    |> cast_embed(:storage, require: true)
+    |> cast_embed(:package, require: true)
+    |> cast_embed(:cluster, require: true)
   end
 end
