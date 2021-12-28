@@ -1,4 +1,4 @@
-defmodule Uplink.Packages.Deployment.Metadata do
+defmodule Uplink.Packages.Metadata do
   use Ecto.Schema
   import Ecto.Changeset
 
@@ -29,5 +29,11 @@ defmodule Uplink.Packages.Deployment.Metadata do
     |> cast(params, [])
     |> cast_embed(:package, require: true)
     |> cast_embed(:cluster, require: true)
+  end
+  
+  def parse(params) do
+    %__MODULE__{}
+    |> changeset(params)
+    |> apply_action(:insert)
   end
 end

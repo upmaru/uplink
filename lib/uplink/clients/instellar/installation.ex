@@ -3,6 +3,8 @@ defmodule Uplink.Clients.Instellar.Installation do
     Cluster,
     Packages
   }
+  
+  alias Packages.Deployment
 
   import Uplink.Secret.Signature,
     only: [compute_signature: 1]
@@ -12,12 +14,14 @@ defmodule Uplink.Clients.Instellar.Installation do
   def metadata(%Deployment{hash: hash, installation: installation}) do
     %{instellar_installation_id: instellar_installation_id} = installation
 
-    signature = compute_signature(hash)
-
     @endpoint
     |> Path.join(["installations", instellar_installation_id])
     |> Req.get!(headers: headers(hash))
     |> case do
+      %{status: 200, body: body} -> 
+        {:ok, body}
+      %{status: _, body: body} ->
+        {:error, body}
     end
   end
 

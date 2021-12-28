@@ -2,8 +2,6 @@ defmodule Uplink.Packages.Deployment do
   use Ecto.Schema
   import Ecto.Changeset
 
-  alias Uplink.Packages.Metadata
-
   use Eventful.Transitable,
     transitions_module: __MODULE__.Transitions
 
@@ -11,7 +9,7 @@ defmodule Uplink.Packages.Deployment do
     field :hash, :string
     field :current_state, :string, default: "created"
 
-    embeds_one :metadata, Metadata, virtual: true
+    field :metadata, :map, virtual: true
 
     belongs_to :installation, Installation
 
@@ -25,7 +23,7 @@ defmodule Uplink.Packages.Deployment do
     |> cast_embed(:metadata, require: true)
   end
 
-  def identifier(%Deployment{hash: hash, metadata: metadata}) do
+  def identifier(%__MODULE__{hash: hash, metadata: metadata}) do
     Path.join([
       ~s(deployments),
       metadata.organization.slug,

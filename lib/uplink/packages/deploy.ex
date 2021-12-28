@@ -11,15 +11,20 @@ defmodule Uplink.Packages.Deploy do
     Repo
   }
 
-  alias Packages.Deployment
+  alias Packages.{
+    Deployment,
+    Metadata
+  }
+  
+  alias Uplink.Clients.Instellar
 
   import Uplink.Secret.Signature,
     only: [compute_signature: 1]
 
   @impl Oban.Worker
   def perform(%Oban.Job{args: %{"deployment_id" => deployment_id}}) do
-    deployment = Repo.get(Deployment, deployment_id)
-    %Deployment{} = deployment = retrieve_metadata(deployment)
+    %Deployment{} = deployment = Repo.get(Deployment, deployment_id)
+    %Metadata{} = metadata = retrieve_metadata(deployment)
   end
 
   defp retrieve_metadata(%Deployment{hash: hash} = deployment) do
@@ -31,7 +36,7 @@ defmodule Uplink.Packages.Deploy do
         Map.merge(deployment, %{metadata: metadata})
 
       nil ->
-        nil
+        Instellar.deployment_metadata(deployment)
         # retrieve metadata dynamically
     end
   end
@@ -68,7 +73,7 @@ defmodule Uplink.Packages.Deploy do
 
   defp process_extracted_file(path, {deployment, _user, identifier}) do
     path = to_string(path)
-    %{bucket: bucket, config: storage_config} = get_storage_config(deployment)
+    %{bucket: bucket, config: storage_config} = Packages.render_metadata_storage(deployment.metadata)
 
     file_with_arch_name =
       path

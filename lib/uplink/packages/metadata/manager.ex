@@ -1,6 +1,9 @@
 defmodule Uplink.Packages.Metadata.Manager do
   alias Uplink.Packages.Metadata
   alias Metadata.Storage
+  
+  defdelegate parse(params), 
+    to: Metadata
 
   def render_storage(
         %Storage{
