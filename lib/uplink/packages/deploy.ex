@@ -23,8 +23,11 @@ defmodule Uplink.Packages.Deploy do
 
   @impl Oban.Worker
   def perform(%Oban.Job{args: %{"deployment_id" => deployment_id}}) do
-    %Deployment{} = deployment = Repo.get(Deployment, deployment_id)
-    %Metadata{} = metadata = retrieve_metadata(deployment)
+    %Deployment{metadata: %Metadata{} = metadata} =
+      deployment =
+      Deployment
+      |> Repo.get(deployment_id)
+      |> retrieve_metadata()
   end
 
   defp retrieve_metadata(%Deployment{hash: hash} = deployment) do
@@ -36,13 +39,23 @@ defmodule Uplink.Packages.Deploy do
         Map.merge(deployment, %{metadata: metadata})
 
       nil ->
-        Instellar.deployment_metadata(deployment)
-        # retrieve metadata dynamically
+        fetch_deployment_metadata(deployment)
     end
   end
 
   defp execute(%Deployment{hash: hash, metadata: metadata} = deployment) do
     identifier = Deployment.identifier(deployment)
+  end
+
+  defp fetch_deployment_metadata(deployment) do
+    with {:ok, metadata_params} <- Instellar.deployment_metadata(deployment),
+         {:ok, %Metadata{} = metadata} <-
+           Packages.parse_metadata(metadata_params) do
+      key_signature = compute_signature(deployment.hash)
+
+      Cache.put({:deployment, key_signature}, metadata)
+      Map.merge(deployment, %{metadata: metadata})
+    end
   end
 
   defp decompress_archive(

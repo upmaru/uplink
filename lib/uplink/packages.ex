@@ -25,8 +25,8 @@ defmodule Uplink.Packages do
               as: :transition_with
 
   alias __MODULE__.Metadata
-  
-  defdelegate parse_metadata(params), 
+
+  defdelegate parse_metadata(params),
     to: Metadata.Manager,
     as: :parse
 

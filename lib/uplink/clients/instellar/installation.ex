@@ -18,8 +18,8 @@ defmodule Uplink.Clients.Instellar.Installation do
     |> Path.join(["installations", instellar_installation_id])
     |> Req.get!(headers: headers(hash))
     |> case do
-      %{status: 200, body: body} ->
-        {:ok, body}
+      %{status: 200, body: %{"data" => %{"attributes" => attributes}}} ->
+        {:ok, attributes}
 
       %{status: _, body: body} ->
         {:error, body}

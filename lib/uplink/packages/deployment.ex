@@ -2,6 +2,8 @@ defmodule Uplink.Packages.Deployment do
   use Ecto.Schema
   import Ecto.Changeset
 
+  alias Uplink.Packages.Installation
+
   use Eventful.Transitable,
     transitions_module: __MODULE__.Transitions
 

@@ -42,12 +42,18 @@ defmodule Uplink.Packages.Deployment.Router do
            Packages.create_deployment(installation, deployment_params),
          {:ok, %{resource: pending_deployment}} <-
            Packages.transition_deployment_with(deployment, actor, "pend"),
-         {:ok, %Metadata{} = metadata} <- Packages.parse_metadata(deployment.metadata) do
+         {:ok, %Metadata{} = metadata} <-
+           Packages.parse_metadata(deployment.metadata) do
       key_signature = compute_signature(pending_deployment.hash)
-      
+
       Cache.put({:deployment, key_signature}, metadata)
       json(conn, :created, %{id: deployment.id})
     else
+      {:error, _error} ->
+        json(conn, :unprocessable_entity, %{
+          error: %{message: "invalid deployment parameters"}
+        })
+
       {:actor, :not_found} ->
         json(conn, :not_found, %{error: %{message: "actor not found"}})
     end

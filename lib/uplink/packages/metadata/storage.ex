@@ -26,7 +26,7 @@ defmodule Uplink.Packages.Metadata.Storage do
 
   def changeset(%__MODULE__{} = storage, params) do
     storage
-    |> cast([], params)
+    |> cast(params, @valid_attrs)
     |> validate_required(@valid_attrs)
   end
 end
