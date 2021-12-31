@@ -10,7 +10,8 @@ defmodule Uplink.Packages.Deployment.Router do
 
   alias Packages.{
     Installation,
-    Deployment
+    Deployment,
+    Metadata
   }
 
   import Uplink.Secret.Signature,
@@ -40,10 +41,11 @@ defmodule Uplink.Packages.Deployment.Router do
          {:ok, %Deployment{} = deployment} <-
            Packages.create_deployment(installation, deployment_params),
          {:ok, %{resource: pending_deployment}} <-
-           Packages.transition_deployment_with(deployment, actor, "pend") do
+           Packages.transition_deployment_with(deployment, actor, "pend"),
+         {:ok, %Metadata{} = metadata} <- Packages.parse_metadata(deployment.metadata) do
       key_signature = compute_signature(pending_deployment.hash)
-
-      Cache.put({:deployment, key_signature}, pending_deployment.metadata)
+      
+      Cache.put({:deployment, key_signature}, metadata)
       json(conn, :created, %{id: deployment.id})
     else
       {:actor, :not_found} ->

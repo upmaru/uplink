@@ -23,9 +23,13 @@ defmodule Uplink.Packages do
               ),
               to: Deployment.Manager,
               as: :transition_with
-              
+
   alias __MODULE__.Metadata
   
+  defdelegate parse_metadata(params), 
+    to: Metadata.Manager,
+    as: :parse
+
   defdelegate render_metadata_storage(metadata),
     to: Metadata.Manager,
     as: :render_storage

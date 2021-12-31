@@ -18,9 +18,8 @@ defmodule Uplink.Packages.Deployment do
 
   def changeset(deployment, params) do
     deployment
-    |> cast(params, [:hash])
+    |> cast(params, [:hash, :metadata])
     |> validate_required([:hash])
-    |> cast_embed(:metadata, require: true)
   end
 
   def identifier(%__MODULE__{hash: hash, metadata: metadata}) do

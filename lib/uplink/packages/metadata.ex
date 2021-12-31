@@ -30,7 +30,7 @@ defmodule Uplink.Packages.Metadata do
     |> cast_embed(:package, require: true)
     |> cast_embed(:cluster, require: true)
   end
-  
+
   def parse(params) do
     %__MODULE__{}
     |> changeset(params)

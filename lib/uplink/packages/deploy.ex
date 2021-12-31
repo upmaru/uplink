@@ -15,7 +15,7 @@ defmodule Uplink.Packages.Deploy do
     Deployment,
     Metadata
   }
-  
+
   alias Uplink.Clients.Instellar
 
   import Uplink.Secret.Signature,
@@ -73,7 +73,9 @@ defmodule Uplink.Packages.Deploy do
 
   defp process_extracted_file(path, {deployment, _user, identifier}) do
     path = to_string(path)
-    %{bucket: bucket, config: storage_config} = Packages.render_metadata_storage(deployment.metadata)
+
+    %{bucket: bucket, config: storage_config} =
+      Packages.render_metadata_storage(deployment.metadata)
 
     file_with_arch_name =
       path

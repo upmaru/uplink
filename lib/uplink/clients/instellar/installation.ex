@@ -3,7 +3,7 @@ defmodule Uplink.Clients.Instellar.Installation do
     Cluster,
     Packages
   }
-  
+
   alias Packages.Deployment
 
   import Uplink.Secret.Signature,
@@ -18,8 +18,9 @@ defmodule Uplink.Clients.Instellar.Installation do
     |> Path.join(["installations", instellar_installation_id])
     |> Req.get!(headers: headers(hash))
     |> case do
-      %{status: 200, body: body} -> 
+      %{status: 200, body: body} ->
         {:ok, body}
+
       %{status: _, body: body} ->
         {:error, body}
     end
