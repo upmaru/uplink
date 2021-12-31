@@ -9,7 +9,11 @@ defmodule Uplink.Packages.Metadata do
   @primary_key false
   embedded_schema do
     embeds_one :package, Package, primary_key: false do
-      field :slug
+      field :slug, :string
+    end
+    
+    embeds_many :instances, Instances, primary_key: false do
+      field :slug, :string
     end
 
     embeds_one :cluster, Cluster, primary_key: false do

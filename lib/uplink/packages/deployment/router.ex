@@ -40,14 +40,16 @@ defmodule Uplink.Packages.Deployment.Router do
            Packages.get_or_create_installation(installation_id),
          {:ok, %Deployment{} = deployment} <-
            Packages.create_deployment(installation, deployment_params),
-         {:ok, %{resource: pending_deployment}} <-
-           Packages.transition_deployment_with(deployment, actor, "pend"),
          {:ok, %Metadata{} = metadata} <-
-           Packages.parse_metadata(deployment.metadata) do
-      key_signature = compute_signature(pending_deployment.hash)
-
-      Cache.put({:deployment, key_signature}, metadata)
-      json(conn, :created, %{id: deployment.id})
+           Packages.parse_metadata(deployment.metadata),
+         :ok <-
+           Cache.put(
+             {:deployment, compute_signature(deployment.hash)},
+             metadata
+           ),
+         {:ok, %{resource: pending_deployment}} <-
+           Packages.transition_deployment_with(deployment, actor, "pend") do
+      json(conn, :created, %{id: pending_deployment.id})
     else
       {:error, _error} ->
         json(conn, :unprocessable_entity, %{

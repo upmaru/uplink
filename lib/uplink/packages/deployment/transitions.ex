@@ -7,12 +7,18 @@ defmodule Uplink.Packages.Deployment.Transitions do
   Deployment
   |> transition(
     [from: "created", to: "pending", via: "pend"],
-    fn changes -> transit(changes) end
+    fn changes -> transit(changes, Deployment.Triggers) end
   )
 
   Deployment
   |> transition(
     [from: "pending", to: "processing", via: "process"],
+    fn changes -> transit(changes) end
+  )
+
+  Deployment
+  |> transition(
+    [from: "pending", to: "failed", via: "failed"],
     fn changes -> transit(changes) end
   )
 end

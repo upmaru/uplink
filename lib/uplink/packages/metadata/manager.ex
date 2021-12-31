@@ -5,12 +5,17 @@ defmodule Uplink.Packages.Metadata.Manager do
   defdelegate parse(params),
     to: Metadata
 
-  def render_storage(
-        %Storage{
-          type: "s3",
-          credential: credential
-        } = storage
-      ) do
+  def render_storage(%Metadata{
+        cluster: %{
+          organization: %{
+            storage:
+              %Storage{
+                type: "s3",
+                credential: credential
+              } = storage
+          }
+        }
+      }) do
     ExAws.Config.new(:s3,
       access_key_id: Map.get(credential, "access_key_id"),
       secret_access_key: Map.get(credential, "secret_access_key"),

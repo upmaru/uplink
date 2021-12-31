@@ -9,6 +9,8 @@ defmodule Uplink.Packages.DeployTest do
 
   @deployment_params %{
     "hash" => "some-hash",
+    "archive_path" =>
+      "archives/7a363fba-8ca7-4ea4-8e84-f3785ac97102/packages.zip",
     "metadata" => %{
       "cluster" => %{
         "credential" => %{
@@ -52,4 +54,6 @@ defmodule Uplink.Packages.DeployTest do
 
     {:ok, actor: actor, deployment: deployment}
   end
+
+  test ""
 end
