@@ -9,6 +9,8 @@ config :uplink, Uplink.Repo,
   queue_interval: 50_000,
   pool: Ecto.Adapters.SQL.Sandbox
 
+config :uplink, Oban, plugins: false, queues: false
+
 config :uplink, Uplink.Secret, "secret"
 
 # config :plug, :validate_header_keys_during_test, false

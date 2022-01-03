@@ -11,51 +11,85 @@ defmodule Uplink.Packages.Deployment.PrepareTest do
     Prepare
   }
 
-  @deployment_params %{
-    "hash" => "some-hash",
-    "archive_url" =>
-      "archives/7a363fba-8ca7-4ea4-8e84-f3785ac97102/packages.zip",
-    "metadata" => %{
-      "cluster" => %{
-        "credential" => %{
-          "certificate" => "cert",
-          "endpoint" => "https://127.0.0.1:8443",
-          "password" => "somepassword",
-          "password_confirmation" => "somepassword",
-          "private_key" => "key"
-        },
-        "organization" => %{
-          "slug" => "upmaru"
-        }
-      },
-      "id" => 8000,
-      "package" => %{"slug" => "something-1640927800"}
-    }
-  }
-
   setup do
     :ok = Ecto.Adapters.SQL.Sandbox.checkout(Uplink.Repo)
-    
+
+    bypass = Bypass.open()
+
+    deployment_params = %{
+      "hash" => "some-hash",
+      "archive_url" => "http://localhost:#{bypass.port}/archives/packages.zip",
+      "metadata" => %{
+        "cluster" => %{
+          "credential" => %{
+            "certificate" => "cert",
+            "endpoint" => "https://127.0.0.1:8443",
+            "password" => "somepassword",
+            "password_confirmation" => "somepassword",
+            "private_key" => "key"
+          },
+          "organization" => %{
+            "slug" => "upmaru"
+          }
+        },
+        "id" => 8000,
+        "package" => %{
+          "slug" => "something-1640927800",
+          "organization" => %{
+            "slug" => "upmaru"
+          }
+        }
+      }
+    }
+
+    Application.put_env(
+      :uplink,
+      Uplink.Clients.Instellar,
+      endpoint: "http://localhost:#{bypass.port}/uplink"
+    )
+
     {:ok, actor} =
       Members.create_actor(%{
         identifier: "zacksiri"
       })
 
-    {:ok, installation} = Packages.get_or_create_installation(1)
+    installation = Packages.get_or_create_installation(1)
 
     {:ok, deployment} =
-      Packages.create_deployment(installation, @deployment_params)
+      Packages.create_deployment(installation, deployment_params)
 
     {:ok, _transition} =
       Packages.transition_deployment_with(deployment, actor, "prepare")
 
-    {:ok, actor: actor, deployment: deployment}
+    {:ok,
+     actor: actor,
+     deployment_params: deployment_params,
+     deployment: deployment,
+     bypass: bypass}
   end
 
   test "successfully prepare deployment", %{
     deployment: deployment,
-    actor: actor
+    deployment_params: deployment_params,
+    actor: actor,
+    bypass: bypass
   } do
+    metadata_response = %{
+      "data" => %{
+        "attributes" => Map.get(deployment_params, "metadata")
+      }
+    }
+
+    Bypass.expect_once(bypass, "GET", "/uplink/installations/1", fn conn ->
+      conn
+      |> Plug.Conn.put_resp_header("content-type", "application/json")
+      |> Plug.Conn.resp(200, Jason.encode!(metadata_response))
+    end)
+
+    Bypass.expect_once(bypass, "GET", "/archives/packages.zip", fn conn ->
+      Plug.Conn.send_file(conn, 200, "test/fixtures/archive/packages.zip")
+    end)
+
     assert {:ok, _transition} =
              perform_job(Prepare, %{
                deployment_id: deployment.id,

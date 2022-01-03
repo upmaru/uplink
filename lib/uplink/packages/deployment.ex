@@ -33,7 +33,7 @@ defmodule Uplink.Packages.Deployment do
   def identifier(%__MODULE__{hash: hash, metadata: metadata}) do
     Path.join([
       ~s(deployments),
-      metadata.organization.slug,
+      metadata.package.organization.slug,
       metadata.package.slug,
       hash
     ])

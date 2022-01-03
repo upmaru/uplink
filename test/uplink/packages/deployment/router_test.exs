@@ -34,7 +34,12 @@ defmodule Uplink.Packages.Deployment.RouterTest do
                       }
                     },
                     "id" => 8000,
-                    "package" => %{"slug" => "something-1640927800"}
+                    "package" => %{
+                      "slug" => "something-1640927800",
+                      "organization" => %{
+                        "slug" => "upmaru"
+                      }
+                    }
                   }
                 }
               })

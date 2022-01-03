@@ -1,11 +1,15 @@
 defmodule Uplink.Packages.Metadata do
   use Ecto.Schema
   import Ecto.Changeset
-  
+
   @primary_key false
   embedded_schema do
     embeds_one :package, Package, primary_key: false do
       field :slug, :string
+
+      embeds_one :organization, Organization, primary_key: false do
+        field :slug
+      end
     end
 
     embeds_many :instances, Instances, primary_key: false do
@@ -33,6 +37,7 @@ defmodule Uplink.Packages.Metadata do
     package
     |> cast(params, [:slug])
     |> validate_required([:slug])
+    |> cast_embed(:organization, required: true, with: &organization_changeset/2)
   end
 
   defp cluster_changeset(cluster, params) do

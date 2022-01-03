@@ -30,10 +30,11 @@ defmodule Uplink.Packages.Deployment.Prepare do
       deployment =
       Deployment
       |> Repo.get(deployment_id)
+      |> Repo.preload([:installation])
       |> retrieve_metadata()
 
-    actor_id
-    |> Members.get_actor()
+    Members.Actor
+    |> Repo.get(actor_id)
     |> execute(deployment)
   end
 
