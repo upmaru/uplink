@@ -15,7 +15,7 @@ defmodule Uplink.Packages.Archive do
 
   def changeset(archive, params) do
     archive
-    |> cast(params, [:node, :location])
-    |> validate_required([:node, :location])
+    |> cast(params, [:node, :locations])
+    |> validate_required([:node, :locations])
   end
 end

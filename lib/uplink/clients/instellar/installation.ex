@@ -12,7 +12,7 @@ defmodule Uplink.Clients.Instellar.Installation do
 
   def metadata(%Deployment{hash: hash, installation: installation}) do
     %{instellar_installation_id: instellar_installation_id} = installation
-
+    
     [
       Clients.Instellar.endpoint(),
       "installations",

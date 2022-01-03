@@ -3,6 +3,7 @@ defmodule Uplink.Packages.Deployment.PrepareTest do
   use Oban.Testing, repo: Uplink.Repo
 
   alias Uplink.{
+    Cache,
     Packages,
     Members
   }
@@ -74,6 +75,8 @@ defmodule Uplink.Packages.Deployment.PrepareTest do
     actor: actor,
     bypass: bypass
   } do
+    Cache.delete_all()
+    
     metadata_response = %{
       "data" => %{
         "attributes" => Map.get(deployment_params, "metadata")
