@@ -46,6 +46,7 @@ defmodule Uplink.MixProject do
 
       # Infrastructure
       {:formation, "~> 0.1.2"},
+      {:lexdee, "~> 1.0.1"},
       {:plug_cowboy, "~> 2.0"},
       {:reverse_proxy_plug, "~> 2.1"},
 
