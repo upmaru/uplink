@@ -76,7 +76,7 @@ defmodule Uplink.Packages.Deployment.PrepareTest do
     bypass: bypass
   } do
     Cache.delete_all()
-    
+
     metadata_response = %{
       "data" => %{
         "attributes" => Map.get(deployment_params, "metadata")

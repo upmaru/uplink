@@ -47,6 +47,7 @@ defmodule Uplink.MixProject do
       # Infrastructure
       {:formation, "~> 0.1.2"},
       {:plug_cowboy, "~> 2.0"},
+      {:reverse_proxy_plug, "~> 2.1"},
 
       # Test
       {:bypass, "~> 2.1", only: :test}

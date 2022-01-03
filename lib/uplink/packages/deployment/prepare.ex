@@ -115,11 +115,11 @@ defmodule Uplink.Packages.Deployment.Prepare do
       {:ok, paths} ->
         tmp_path = Path.join("tmp", "deployments")
         File.mkdir_p!(tmp_path)
-        
+
         [_, org, package, _] = String.split(identifier, "/")
-        
+
         destination = Path.join([tmp_path, org, package])
-        
+
         paths
         |> Enum.map(&process_extracted_file(&1, destination))
         |> validate_and_finalize_deployment(paths, state)
@@ -135,7 +135,7 @@ defmodule Uplink.Packages.Deployment.Prepare do
     end
   end
 
-  defp process_extracted_file(path, destination) do    
+  defp process_extracted_file(path, destination) do
     path = to_string(path)
 
     file_with_arch_name =
@@ -145,9 +145,9 @@ defmodule Uplink.Packages.Deployment.Prepare do
       |> Path.join()
 
     storage_path = Path.join(destination, file_with_arch_name)
-    
+
     File.mkdir_p!(Path.dirname(storage_path))
-    
+
     case File.rename(path, storage_path) do
       :ok ->
         {:ok, storage_path}
