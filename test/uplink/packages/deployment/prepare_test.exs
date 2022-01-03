@@ -1,4 +1,4 @@
-defmodule Uplink.Packages.DeployTest do
+defmodule Uplink.Packages.Deployment.PrepareTest do
   use ExUnit.Case, async: true
   use Oban.Testing, repo: Uplink.Repo
 
@@ -7,9 +7,13 @@ defmodule Uplink.Packages.DeployTest do
     Members
   }
 
+  alias Packages.Deployment.{
+    Prepare
+  }
+
   @deployment_params %{
     "hash" => "some-hash",
-    "archive_path" =>
+    "archive_url" =>
       "archives/7a363fba-8ca7-4ea4-8e84-f3785ac97102/packages.zip",
     "metadata" => %{
       "cluster" => %{
@@ -21,19 +25,7 @@ defmodule Uplink.Packages.DeployTest do
           "private_key" => "key"
         },
         "organization" => %{
-          "slug" => "upmaru",
-          "storage" => %{
-            "bucket" => "something",
-            "credential" => %{
-              "access_key_id" => "blah",
-              "secret_access_key" => "secret"
-            },
-            "host" => "something.aws.com",
-            "port" => 443,
-            "region" => "ap-southeast-1",
-            "scheme" => "https://",
-            "type" => "s3"
-          }
+          "slug" => "upmaru"
         }
       },
       "id" => 8000,
@@ -42,6 +34,8 @@ defmodule Uplink.Packages.DeployTest do
   }
 
   setup do
+    :ok = Ecto.Adapters.SQL.Sandbox.checkout(Uplink.Repo)
+    
     {:ok, actor} =
       Members.create_actor(%{
         identifier: "zacksiri"
@@ -52,8 +46,20 @@ defmodule Uplink.Packages.DeployTest do
     {:ok, deployment} =
       Packages.create_deployment(installation, @deployment_params)
 
+    {:ok, _transition} =
+      Packages.transition_deployment_with(deployment, actor, "prepare")
+
     {:ok, actor: actor, deployment: deployment}
   end
 
-  test ""
+  test "successfully prepare deployment", %{
+    deployment: deployment,
+    actor: actor
+  } do
+    assert {:ok, _transition} =
+             perform_job(Prepare, %{
+               deployment_id: deployment.id,
+               actor_id: actor.id
+             })
+  end
 end

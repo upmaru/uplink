@@ -41,6 +41,9 @@ defmodule Uplink.MixProject do
       # Rest
       {:req, "~> 0.2.1"},
 
+      # Downstream
+      {:downstream, "~> 1.1.0"},
+
       # Infrastructure
       {:ex_aws, "~> 2.1"},
       {:ex_aws_s3, "~> 2.0"},

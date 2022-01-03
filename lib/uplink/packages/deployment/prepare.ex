@@ -3,8 +3,6 @@ defmodule Uplink.Packages.Deployment.Prepare do
 
   require Logger
 
-  alias ExAws.S3
-
   alias Uplink.{
     Members,
     Packages,
@@ -56,8 +54,7 @@ defmodule Uplink.Packages.Deployment.Prepare do
          %Members.Actor{} = actor,
          %Deployment{
            hash: hash,
-           archive_path: archive_path,
-           metadata: metadata
+           archive_url: archive_url
          } = deployment
        ) do
     identifier = Deployment.identifier(deployment)
@@ -72,14 +69,13 @@ defmodule Uplink.Packages.Deployment.Prepare do
 
     Logger.info("#{@logger_prefix} Downloading archive - #{identifier}")
 
-    %Metadata{cluster: %{organization: %{storage: storage}}} = metadata
-    
-    # here perhaps it is simpler to use signed url from S3
-    storage.bucket
-    |> S3.download_file(archive_path, archive_file_path)
-    |> ExAws.request(Packages.render_metadata_storage(metadata))
+    file = File.open!(archive_file_path, [:write])
+
+    archive_url
+    |> Downstream.get(file)
     |> case do
-      {:ok, _response} ->
+      {:ok, %{status_code: 200}} ->
+        :ok = File.close(file)
         decompress_archive(archive_file_path, extraction_path, state)
 
       _ ->
@@ -117,7 +113,7 @@ defmodule Uplink.Packages.Deployment.Prepare do
     |> case do
       {:ok, paths} ->
         paths
-        |> Enum.map(&process_extracted_file(&1, state))
+        |> Enum.map(&process_extracted_file(&1, identifier))
         |> validate_and_finalize_deployment(paths, state)
 
       _ ->
@@ -131,19 +127,8 @@ defmodule Uplink.Packages.Deployment.Prepare do
     end
   end
 
-  defp process_extracted_file(
-         path,
-         {%Deployment{metadata: metadata}, _actor, identifier}
-       ) do
+  defp process_extracted_file(path, identifier) do
     path = to_string(path)
-
-    %Metadata{
-      cluster: %{
-        organization: %{
-          storage: storage
-        }
-      }
-    } = metadata
 
     file_with_arch_name =
       path
@@ -152,12 +137,14 @@ defmodule Uplink.Packages.Deployment.Prepare do
       |> Path.join()
 
     storage_path = Path.join(identifier, file_with_arch_name)
-    
-    # TODO: here instead of uploading to S3 we create directory structure locally
-    # path
-    # |> S3.Upload.stream_file()
-    # |> S3.upload(storage.bucket, storage_path)
-    # |> ExAws.request(Packages.render_metadata_storage(metadata))
+
+    case File.rename(path, storage_path) do
+      :ok ->
+        {:ok, storage_path}
+
+      error ->
+        error
+    end
   end
 
   defp validate_and_finalize_deployment(
@@ -171,7 +158,23 @@ defmodule Uplink.Packages.Deployment.Prepare do
     if Enum.count(successful_uploads) == Enum.count(paths) do
       Logger.info("#{@logger_prefix} Deployment completed - #{identifier}")
 
-      Packages.transition_deployment_with(deployment, actor, "process")
+      params = %{
+        node: Node.self(),
+        locations:
+          Enum.map(successful_uploads, fn {_result, file_path} ->
+            file_path
+          end)
+      }
+
+      case Packages.create_archive(deployment, params) do
+        {:ok, _archive} ->
+          Packages.transition_deployment_with(deployment, actor, "complete")
+
+        {:error, _error} ->
+          Packages.transition_deployment_with(deployment, actor, "fail",
+            comment: "archive not created"
+          )
+      end
     else
       comment = "Upload partially failed"
       Logger.error("#{@logger_prefix} #{comment} - #{identifier}")

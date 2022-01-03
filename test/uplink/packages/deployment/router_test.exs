@@ -18,7 +18,7 @@ defmodule Uplink.Packages.Deployment.RouterTest do
                 "installation_id" => 1,
                 "deployment" => %{
                   "hash" => "some-hash",
-                  "archive_path" =>
+                  "archive_url" =>
                     "archives/7a363fba-8ca7-4ea4-8e84-f3785ac97102/packages.zip",
                   "metadata" => %{
                     "cluster" => %{
@@ -30,19 +30,7 @@ defmodule Uplink.Packages.Deployment.RouterTest do
                         "private_key" => "key"
                       },
                       "organization" => %{
-                        "slug" => "upmaru",
-                        "storage" => %{
-                          "bucket" => "something",
-                          "credential" => %{
-                            "access_key_id" => "blah",
-                            "secret_access_key" => "secret"
-                          },
-                          "host" => "something.aws.com",
-                          "port" => 443,
-                          "region" => "ap-southeast-1",
-                          "scheme" => "https://",
-                          "type" => "s3"
-                        }
+                        "slug" => "upmaru"
                       }
                     },
                     "id" => 8000,

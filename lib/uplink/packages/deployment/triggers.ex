@@ -9,7 +9,7 @@ defmodule Uplink.Packages.Deployment.Triggers do
   alias Deployment.Prepare
 
   Deployment
-  |> trigger([currently: "pending"], fn event, deployment ->
+  |> trigger([currently: "preparing"], fn event, deployment ->
     %{actor_id: event.actor_id, deployment_id: deployment.id}
     |> Prepare.new()
     |> Oban.insert()

@@ -1,4 +1,10 @@
 defmodule Uplink.Packages do
+  alias __MODULE__.Archive
+
+  defdelegate create_archive(deployment, params),
+    to: Archive.Manager,
+    as: :create
+
   alias __MODULE__.Installation
 
   defdelegate get_or_create_installation(instellar_installation_id),
@@ -29,8 +35,4 @@ defmodule Uplink.Packages do
   defdelegate parse_metadata(params),
     to: Metadata.Manager,
     as: :parse
-
-  defdelegate render_metadata_storage(metadata),
-    to: Metadata.Manager,
-    as: :render_storage
 end

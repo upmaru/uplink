@@ -4,7 +4,7 @@ defmodule Uplink.Repo.Migrations.CreateArchives do
   def change do
     create table(:archives) do
       add :node, :string, null: false
-      add :location, :string, null: false
+      add :locations, {:array, :string}, null: false
       add :current_state, :citext, defaut: "created", null: false
       
       add :deployment_id, references(:deployments, on_delete: :restrict), null: false

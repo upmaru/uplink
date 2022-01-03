@@ -4,7 +4,7 @@ defmodule Uplink.Repo.Migrations.CreateDeployments do
   def change do
     create table(:deployments) do
       add :hash, :string, null: false
-      add :archive_path, :string, null: false
+      add :archive_url, :string, null: false
       add :current_state, :citext, default: "created"
       
       add :installation_id, references(:installations, on_delete: :restrict), null: false

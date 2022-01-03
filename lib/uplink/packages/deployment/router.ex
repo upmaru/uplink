@@ -47,9 +47,9 @@ defmodule Uplink.Packages.Deployment.Router do
              {:deployment, compute_signature(deployment.hash)},
              metadata
            ),
-         {:ok, %{resource: pending_deployment}} <-
-           Packages.transition_deployment_with(deployment, actor, "pend") do
-      json(conn, :created, %{id: pending_deployment.id})
+         {:ok, %{resource: preparing_deployment}} <-
+           Packages.transition_deployment_with(deployment, actor, "prepare") do
+      json(conn, :created, %{id: preparing_deployment.id})
     else
       {:error, _error} ->
         json(conn, :unprocessable_entity, %{

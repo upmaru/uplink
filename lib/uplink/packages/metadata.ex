@@ -1,17 +1,13 @@
 defmodule Uplink.Packages.Metadata do
   use Ecto.Schema
   import Ecto.Changeset
-
-  alias __MODULE__.{
-    Storage
-  }
-
+  
   @primary_key false
   embedded_schema do
     embeds_one :package, Package, primary_key: false do
       field :slug, :string
     end
-    
+
     embeds_many :instances, Instances, primary_key: false do
       field :slug, :string
     end
@@ -22,8 +18,6 @@ defmodule Uplink.Packages.Metadata do
 
       embeds_one :organization, Organization, primary_key: false do
         field :slug
-
-        embeds_one :storage, Storage
       end
     end
   end
@@ -51,7 +45,6 @@ defmodule Uplink.Packages.Metadata do
     organization
     |> cast(params, [:slug])
     |> validate_required([:slug])
-    |> cast_embed(:storage, required: true)
   end
 
   def parse(params) do

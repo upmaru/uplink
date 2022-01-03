@@ -12,13 +12,13 @@ defmodule Uplink.Packages.Deployment do
 
   schema "deployments" do
     field :hash, :string
-    field :archive_path, :string
+    field :archive_url, :string
     field :current_state, :string, default: "created"
 
     field :metadata, :map, virtual: true
 
     belongs_to :installation, Installation
-    
+
     has_one :archive, Archive
 
     timestamps(type: :utc_datetime_usec)
@@ -26,8 +26,8 @@ defmodule Uplink.Packages.Deployment do
 
   def changeset(deployment, params) do
     deployment
-    |> cast(params, [:hash, :archive_path, :metadata])
-    |> validate_required([:hash, :archive_path, :metadata])
+    |> cast(params, [:hash, :archive_url, :metadata])
+    |> validate_required([:hash, :archive_url, :metadata])
   end
 
   def identifier(%__MODULE__{hash: hash, metadata: metadata}) do
