@@ -14,6 +14,6 @@ defmodule Uplink.Packages.Distribution do
     IO.inspect(conn)
   end
 
-  defp respond(conn, _opts), 
+  defp respond(conn, _opts),
     do: send_resp(conn)
 end

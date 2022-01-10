@@ -44,6 +44,9 @@ defmodule Uplink.MixProject do
       # Downstream
       {:downstream, "~> 1.1.0"},
 
+      # One time password
+      {:pot, "~> 1.0.2"},
+
       # Infrastructure
       {:formation, "~> 0.1.2"},
       {:lexdee, "~> 1.0.1"},
