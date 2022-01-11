@@ -1,4 +1,4 @@
-defmodule Uplink.BootTest do
+defmodule Uplink.Clients.Instellar.SelfTest do
   use ExUnit.Case
 
   alias Uplink.Cache
@@ -30,8 +30,14 @@ defmodule Uplink.BootTest do
     {:ok, bypass: bypass}
   end
 
-  describe "boot sequence" do
-    alias Uplink.Boot
+  describe "when not cached" do
+    alias Uplink.Clients.Instellar.Self
+    
+    setup do
+      Cache.delete(:self)
+      
+      :ok
+    end
 
     test "fetch and store cluster credential", %{bypass: bypass} do
       Bypass.expect_once(bypass, "GET", "/uplink/self", fn conn ->
@@ -40,9 +46,21 @@ defmodule Uplink.BootTest do
         |> Plug.Conn.resp(200, Jason.encode!(@response))
       end)
 
-      assert :ok == Boot.perform()
+      assert %{"credential" => _credential} = Self.show()
+    end
+  end
 
-      assert %{"credential" => credential} = Cache.get(:self)
+  describe "when cached" do
+    alias Uplink.Clients.Instellar.Self
+
+    setup do
+      Cache.put(:self, @response["data"]["attributes"])
+
+      :ok
+    end
+
+    test "return credential without network call" do
+      assert %{"credential" => _credential} = Self.show()
     end
   end
 end
