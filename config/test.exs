@@ -9,7 +9,8 @@ config :uplink, Uplink.Repo,
   queue_interval: 50_000,
   pool: Ecto.Adapters.SQL.Sandbox
 
-config :uplink, :env, :test
+config :uplink, :environment, :test
+config :lexdee, :environment, :test
 
 config :uplink, Oban, plugins: false, queues: false
 

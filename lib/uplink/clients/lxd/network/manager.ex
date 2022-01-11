@@ -1,10 +1,46 @@
 defmodule Uplink.Clients.LXD.Network.Manager do
-  alias Uplink.Cache
+  alias Uplink.{
+    Cache,
+    Clients
+  }
 
-  def list(client) do
-    # case Cache.get({:networks, "managed"}) do
-    #   nil ->
-    #     Lexdee.
-    # end
+  alias Clients.LXD
+  alias LXD.Network
+
+  def leases do
+    with %Network{name: name} = network <- managed(),
+         {:ok, %{body: leases}} <-
+           LXD.client()
+           |> Lexdee.list_network_leases(name) do
+      Enum.map(leases, fn lease ->
+        Network.Lease.parse(lease)
+      end)
+    else
+      error -> error
+    end
+  end
+
+  def managed do
+    Cache.get({:networks, "managed"}) ||
+      LXD.client()
+      |> Lexdee.list_networks(query: [recursive: 1])
+      |> case do
+        {:ok, %{body: networks}} ->
+          network =
+            networks
+            |> Enum.map(fn network ->
+              Network.parse(network)
+            end)
+            |> Enum.find(fn network ->
+              network.managed
+            end)
+
+          Cache.put({:networks, "managed"}, network)
+
+          network
+
+        error ->
+          error
+      end
   end
 end

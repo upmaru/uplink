@@ -32,10 +32,10 @@ defmodule Uplink.Clients.Instellar.SelfTest do
 
   describe "when not cached" do
     alias Uplink.Clients.Instellar.Self
-    
+
     setup do
       Cache.delete(:self)
-      
+
       :ok
     end
 
