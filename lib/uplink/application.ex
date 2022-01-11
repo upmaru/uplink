@@ -9,6 +9,7 @@ defmodule Uplink.Application do
     children = [
       {Uplink.Cache, []},
       {Uplink.Repo, []},
+      {Uplink.Boot, []},
       {Oban, oban_config},
       {Plug.Cowboy, scheme: :http, plug: Uplink.Router, port: 4040}
     ]

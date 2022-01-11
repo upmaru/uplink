@@ -1,9 +1,15 @@
 defmodule Uplink.Clients.Instellar do
   alias __MODULE__.{
-    Installation
+    Installation,
+    Self
   }
 
   @endpoint "https://web.instellar.app/uplink"
+  
+  defdelegate get_self(), 
+    to: Self,
+    as: :show
+     
 
   defdelegate deployment_metadata(deployment),
     to: Installation,
