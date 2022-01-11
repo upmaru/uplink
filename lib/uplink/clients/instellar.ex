@@ -5,11 +5,10 @@ defmodule Uplink.Clients.Instellar do
   }
 
   @endpoint "https://web.instellar.app/uplink"
-  
-  defdelegate get_self(), 
+
+  defdelegate get_self(),
     to: Self,
     as: :show
-     
 
   defdelegate deployment_metadata(deployment),
     to: Installation,
