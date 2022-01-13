@@ -2,8 +2,12 @@ defmodule Uplink.Packages.Installation do
   use Ecto.Schema
   import Ecto.Changeset
 
+  use Eventful.Transitable,
+    transitions_module: __MODULE__.Transitions
+
   schema "installations" do
-    field(:instellar_installation_id, :integer)
+    field :instellar_installation_id, :integer
+    field :current_state, :string, default: "synced"
 
     timestamps(type: :utc_datetime_usec)
   end

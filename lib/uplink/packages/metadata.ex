@@ -12,7 +12,7 @@ defmodule Uplink.Packages.Metadata do
       end
     end
 
-    embeds_many :instances, Instances, primary_key: false do
+    embeds_many :instances, Instance, primary_key: false do
       field :slug, :string
     end
 

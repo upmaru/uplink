@@ -4,6 +4,7 @@ defmodule Uplink.Repo.Migrations.CreateInstallations do
   def change do
     create table(:installations) do
       add :instellar_installation_id, :integer, null: false
+      add :current_state, :citext, default: "synced"
       
       timestamps(type: :utc_datetime_usec)
     end
