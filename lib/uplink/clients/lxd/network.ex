@@ -12,7 +12,7 @@ defmodule Uplink.Clients.LXD.Network do
     status
     locations
   )a
-  
+
   @required_attrs ~w(
     config
     type

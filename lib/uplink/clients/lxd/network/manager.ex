@@ -8,7 +8,7 @@ defmodule Uplink.Clients.LXD.Network.Manager do
   alias LXD.Network
 
   def leases do
-    with %Network{name: name} = network <- managed(),
+    with %Network{name: name} <- managed(),
          {:ok, %{body: leases}} <-
            LXD.client()
            |> Lexdee.list_network_leases(name) do
