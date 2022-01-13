@@ -1,5 +1,9 @@
 defmodule Uplink.Clients.LXD do
   alias Uplink.Clients.Instellar
+  
+  defdelegate network_leases(), 
+    to: __MODULE__.Network.Manager,
+    as: :leases
 
   def client do
     %{
