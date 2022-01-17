@@ -7,12 +7,12 @@ defmodule Uplink.Repo.Migrations.CreateDeployments do
       add :archive_url, :string, null: false
       add :current_state, :citext, default: "created"
       
-      add :installation_id, references(:installations, on_delete: :restrict), null: false
-      
+      add :app_id, references(:apps, on_delete: :restrict), null: false
+            
       timestamps(type: :utc_datetime_usec)
     end
     
-    create index(:deployments, [:installation_id])
-    create index(:deployments, [:installation_id, :hash], unique: true)
+    create index(:deployments, [:app_id])
+    create index(:deployments, [:app_id, :hash], unique: true)
   end
 end

@@ -1,4 +1,10 @@
 defmodule Uplink.Packages do
+  alias __MODULE__.App
+
+  defdelegate get_or_create_app(slug),
+    to: App.Manager,
+    as: :get_or_create
+
   alias __MODULE__.Archive
 
   defdelegate create_archive(deployment, params),
@@ -7,9 +13,9 @@ defmodule Uplink.Packages do
 
   alias __MODULE__.Installation
 
-  defdelegate get_or_create_installation(instellar_installation_id, slug),
+  defdelegate create_installation(deployment, instellar_installation_id),
     to: Installation.Manager,
-    as: :get_or_create
+    as: :create
 
   alias __MODULE__.Deployment
 
@@ -17,9 +23,9 @@ defmodule Uplink.Packages do
     to: Deployment.Manager,
     as: :get
 
-  defdelegate create_deployment(installation, params),
+  defdelegate get_or_create_deployment(app, params),
     to: Deployment.Manager,
-    as: :create
+    as: :get_or_create
 
   defdelegate transition_deployment_with(
                 deployment,

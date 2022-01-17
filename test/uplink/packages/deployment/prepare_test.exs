@@ -12,6 +12,8 @@ defmodule Uplink.Packages.Deployment.PrepareTest do
     Prepare
   }
 
+  @app_slug "upmaru/something-1640927800"
+
   setup do
     :ok = Ecto.Adapters.SQL.Sandbox.checkout(Uplink.Repo)
 
@@ -54,10 +56,12 @@ defmodule Uplink.Packages.Deployment.PrepareTest do
         identifier: "zacksiri"
       })
 
-    installation = Packages.get_or_create_installation(1, "upmaru/uplink")
+    app = Packages.get_or_create_app(@app_slug)
 
     {:ok, deployment} =
-      Packages.create_deployment(installation, deployment_params)
+      Packages.get_or_create_deployment(app, deployment_params)
+
+    {:ok, installation} = Packages.create_installation(deployment, 1)
 
     {:ok, _transition} =
       Packages.transition_deployment_with(deployment, actor, "prepare")

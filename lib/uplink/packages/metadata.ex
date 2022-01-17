@@ -52,7 +52,7 @@ defmodule Uplink.Packages.Metadata do
     |> validate_required([:slug])
   end
 
-  def installation_slug(%__MODULE__{package: package}) do
+  def app_slug(%__MODULE__{package: package}) do
     [package.organization.slug, package.slug]
     |> Enum.join("/")
   end

@@ -3,8 +3,9 @@ defmodule Uplink.Packages.Deployment do
   import Ecto.Changeset
 
   alias Uplink.Packages.{
-    Installation,
-    Archive
+    App,
+    Archive,
+    Installation
   }
 
   use Eventful.Transitable,
@@ -17,9 +18,11 @@ defmodule Uplink.Packages.Deployment do
 
     field :metadata, :map, virtual: true
 
-    belongs_to :installation, Installation
+    belongs_to :app, App
 
     has_one :archive, Archive
+
+    has_many :installations, Installation
 
     timestamps(type: :utc_datetime_usec)
   end

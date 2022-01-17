@@ -4,23 +4,18 @@ defmodule Uplink.Packages.Installation.Manager do
     Repo
   }
 
-  alias Packages.Installation
-
-  @spec get_or_create(integer | binary, binary) :: %Installation{}
-  def get_or_create(instellar_installation_id, slug) do
+  alias Packages.{
+    Deployment,
     Installation
-    |> Repo.get_by(instellar_installation_id: instellar_installation_id)
-    |> case do
-      nil ->
-        %Installation{}
-        |> Installation.changeset(%{
-          instellar_installation_id: instellar_installation_id,
-          slug: slug
-        })
-        |> Repo.insert!()
+  }
 
-      %Installation{} = installation ->
-        installation
-    end
+  @spec create(%Deployment{}, integer | binary) ::
+          {:ok, %Installation{}} | {:error, Ecto.Changeset.t()}
+  def create(%Deployment{id: deployment_id}, instellar_installation_id) do
+    %Installation{deployment_id: deployment_id}
+    |> Installation.changeset(%{
+      instellar_installation_id: instellar_installation_id
+    })
+    |> Repo.insert()
   end
 end
