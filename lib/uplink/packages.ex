@@ -7,7 +7,7 @@ defmodule Uplink.Packages do
 
   alias __MODULE__.Installation
 
-  defdelegate get_or_create_installation(instellar_installation_id),
+  defdelegate get_or_create_installation(instellar_installation_id, slug),
     to: Installation.Manager,
     as: :get_or_create
 

@@ -13,7 +13,7 @@ defmodule Uplink.Packages.Installation.ManageTest do
     alias Installation.Manager
 
     test "return installation" do
-      assert %Installation{} = Manager.get_or_create(1)
+      assert %Installation{} = Manager.get_or_create(1, "upmaru/instellar")
     end
   end
 end

@@ -6,6 +6,7 @@ defmodule Uplink.Packages.Installation do
     transitions_module: __MODULE__.Transitions
 
   schema "installations" do
+    field :slug, :string
     field :instellar_installation_id, :integer
     field :current_state, :string, default: "synced"
 
@@ -14,7 +15,7 @@ defmodule Uplink.Packages.Installation do
 
   def changeset(installation, params) do
     installation
-    |> cast(params, [:instellar_installation_id])
-    |> validate_required([:instellar_installation_id])
+    |> cast(params, [:instellar_installation_id, :slug])
+    |> validate_required([:instellar_installation_id, :slug])
   end
 end

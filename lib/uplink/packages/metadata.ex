@@ -52,6 +52,11 @@ defmodule Uplink.Packages.Metadata do
     |> validate_required([:slug])
   end
 
+  def installation_slug(%__MODULE__{package: package}) do
+    [package.organization.slug, package.slug]
+    |> Enum.join("/")
+  end
+
   def parse(params) do
     %__MODULE__{}
     |> changeset(params)

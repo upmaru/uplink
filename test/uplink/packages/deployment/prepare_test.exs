@@ -54,7 +54,7 @@ defmodule Uplink.Packages.Deployment.PrepareTest do
         identifier: "zacksiri"
       })
 
-    installation = Packages.get_or_create_installation(1)
+    installation = Packages.get_or_create_installation(1, "upmaru/uplink")
 
     {:ok, deployment} =
       Packages.create_deployment(installation, deployment_params)

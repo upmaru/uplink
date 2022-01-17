@@ -35,13 +35,18 @@ defmodule Uplink.Packages.Deployment.Router do
       "deployment" => deployment_params
     } = conn.body_params
 
-    with %Members.Actor{} = actor <- Members.get_actor(actor_params),
+    with {:ok, %Metadata{} = metadata} <-
+           deployment_params
+           |> Map.get("metadata")
+           |> Packages.parse_metadata(),
+         %Members.Actor{} = actor <- Members.get_actor(actor_params),
          %Installation{} = installation <-
-           Packages.get_or_create_installation(installation_id),
+           Packages.get_or_create_installation(
+             installation_id,
+             Metadata.installation_slug(metadata)
+           ),
          {:ok, %Deployment{} = deployment} <-
            Packages.create_deployment(installation, deployment_params),
-         {:ok, %Metadata{} = metadata} <-
-           Packages.parse_metadata(deployment.metadata),
          :ok <-
            Cache.put(
              {:deployment, compute_signature(deployment.hash)},
