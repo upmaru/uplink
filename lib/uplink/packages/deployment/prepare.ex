@@ -6,21 +6,14 @@ defmodule Uplink.Packages.Deployment.Prepare do
   alias Uplink.{
     Members,
     Packages,
-    Cache,
     Repo
   }
 
   alias Packages.{
-    Deployment,
-    Metadata
+    Deployment
   }
 
-  alias Uplink.Clients.Instellar
-
   @logger_prefix "[Uplink.Packages.Deployment.Prepare]"
-
-  import Uplink.Secret.Signature,
-    only: [compute_signature: 1]
 
   @impl Oban.Worker
   def perform(%Oban.Job{
@@ -30,25 +23,11 @@ defmodule Uplink.Packages.Deployment.Prepare do
       deployment =
       Deployment
       |> Repo.get(deployment_id)
-      |> Repo.preload([:installation])
-      |> retrieve_metadata()
+      |> Repo.preload([:app])
 
     Members.Actor
     |> Repo.get(actor_id)
     |> execute(deployment)
-  end
-
-  defp retrieve_metadata(%Deployment{hash: hash} = deployment) do
-    key_signature = compute_signature(hash)
-
-    Cache.get({:deployment, key_signature})
-    |> case do
-      %Metadata{} = metadata ->
-        Map.merge(deployment, %{metadata: metadata})
-
-      nil ->
-        fetch_deployment_metadata(deployment)
-    end
   end
 
   defp execute(
@@ -87,17 +66,6 @@ defmodule Uplink.Packages.Deployment.Prepare do
         Packages.transition_deployment_with(deployment, actor, "fail",
           comment: comment
         )
-    end
-  end
-
-  defp fetch_deployment_metadata(deployment) do
-    with {:ok, metadata_params} <- Instellar.deployment_metadata(deployment),
-         {:ok, %Metadata{} = metadata} <-
-           Packages.parse_metadata(metadata_params) do
-      key_signature = compute_signature(deployment.hash)
-
-      Cache.put({:deployment, key_signature}, metadata)
-      Map.merge(deployment, %{metadata: metadata})
     end
   end
 

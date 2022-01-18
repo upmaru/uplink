@@ -44,31 +44,23 @@ defmodule Uplink.Packages.Deployment.Router do
            metadata
            |> Metadata.app_slug()
            |> Packages.get_or_create_app(),
-         {:ok, %Deployment{current_state: "created"} = deployment} <-
+         {:ok, %Deployment{} = deployment} <-
            Packages.get_or_create_deployment(app, deployment_params),
          %Members.Actor{} = actor <- Members.get_actor(actor_params),
          {:ok, %Installation{} = _installation} <-
            Packages.create_installation(deployment, instellar_installation_id),
          :ok <-
            Cache.put(
-             {:deployment, compute_signature(deployment.hash)},
+             {:deployment, compute_signature(deployment.hash),
+              instellar_installation_id},
              metadata
-           ),
-         {:ok, %{resource: preparing_deployment}} <-
-           Packages.transition_deployment_with(deployment, actor, "prepare") do
-      json(conn, :created, %{id: preparing_deployment.id})
+           ) do
+      if deployment.current_state == "created" do
+        Packages.transition_deployment_with(deployment, actor, "prepare")
+      end
+
+      json(conn, :created, %{id: deployment.id})
     else
-      {:ok, %Deployment{current_state: "live"} = deployment} ->
-        case Packages.create_installation(deployment, instellar_installation_id) do
-          {:ok, _installation} ->
-            json(conn, :created, %{id: deployment.id})
-
-          {:error, _changeset} ->
-            json(conn, :unprocessable_entity, %{
-              error: %{message: "invalid deployment parameters"}
-            })
-        end
-
       {:error, _error} ->
         json(conn, :unprocessable_entity, %{
           error: %{message: "invalid deployment parameters"}

@@ -45,12 +45,6 @@ defmodule Uplink.Packages.Deployment.PrepareTest do
       }
     }
 
-    Application.put_env(
-      :uplink,
-      Uplink.Clients.Instellar,
-      endpoint: "http://localhost:#{bypass.port}/uplink"
-    )
-
     {:ok, actor} =
       Members.create_actor(%{
         identifier: "zacksiri"
@@ -61,37 +55,20 @@ defmodule Uplink.Packages.Deployment.PrepareTest do
     {:ok, deployment} =
       Packages.get_or_create_deployment(app, deployment_params)
 
-    {:ok, installation} = Packages.create_installation(deployment, 1)
+    {:ok, _installation} = Packages.create_installation(deployment, 1)
 
     {:ok, _transition} =
       Packages.transition_deployment_with(deployment, actor, "prepare")
 
-    {:ok,
-     actor: actor,
-     deployment_params: deployment_params,
-     deployment: deployment,
-     bypass: bypass}
+    {:ok, actor: actor, deployment: deployment, bypass: bypass}
   end
 
   test "successfully prepare deployment", %{
     deployment: deployment,
-    deployment_params: deployment_params,
     actor: actor,
     bypass: bypass
   } do
     Cache.delete_all()
-
-    metadata_response = %{
-      "data" => %{
-        "attributes" => Map.get(deployment_params, "metadata")
-      }
-    }
-
-    Bypass.expect_once(bypass, "GET", "/uplink/installations/1", fn conn ->
-      conn
-      |> Plug.Conn.put_resp_header("content-type", "application/json")
-      |> Plug.Conn.resp(200, Jason.encode!(metadata_response))
-    end)
 
     Bypass.expect_once(bypass, "GET", "/archives/packages.zip", fn conn ->
       Plug.Conn.send_file(conn, 200, "test/fixtures/archive/packages.zip")

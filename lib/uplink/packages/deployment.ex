@@ -33,12 +33,7 @@ defmodule Uplink.Packages.Deployment do
     |> validate_required([:hash, :archive_url, :metadata])
   end
 
-  def identifier(%__MODULE__{hash: hash, metadata: metadata}) do
-    Path.join([
-      ~s(deployments),
-      metadata.package.organization.slug,
-      metadata.package.slug,
-      hash
-    ])
+  def identifier(%__MODULE__{hash: hash, app: app}) do
+    Path.join([~s(deployments), app.slug, hash])
   end
 end
