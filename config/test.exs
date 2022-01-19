@@ -1,9 +1,13 @@
 use Mix.Config
 
 config :uplink, Uplink.Repo,
-  username: System.get_env("UPLINK_DB_USERNAME") || System.get_env("POSTGRES_USERNAME"),
-  password: System.get_env("UPLINK_DB_PASSWORD") || System.get_env("POSTGRES_PASSWORD"),
-  hostname: System.get_env("UPLINK_DB_HOST") || System.get_env("POSTGRES_HOST") || "localhost",
+  username:
+    System.get_env("UPLINK_DB_USERNAME") || System.get_env("POSTGRES_USERNAME"),
+  password:
+    System.get_env("UPLINK_DB_PASSWORD") || System.get_env("POSTGRES_PASSWORD"),
+  hostname:
+    System.get_env("UPLINK_DB_HOST") || System.get_env("POSTGRES_HOST") ||
+      "localhost",
   database: "uplink_test",
   queue_target: 50_000,
   queue_interval: 50_000,
