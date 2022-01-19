@@ -1,0 +1,78 @@
+{
+  "type": "sync",
+  "status": "Success",
+  "status_code": 200,
+  "operation": "",
+  "error_code": 0,
+  "error": "",
+  "metadata": [
+    {
+      "config": {
+        "bridge.mode": "fan",
+        "fan.underlay_subnet": "10.130.0.0/16",
+        "ipv4.nat": "true"
+      },
+      "description": "",
+      "name": "lxdfan0",
+      "type": "bridge",
+      "used_by": [
+        "/1.0/profiles/default",
+        "/1.0/instances/artellectual-web-01",
+        "/1.0/instances/helipad-web-test-01"
+      ],
+      "managed": true,
+      "status": "Created",
+      "locations": ["ubuntu-s-1vcpu-1gb-sgp1-01"]
+    },
+    {
+      "config": {},
+      "description": "",
+      "name": "lo",
+      "type": "loopback",
+      "used_by": [],
+      "managed": false,
+      "status": "",
+      "locations": null
+    },
+    {
+      "config": {},
+      "description": "",
+      "name": "eth0",
+      "type": "physical",
+      "used_by": null,
+      "managed": false,
+      "status": "",
+      "locations": null
+    },
+    {
+      "config": {},
+      "description": "",
+      "name": "eth1",
+      "type": "physical",
+      "used_by": null,
+      "managed": false,
+      "status": "",
+      "locations": null
+    },
+    {
+      "config": {},
+      "description": "",
+      "name": "lxdfan0-mtu",
+      "type": "unknown",
+      "used_by": null,
+      "managed": false,
+      "status": "",
+      "locations": null
+    },
+    {
+      "config": {},
+      "description": "",
+      "name": "lxdfan0-fan",
+      "type": "unknown",
+      "used_by": null,
+      "managed": false,
+      "status": "",
+      "locations": null
+    }
+  ]
+}

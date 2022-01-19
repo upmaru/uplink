@@ -24,6 +24,10 @@ uplink-*.tar
 
 .elixir_ls
 
+.DS_Store
+
+/tmp
+
 mnesia
 
 .mnesia

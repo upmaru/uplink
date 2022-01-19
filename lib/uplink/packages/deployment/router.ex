@@ -9,8 +9,10 @@ defmodule Uplink.Packages.Deployment.Router do
   }
 
   alias Packages.{
-    Installation,
-    Deployment
+    App,
+    Install,
+    Deployment,
+    Metadata
   }
 
   import Uplink.Secret.Signature,
@@ -30,22 +32,40 @@ defmodule Uplink.Packages.Deployment.Router do
   post "/" do
     %{
       "actor" => actor_params,
-      "installation_id" => installation_id,
+      "installation_id" => instellar_installation_id,
       "deployment" => deployment_params
     } = conn.body_params
 
-    with %Members.Actor{} = actor <- Members.get_actor(actor_params),
-         %Installation{} = installation <-
-           Packages.get_or_create_installation(installation_id),
+    with {:ok, %Metadata{} = metadata} <-
+           deployment_params
+           |> Map.get("metadata")
+           |> Packages.parse_metadata(),
+         %App{} = app <-
+           metadata
+           |> Metadata.app_slug()
+           |> Packages.get_or_create_app(),
          {:ok, %Deployment{} = deployment} <-
-           Packages.create_deployment(installation, deployment_params),
-         {:ok, %{resource: pending_deployment}} <-
-           Packages.transition_deployment_with(deployment, actor, "pend") do
-      key_signature = compute_signature(pending_deployment.hash)
+           Packages.get_or_create_deployment(app, deployment_params),
+         %Members.Actor{} = actor <- Members.get_actor(actor_params),
+         {:ok, %Install{} = _install} <-
+           Packages.create_install(deployment, instellar_installation_id),
+         :ok <-
+           Cache.put(
+             {:deployment, compute_signature(deployment.hash),
+              instellar_installation_id},
+             metadata
+           ) do
+      if deployment.current_state == "created" do
+        Packages.transition_deployment_with(deployment, actor, "prepare")
+      end
 
-      Cache.put({:deployment, key_signature}, pending_deployment.metadata)
       json(conn, :created, %{id: deployment.id})
     else
+      {:error, _error} ->
+        json(conn, :unprocessable_entity, %{
+          error: %{message: "invalid deployment parameters"}
+        })
+
       {:actor, :not_found} ->
         json(conn, :not_found, %{error: %{message: "actor not found"}})
     end

@@ -4,7 +4,11 @@ defmodule Uplink.Packages.Deployment.Manager do
     Repo
   }
 
-  alias Packages.Deployment
+  alias Packages.{
+    App,
+    Deployment
+  }
+
   alias Deployment.Event
 
   @spec get(integer()) :: %Deployment{}
@@ -12,11 +16,21 @@ defmodule Uplink.Packages.Deployment.Manager do
     Repo.get(Deployment, id)
   end
 
-  @spec create(%Packages.Installation{}, map) :: {:ok, %Deployment{}}
-  def create(installation, params) do
-    %Deployment{installation_id: installation.id}
-    |> Deployment.changeset(params)
-    |> Repo.insert()
+  @spec get_or_create(%App{}, map) :: {:ok, %Deployment{}}
+  def get_or_create(%App{id: app_id}, params) do
+    hash = Map.get(params, :hash) || Map.get(params, "hash")
+
+    Deployment
+    |> Repo.get_by(app_id: app_id, hash: hash)
+    |> case do
+      nil ->
+        %Deployment{app_id: app_id}
+        |> Deployment.changeset(params)
+        |> Repo.insert()
+
+      %Deployment{} = deployment ->
+        {:ok, deployment}
+    end
   end
 
   def transition_with(deployment, actor, event_name, opts \\ []) do

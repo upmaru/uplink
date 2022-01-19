@@ -4,4 +4,6 @@ config :uplink, Uplink.Repo,
   database: System.get_env("UPLINK_DB_NAME"),
   username: System.get_env("UPLINK_DB_USERNAME"),
   password: System.get_env("UPLINK_DB_PASSWORD"),
-  hostname: System.get_env("UPLINK_DB_HOST")
+  hostname: System.get_env("UPLINK_DB_HOST") || "localhost",
+  show_sensitive_data_on_connection_error: true,
+  pool_size: 10

@@ -1,0 +1,24 @@
+{
+  "type": "sync",
+  "status": "Success",
+  "status_code": 200,
+  "operation": "",
+  "error_code": 0,
+  "error": "",
+  "metadata": [
+    {
+      "hostname": "helipad-web-test-01",
+      "hwaddr": "00:16:3e:8c:10:7b",
+      "address": "240.0.3.227",
+      "type": "dynamic",
+      "location": "ubuntu-s-1vcpu-1gb-sgp1-01"
+    },
+    {
+      "hostname": "artellectual-web-01",
+      "hwaddr": "00:16:3e:ec:13:2f",
+      "address": "240.0.3.194",
+      "type": "dynamic",
+      "location": "ubuntu-s-1vcpu-1gb-sgp1-01"
+    }
+  ]
+}
