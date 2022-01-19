@@ -4,7 +4,7 @@ defmodule Uplink.Packages.Distribution do
 
   alias Uplink.Clients.LXD
 
-  # plug :validate
+  plug :validate
 
   plug :serve_or_proxy
 

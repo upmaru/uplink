@@ -6,7 +6,7 @@ defmodule Uplink.Clients.LXD.Network.Manager do
 
   alias Clients.LXD
   alias LXD.Network
-
+  
   def leases do
     with %Network{name: name} <- managed(),
          {:ok, %{body: leases}} <-
