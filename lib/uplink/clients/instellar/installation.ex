@@ -6,13 +6,13 @@ defmodule Uplink.Clients.Instellar.Installation do
   }
 
   alias Packages.{
-    Installation
+    Install
   }
 
   import Uplink.Secret.Signature,
     only: [compute_signature: 1]
 
-  def metadata(%Installation{
+  def metadata(%Install{
         instellar_installation_id: instellar_installation_id,
         deployment: deployment
       }) do

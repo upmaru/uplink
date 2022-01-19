@@ -10,7 +10,7 @@ defmodule Uplink.Packages.Deployment.Router do
 
   alias Packages.{
     App,
-    Installation,
+    Install,
     Deployment,
     Metadata
   }
@@ -47,8 +47,8 @@ defmodule Uplink.Packages.Deployment.Router do
          {:ok, %Deployment{} = deployment} <-
            Packages.get_or_create_deployment(app, deployment_params),
          %Members.Actor{} = actor <- Members.get_actor(actor_params),
-         {:ok, %Installation{} = _installation} <-
-           Packages.create_installation(deployment, instellar_installation_id),
+         {:ok, %Install{} = _install} <-
+           Packages.create_install(deployment, instellar_installation_id),
          :ok <-
            Cache.put(
              {:deployment, compute_signature(deployment.hash),

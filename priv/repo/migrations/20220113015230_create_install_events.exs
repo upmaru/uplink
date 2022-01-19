@@ -1,15 +1,15 @@
-defmodule Uplink.Repo.Migrations.CreateInstallationEvents do
+defmodule Uplink.Repo.Migrations.CreateInstallEvents do
   use Ecto.Migration
 
   def change do
-    create table(:installation_events) do
+    create table(:install_events) do
       add(:name, :string, null: false)
       add(:domain, :string, null: false)
       add(:metadata, :map, default: "{}")
       
       add(
-        :installation_id,
-        references(:installations, on_delete: :restrict),
+        :install_id,
+        references(:installs, on_delete: :restrict),
         null: false
       )
       
@@ -22,7 +22,7 @@ defmodule Uplink.Repo.Migrations.CreateInstallationEvents do
       timestamps(type: :utc_datetime_usec)
     end
     
-    create index(:installation_events, [:installation_id])
-    create index(:installation_events, [:actor_id])
+    create index(:install_events, [:install_id])
+    create index(:install_events, [:actor_id])
   end
 end

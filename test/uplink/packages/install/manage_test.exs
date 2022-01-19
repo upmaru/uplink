@@ -1,11 +1,14 @@
-defmodule Uplink.Packages.Installation.ManageTest do
+defmodule Uplink.Packages.Install.ManageTest do
   use ExUnit.Case
 
-  alias Uplink.Packages
+  alias Uplink.{
+    Members,
+    Packages
+  }
 
   alias Packages.{
     Metadata,
-    Installation
+    Install
   }
 
   @deployment_params %{
@@ -52,11 +55,28 @@ defmodule Uplink.Packages.Installation.ManageTest do
     {:ok, deployment: deployment}
   end
 
-  describe "get_or_create" do
-    alias Installation.Manager
+  describe "create" do
+    alias Install.Manager
 
     test "return installation", %{deployment: deployment} do
-      assert {:ok, %Installation{}} = Manager.create(deployment, 1)
+      assert {:ok, %Install{}} = Manager.create(deployment, 1)
+    end
+  end
+
+  describe "transition_with" do
+    alias Install.Manager
+
+    setup %{deployment: deployment} do
+      {:ok, %Install{} = install} = Manager.create(deployment, 1)
+
+      {:ok, actor} = Members.create_actor(%{"identifier" => "zacksiri"})
+
+      {:ok, install: install, actor: actor}
+    end
+
+    test "can transition state", %{install: install, actor: actor} do
+      assert {:ok, _transition} =
+               Manager.transition_with(install, actor, "deploy")
     end
   end
 end

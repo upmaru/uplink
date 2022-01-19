@@ -5,7 +5,7 @@ defmodule Uplink.Packages.Deployment do
   alias Uplink.Packages.{
     App,
     Archive,
-    Installation
+    Install
   }
 
   use Eventful.Transitable,
@@ -22,7 +22,7 @@ defmodule Uplink.Packages.Deployment do
 
     has_one :archive, Archive
 
-    has_many :installations, Installation
+    has_many :installs, Install
 
     timestamps(type: :utc_datetime_usec)
   end

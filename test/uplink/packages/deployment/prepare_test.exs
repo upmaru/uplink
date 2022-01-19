@@ -55,7 +55,7 @@ defmodule Uplink.Packages.Deployment.PrepareTest do
     {:ok, deployment} =
       Packages.get_or_create_deployment(app, deployment_params)
 
-    {:ok, _installation} = Packages.create_installation(deployment, 1)
+    {:ok, _installation} = Packages.create_install(deployment, 1)
 
     {:ok, _transition} =
       Packages.transition_deployment_with(deployment, actor, "prepare")

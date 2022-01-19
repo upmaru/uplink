@@ -1,8 +1,8 @@
-defmodule Uplink.Repo.Migrations.CreateInstallations do
+defmodule Uplink.Repo.Migrations.CreateInstalls do
   use Ecto.Migration
 
   def change do
-    create table(:installations) do
+    create table(:installs) do
       add :instellar_installation_id, :integer, null: false
       add :current_state, :citext, default: "created"
       
@@ -11,6 +11,6 @@ defmodule Uplink.Repo.Migrations.CreateInstallations do
       timestamps(type: :utc_datetime_usec)
     end
     
-    create index(:installations, [:deployment_id, :instellar_installation_id], unique: true)
+    create index(:installs, [:deployment_id, :instellar_installation_id], unique: true)
   end
 end

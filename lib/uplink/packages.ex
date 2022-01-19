@@ -11,10 +11,10 @@ defmodule Uplink.Packages do
     to: Archive.Manager,
     as: :create
 
-  alias __MODULE__.Installation
+  alias __MODULE__.Install
 
-  defdelegate create_installation(deployment, instellar_installation_id),
-    to: Installation.Manager,
+  defdelegate create_install(deployment, instellar_installation_id),
+    to: Install.Manager,
     as: :create
 
   alias __MODULE__.Deployment
