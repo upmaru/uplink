@@ -1,6 +1,6 @@
 # Uplink
 
-![build](https://github.com/upmaru/uplink/actions/workflows/ci/badge.svg)
+![build](https://github.com/upmaru/uplink/actions/workflows/ci.yml/badge.svg)
 
 ## Installation
 
