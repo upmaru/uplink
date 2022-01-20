@@ -2,9 +2,15 @@ defmodule Uplink.Packages.Distribution do
   use Plug.Builder
   plug Plug.Logger
 
-  alias Uplink.Clients.LXD
+  alias Uplink.{
+    Clients,
+    Packages
+  }
+  
+  alias Clients.LXD
+  alias Packages.Deployment
 
-  plug :validate
+  # plug :validate
 
   plug :serve_or_proxy
 
@@ -14,6 +20,8 @@ defmodule Uplink.Packages.Distribution do
   #   from: "tmp/deployments"
 
   plug :respond
+  
+  import Ecto.Query, only: [where: 3, join: 3, preload: 2, limit: 2]
 
   defp validate(conn, _opts) do
     case LXD.network_leases() do
@@ -42,6 +50,31 @@ defmodule Uplink.Packages.Distribution do
   end
 
   defp serve_or_proxy(conn, _opts) do
+    %{"glob" => params} = conn.params
+    
+    [org, package] = Enum.take(params, 2)
+    app_slug = "#{org}/#{package}"
+    
+    Deployment
+    |> join(:inner, [d], a in assoc(d, :app))
+    |> where([d, a], 
+      a.slug == ^app_slug 
+        and d.current_state == ^"live"
+    )
+    |> preload([:archive])
+    |> limit(1)
+    |> Repo.one()
+    |> case do
+      %Deployment{archive: archive} ->
+      
+      nil ->
+        conn
+        |> send_resp(:not_found, "")
+        |> halt()
+    end
+      
+      
+      
     IO.inspect(conn)
   end
 
