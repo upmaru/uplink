@@ -3,24 +3,25 @@ defmodule Uplink.Clients.LXD.Instance.Manager do
     Cache,
     Clients
   }
-  
+
   alias Clients.LXD
   alias LXD.Instance
-  
+
   def list do
-    Cache.get(:instances) || 
+    Cache.get(:instances) ||
       LXD.client()
       |> Lexdee.list_instances(query: [recursive: 1])
       |> case do
         {:ok, %{body: instances}} ->
-          instances = 
+          instances =
             instances
-            |> Enum.map(fn instance -> 
+            |> Enum.map(fn instance ->
               Instance.parse(instance)
             end)
-          
+
           Cache.put(:instances, instances)
-        error -> 
+
+        error ->
           error
       end
   end
