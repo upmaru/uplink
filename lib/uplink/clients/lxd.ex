@@ -1,5 +1,9 @@
 defmodule Uplink.Clients.LXD do
   alias Uplink.Clients.Instellar
+  
+  defdelegate list_instances(), 
+    to: __MODULE__.Instance.Manager,
+    as: :list
 
   defdelegate managed_network(),
     to: __MODULE__.Network.Manager,
