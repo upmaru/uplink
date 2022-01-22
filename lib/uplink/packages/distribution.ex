@@ -25,8 +25,6 @@ defmodule Uplink.Packages.Distribution do
     only: [where: 3, join: 4, preload: 2, limit: 2]
 
   defp validate(conn, _opts) do
-    IO.inspect(conn)
-
     case LXD.network_leases() do
       leases when is_list(leases) ->
         ip_addresses =
@@ -43,7 +41,7 @@ defmodule Uplink.Packages.Distribution do
           conn
         else
           conn
-          |> send_resp(:not_allowed, "")
+          |> send_resp(:forbidden, "")
           |> halt()
         end
 
@@ -55,7 +53,7 @@ defmodule Uplink.Packages.Distribution do
   defp serve_or_proxy(conn, _opts) do
     %{"glob" => params} = conn.params
 
-    [org, package] = Enum.take(params, 2)
+    [org, package] = Enum.take(conn.path_info, 2)
     app_slug = "#{org}/#{package}"
 
     Deployment
@@ -95,7 +93,7 @@ defmodule Uplink.Packages.Distribution do
       port = Keyword.get(router_config, :port)
 
       upstream =
-        ["http://", "#{node_nost_name}:#{port}", conn.request_path]
+        ["http://", "#{node_host_name}:#{port}", conn.request_path]
         |> Path.join()
 
       reverse_proxy_options = ReverseProxyPlug.init(upstream: upstream)
