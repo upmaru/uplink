@@ -93,7 +93,7 @@ defmodule Uplink.Packages.Distribution do
       port = Keyword.get(router_config, :port, 4040)
 
       upstream =
-        ["http://", "#{node_host_name}:#{port}", conn.request_path]
+        ["#{conn.scheme}://", "#{node_host_name}:#{port}", conn.request_path]
         |> Path.join()
 
       reverse_proxy_options = ReverseProxyPlug.init(upstream: upstream)

@@ -9,6 +9,8 @@ defmodule Uplink.Packages.DistributionTest do
     Cache
   }
 
+  alias Clients.LXD
+
   @app_slug "upmaru/something-1640927800"
 
   setup do
@@ -20,6 +22,11 @@ defmodule Uplink.Packages.DistributionTest do
       "credential" => %{
         "endpoint" => "http://localhost:#{bypass.port}"
       }
+    })
+
+    Cache.put({:networks, "managed"}, %LXD.Network{
+      managed: true,
+      name: "lxdfan0"
     })
 
     deployment_payload = %{
@@ -72,39 +79,45 @@ defmodule Uplink.Packages.DistributionTest do
     {:ok, %{resource: preparing_deployment}} =
       Packages.transition_deployment_with(deployment, actor, "prepare")
 
-    {:ok, actor: actor, deployment: preparing_deployment, bypass: bypass}
+    leases_list = File.read!("test/fixtures/lxd/networks/leases.json")
+
+    allowed_ips =
+      leases_list
+      |> Jason.decode!()
+      |> Map.get("metadata")
+      |> Enum.map(fn data ->
+        data["address"]
+      end)
+
+    %LXD.Network{} = network = LXD.managed_network()
+
+    Bypass.expect(
+      bypass,
+      "GET",
+      "/1.0/networks/#{network.name}/leases",
+      fn conn ->
+        conn
+        |> Plug.Conn.put_resp_header("content-type", "application/json")
+        |> Plug.Conn.resp(200, leases_list)
+      end
+    )
+
+    [first, second, third, fourth] =
+      List.first(allowed_ips)
+      |> String.split(".")
+      |> Enum.map(&String.to_integer/1)
+
+    address = {first, second, third, fourth}
+
+    {:ok,
+     actor: actor,
+     deployment: preparing_deployment,
+     bypass: bypass,
+     allowed_ips: allowed_ips,
+     address: address}
   end
 
   describe "matching archive node" do
-    alias Clients.LXD
-
-    setup %{bypass: bypass} do
-      leases_list = File.read!("test/fixtures/lxd/networks/leases.json")
-
-      allowed_ips =
-        leases_list
-        |> Jason.decode!()
-        |> Map.get("metadata")
-        |> Enum.map(fn data ->
-          data["address"]
-        end)
-
-      %LXD.Network{} = network = LXD.managed_network()
-
-      Bypass.expect(
-        bypass,
-        "GET",
-        "/1.0/networks/#{network.name}/leases",
-        fn conn ->
-          conn
-          |> Plug.Conn.put_resp_header("content-type", "application/json")
-          |> Plug.Conn.resp(200, leases_list)
-        end
-      )
-
-      {:ok, allowed_ips: allowed_ips}
-    end
-
     setup %{deployment: deployment, actor: actor} do
       {:ok, archive} =
         Packages.create_archive(deployment, %{
@@ -118,14 +131,7 @@ defmodule Uplink.Packages.DistributionTest do
       {:ok, archive: archive, deployment: completed_deployment}
     end
 
-    test "successfully fetch file", %{allowed_ips: allowed_ips} do
-      [first, second, third, fourth] =
-        List.first(allowed_ips)
-        |> String.split(".")
-        |> Enum.map(&String.to_integer/1)
-
-      address = {first, second, third, fourth}
-
+    test "successfully fetch file", %{address: address} do
       conn =
         conn(:get, "/distribution/#{@app_slug}/x86_64/APKINDEX.tar.gz")
         |> Map.put(:remote_ip, address)

@@ -76,7 +76,7 @@ defmodule Uplink.Clients.LXD.Network.ManagerTest do
         end
       )
 
-      assert [lease, _] = Manager.leases()
+      assert [lease, _, _] = Manager.leases()
 
       assert %Lease{} = lease
     end
