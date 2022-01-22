@@ -6,6 +6,8 @@ config :uplink, Uplink.Cache,
     backend: :shards
   ]
 
+config :uplink, Uplink.Router, port: 4040
+
 config :uplink, Oban,
   repo: Uplink.Repo,
   queues: [prepare_deployment: 1]

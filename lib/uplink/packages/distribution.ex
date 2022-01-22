@@ -21,9 +21,12 @@ defmodule Uplink.Packages.Distribution do
 
   plug :respond
 
-  import Ecto.Query, only: [where: 3, join: 4, preload: 2, limit: 2]
+  import Ecto.Query,
+    only: [where: 3, join: 4, preload: 2, limit: 2]
 
   defp validate(conn, _opts) do
+    IO.inspect(conn)
+
     case LXD.network_leases() do
       leases when is_list(leases) ->
         ip_addresses =
@@ -78,12 +81,28 @@ defmodule Uplink.Packages.Distribution do
 
   defp serve(conn, %Archive{node: node}) do
     if Atom.to_string(Node.self()) == node do
-      static_options = Plug.Static.init(at: "/", from: "tmp/deployments")
+      static_options =
+        Plug.Static.init(
+          at: "/",
+          from: "tmp/deployments"
+        )
 
       conn
       |> Plug.Static.call(static_options)
     else
-      nil
+      [app, node_host_name] = String.split(node, "@")
+      router_config = Application.get_env(:uplink, Uplink.Router)
+      port = Keyword.get(router_config, :port)
+
+      upstream =
+        ["http://", "#{node_nost_name}:#{port}", conn.request_path]
+        |> Path.join()
+
+      reverse_proxy_options = ReverseProxyPlug.init(upstream: upstream)
+
+      conn
+      |> Map.put(:path_info, [])
+      |> ReverseProxyPlug.call(reverse_proxy_options)
     end
   end
 
