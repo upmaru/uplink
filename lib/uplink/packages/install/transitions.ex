@@ -3,11 +3,11 @@ defmodule Uplink.Packages.Install.Transitions do
 
   @behaviour Eventful.Handler
   use Eventful.Transition, repo: Uplink.Repo
-
+  
   Install
   |> transition(
     [from: "created", to: "executing", via: "execute"],
-    fn changes -> transit(changes) end
+    fn changes -> transit(changes, Install.Triggers) end
   )
 
   Install

@@ -9,12 +9,13 @@ defmodule Uplink.Packages.Install.Execute do
   alias Packages.Install
 
   import Ecto.Query,
-    only: [where: 3]
+    only: [where: 3, preload: 2]
 
   def perform(%Oban.Job{args: %{"install_id" => install_id}}) do
-    install =
+    %Install{deployment: deployment} =
       Install
       |> where([i], i.current_state == ^"executing")
+      |> preload([:deployment])
       |> Repo.get(install_id)
   end
 end
