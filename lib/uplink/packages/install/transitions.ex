@@ -6,13 +6,13 @@ defmodule Uplink.Packages.Install.Transitions do
 
   Install
   |> transition(
-    [from: "created", to: "deploying", via: "deploy"],
+    [from: "created", to: "executing", via: "execute"],
     fn changes -> transit(changes) end
   )
 
   Install
   |> transition(
-    [from: "deploying", to: "completed", via: "complete"],
+    [from: "executing", to: "completed", via: "complete"],
     fn changes -> transit(changes) end
   )
 end

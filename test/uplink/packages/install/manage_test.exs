@@ -76,7 +76,7 @@ defmodule Uplink.Packages.Install.ManageTest do
 
     test "can transition state", %{install: install, actor: actor} do
       assert {:ok, _transition} =
-               Manager.transition_with(install, actor, "deploy")
+               Manager.transition_with(install, actor, "execute")
     end
   end
 end

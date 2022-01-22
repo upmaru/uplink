@@ -17,6 +17,10 @@ defmodule Uplink.Packages do
     to: Install.Manager,
     as: :create
 
+  defdelegate transition_install_with(install, actor, event_name, opts \\ []),
+    to: Install.Manager,
+    as: :transition_with
+
   alias __MODULE__.Deployment
 
   defdelegate get_deployment(id),

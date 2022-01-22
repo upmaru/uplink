@@ -10,7 +10,10 @@ config :uplink, Uplink.Router, port: 4040
 
 config :uplink, Oban,
   repo: Uplink.Repo,
-  queues: [prepare_deployment: 1]
+  queues: [
+    prepare_deployment: 1,
+    execute_install: 1
+  ]
 
 config :uplink, Uplink.Cluster,
   installation_id: System.get_env("UPLINK_INSTALLATION_ID")

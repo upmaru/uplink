@@ -13,7 +13,7 @@ defmodule Uplink.Packages.Deployment.Transitions do
   Deployment
   |> transition(
     [from: "preparing", to: "live", via: "complete"],
-    fn changes -> transit(changes) end
+    fn changes -> transit(changes, Deployment.Triggers) end
   )
 
   Deployment
