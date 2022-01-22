@@ -4,24 +4,24 @@ defmodule Uplink.Packages.Distribution do
 
   alias Uplink.{
     Clients,
-    Packages
+    Packages,
+    Repo
   }
-  
-  alias Clients.LXD
-  alias Packages.Deployment
 
-  # plug :validate
+  alias Clients.LXD
+
+  alias Packages.{
+    Deployment,
+    Archive
+  }
+
+  plug :validate
 
   plug :serve_or_proxy
 
-  # TODO move this into serve_or_proxy
-  # plug Plug.Static,
-  #   at: "/",
-  #   from: "tmp/deployments"
-
   plug :respond
-  
-  import Ecto.Query, only: [where: 3, join: 3, preload: 2, limit: 2]
+
+  import Ecto.Query, only: [where: 3, join: 4, preload: 2, limit: 2]
 
   defp validate(conn, _opts) do
     case LXD.network_leases() do
@@ -51,31 +51,40 @@ defmodule Uplink.Packages.Distribution do
 
   defp serve_or_proxy(conn, _opts) do
     %{"glob" => params} = conn.params
-    
+
     [org, package] = Enum.take(params, 2)
     app_slug = "#{org}/#{package}"
-    
+
     Deployment
-    |> join(:inner, [d], a in assoc(d, :app))
-    |> where([d, a], 
-      a.slug == ^app_slug 
-        and d.current_state == ^"live"
+    |> join(:inner, [d], app in assoc(d, :app))
+    |> where(
+      [d, app],
+      app.slug == ^app_slug and
+        d.current_state == ^"live"
     )
     |> preload([:archive])
     |> limit(1)
     |> Repo.one()
     |> case do
       %Deployment{archive: archive} ->
-      
+        serve(conn, archive)
+
       nil ->
         conn
         |> send_resp(:not_found, "")
         |> halt()
     end
-      
-      
-      
-    IO.inspect(conn)
+  end
+
+  defp serve(conn, %Archive{node: node}) do
+    if Atom.to_string(Node.self()) == node do
+      static_options = Plug.Static.init(at: "/", from: "tmp/deployments")
+
+      conn
+      |> Plug.Static.call(static_options)
+    else
+      nil
+    end
   end
 
   defp respond(conn, _opts),
