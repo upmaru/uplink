@@ -91,7 +91,7 @@ defmodule Uplink.Packages.Distribution do
       |> Plug.Static.call(static_options)
     else
       [app, node_host_name] = String.split(node, "@")
-      router_config = Application.get_env(:uplink, Uplink.Router)
+      router_config = Application.get_env(:uplink, Uplink.Router, port: 4040)
       port = Keyword.get(router_config, :port)
 
       upstream =

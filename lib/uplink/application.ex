@@ -5,7 +5,7 @@ defmodule Uplink.Application do
 
   def start(_type, _args) do
     oban_config = Application.fetch_env!(:uplink, Oban)
-    router_config = Application.get_env(:uplink, Uplink.Router)
+    router_config = Application.get_env(:uplink, Uplink.Router, port: 4040)
 
     children = [
       {Uplink.Cache, []},
