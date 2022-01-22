@@ -13,48 +13,47 @@ defmodule Uplink.Packages.DistributionTest do
 
   setup do
     :ok = Ecto.Adapters.SQL.Sandbox.checkout(Uplink.Repo)
-    
+
     bypass = Bypass.open()
-    
+
     Cache.put(:self, %{
       "credential" => %{
         "endpoint" => "http://localhost:#{bypass.port}"
       }
     })
-    
-    deployment_payload =
-      %{
-        "actor" => %{
-          "identifier" => "zacksiri"
-        },
-        "installation_id" => 1,
-        "deployment" => %{
-          "hash" => "some-hash",
-          "archive_url" =>
-            "archives/7a363fba-8ca7-4ea4-8e84-f3785ac97102/packages.zip",
-          "metadata" => %{
-            "cluster" => %{
-              "credential" => %{
-                "certificate" => "cert",
-                "endpoint" => "http://localhost:#{bypass.port}",
-                "password" => "somepassword",
-                "password_confirmation" => "somepassword",
-                "private_key" => "key"
-              },
-              "organization" => %{
-                "slug" => "upmaru"
-              }
+
+    deployment_payload = %{
+      "actor" => %{
+        "identifier" => "zacksiri"
+      },
+      "installation_id" => 1,
+      "deployment" => %{
+        "hash" => "some-hash",
+        "archive_url" =>
+          "archives/7a363fba-8ca7-4ea4-8e84-f3785ac97102/packages.zip",
+        "metadata" => %{
+          "cluster" => %{
+            "credential" => %{
+              "certificate" => "cert",
+              "endpoint" => "http://localhost:#{bypass.port}",
+              "password" => "somepassword",
+              "password_confirmation" => "somepassword",
+              "private_key" => "key"
             },
-            "id" => 8000,
-            "package" => %{
-              "slug" => "something-1640927800",
-              "organization" => %{
-                "slug" => "upmaru"
-              }
+            "organization" => %{
+              "slug" => "upmaru"
+            }
+          },
+          "id" => 8000,
+          "package" => %{
+            "slug" => "something-1640927800",
+            "organization" => %{
+              "slug" => "upmaru"
             }
           }
         }
       }
+    }
 
     {:ok, actor} =
       Members.create_actor(%{
@@ -62,7 +61,7 @@ defmodule Uplink.Packages.DistributionTest do
       })
 
     app = Packages.get_or_create_app(@app_slug)
-    
+
     deployment_params = Map.get(deployment_payload, "deployment")
 
     {:ok, deployment} =
@@ -81,17 +80,17 @@ defmodule Uplink.Packages.DistributionTest do
 
     setup %{bypass: bypass} do
       leases_list = File.read!("test/fixtures/lxd/networks/leases.json")
-      
-      allowed_ips = 
+
+      allowed_ips =
         leases_list
         |> Jason.decode!()
         |> Map.get("metadata")
-        |> Enum.map(fn data -> 
+        |> Enum.map(fn data ->
           data["address"]
         end)
-      
+
       %LXD.Network{} = network = LXD.managed_network()
-      
+
       Bypass.expect(
         bypass,
         "GET",
@@ -102,10 +101,10 @@ defmodule Uplink.Packages.DistributionTest do
           |> Plug.Conn.resp(200, leases_list)
         end
       )
-      
+
       {:ok, allowed_ips: allowed_ips}
     end
-    
+
     setup %{deployment: deployment, actor: actor} do
       {:ok, archive} =
         Packages.create_archive(deployment, %{
@@ -120,18 +119,18 @@ defmodule Uplink.Packages.DistributionTest do
     end
 
     test "successfully fetch file", %{allowed_ips: allowed_ips} do
-      [first, second, third, fourth] = 
+      [first, second, third, fourth] =
         List.first(allowed_ips)
         |> String.split(".")
         |> Enum.map(&String.to_integer/1)
-        
+
       address = {first, second, third, fourth}
-    
-      conn = 
+
+      conn =
         conn(:get, "/distribution/#{@app_slug}/x86_64/APKINDEX.tar.gz")
         |> Map.put(:remote_ip, address)
         |> Uplink.Router.call([])
-                
+
       assert conn.status == 200
     end
   end

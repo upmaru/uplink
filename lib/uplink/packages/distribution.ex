@@ -53,7 +53,7 @@ defmodule Uplink.Packages.Distribution do
   defp serve_or_proxy(conn, _opts) do
     %{"glob" => params} = conn.params
 
-    [org, package] = Enum.take(conn.path_info, 2)
+    [org, package] = Enum.take(params, 2)
     app_slug = "#{org}/#{package}"
 
     Deployment
@@ -88,9 +88,9 @@ defmodule Uplink.Packages.Distribution do
       conn
       |> Plug.Static.call(static_options)
     else
-      [app, node_host_name] = String.split(node, "@")
-      router_config = Application.get_env(:uplink, Uplink.Router, port: 4040)
-      port = Keyword.get(router_config, :port)
+      [_app, node_host_name] = String.split(node, "@")
+      router_config = Application.get_env(:uplink, Uplink.Router)
+      port = Keyword.get(router_config, :port, 4040)
 
       upstream =
         ["http://", "#{node_host_name}:#{port}", conn.request_path]
