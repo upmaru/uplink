@@ -13,6 +13,7 @@ defmodule Uplink.Packages.Metadata do
     end
 
     embeds_many :instances, Instance, primary_key: false do
+      field :installation_instance_id, :integer
       field :slug, :string
     end
 
@@ -31,6 +32,7 @@ defmodule Uplink.Packages.Metadata do
     |> cast(params, [])
     |> cast_embed(:package, required: true, with: &package_changeset/2)
     |> cast_embed(:cluster, required: true, with: &cluster_changeset/2)
+    |> cast_embed(:instances, required: true, with: &instance_changeset/2)
   end
 
   defp package_changeset(package, params) do
@@ -44,6 +46,12 @@ defmodule Uplink.Packages.Metadata do
     cluster
     |> cast(params, [:type, :credential])
     |> cast_embed(:organization, required: true, with: &organization_changeset/2)
+  end
+
+  defp instance_changeset(instance, params) do
+    instance
+    |> cast(params, [:installation_instance_id, :slug])
+    |> validate_required([:installation_instance_id, :slug])
   end
 
   defp organization_changeset(organization, params) do

@@ -15,6 +15,12 @@ defmodule Uplink.Packages.Install.ManageTest do
     "hash" => "some-hash",
     "archive_url" => "http://localhost/archives/packages.zip",
     "metadata" => %{
+      "instances" => [
+        %{
+          "installation_instance_id" => 1,
+          "slug" => "something-1"
+        }
+      ],
       "cluster" => %{
         "credential" => %{
           "certificate" => "cert",
