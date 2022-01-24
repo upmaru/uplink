@@ -20,6 +20,8 @@ defmodule Uplink.Clients.LXD.Instance.Manager do
             end)
 
           Cache.put(:instances, instances)
+          
+          instances
 
         error ->
           error
