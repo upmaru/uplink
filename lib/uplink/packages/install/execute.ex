@@ -25,13 +25,16 @@ defmodule Uplink.Packages.Install.Execute do
     %Install{} =
       install =
       Install
-      |> where([i], i.current_state == ^"executing")
+      |> where(
+        [i],
+        i.current_state == ^"executing"
+      )
       |> preload([:deployment])
       |> Repo.get(install_id)
 
     install
     |> retrieve_metadata()
-    |> sync_instances_state()
+    |> sync_profiles()
   end
 
   defp retrieve_metadata(%Install{deployment: deployment} = install) do
@@ -41,7 +44,7 @@ defmodule Uplink.Packages.Install.Execute do
     |> Cache.get()
     |> case do
       %Metadata{} = metadata ->
-        metadata
+        %{install: install, metadata: metadata}
 
       nil ->
         fetch_deployment_metadata(install)
@@ -59,11 +62,15 @@ defmodule Uplink.Packages.Install.Execute do
         metadata
       )
 
-      metadata
+      %{install: install, metadata: metadata}
     end
   end
 
-  defp sync_instances_state(%Metadata{instances: instances}) do
-    {:ok, instances}
+  defp sync_profiles(%{install: install, metadata: metadata} = params) do
+    profile_params = %{
+      "name" => Metadata.Manager.profile_name(metadata)
+    }
+
+    {:ok, install}
   end
 end

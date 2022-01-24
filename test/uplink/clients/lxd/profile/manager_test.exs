@@ -1,4 +1,4 @@
-defmodule Uplink.Clients.LXD.Instance.ManagerTest do
+defmodule Uplink.Clients.LXD.Profile.ManagerTest do
   use ExUnit.Case
 
   alias Uplink.{
@@ -7,7 +7,7 @@ defmodule Uplink.Clients.LXD.Instance.ManagerTest do
   }
 
   alias Clients.LXD
-  alias LXD.Instance
+  alias LXD.Profile
 
   setup do
     bypass = Bypass.open()
@@ -18,18 +18,18 @@ defmodule Uplink.Clients.LXD.Instance.ManagerTest do
       }
     })
 
-    response = File.read!("test/fixtures/lxd/instances/list.json")
+    response = File.read!("test/fixtures/lxd/profiles/list.json")
 
-    Cache.delete(:instances)
+    Cache.delete(:profiles)
 
     {:ok, bypass: bypass, response: response}
   end
 
-  describe "list leases" do
-    alias Instance.Manager
+  describe "list profiles" do
+    alias Profile.Manager
 
-    test "return instances", %{bypass: bypass, response: response} do
-      Bypass.expect_once(bypass, "GET", "/1.0/instances", fn conn ->
+    test "return profiles", %{bypass: bypass, response: response} do
+      Bypass.expect_once(bypass, "GET", "/1.0/profiles", fn conn ->
         assert %{"recursive" => "1"} = conn.query_params
 
         conn
@@ -37,8 +37,8 @@ defmodule Uplink.Clients.LXD.Instance.ManagerTest do
         |> Plug.Conn.resp(200, response)
       end)
 
-      assert [instance1, _instance2] = Manager.list()
-      assert %Instance{} = instance1
+      assert [profile1, _profile2, _profile3] = Manager.list()
+      assert %Profile{} = profile1
     end
   end
 end

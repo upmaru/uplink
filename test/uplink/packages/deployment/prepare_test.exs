@@ -23,6 +23,18 @@ defmodule Uplink.Packages.Deployment.PrepareTest do
       "hash" => "some-hash",
       "archive_url" => "http://localhost:#{bypass.port}/archives/packages.zip",
       "metadata" => %{
+        "installation" => %{
+          "id" => 1,
+          "slug" => "uplink-web",
+          "service_port" => 4000,
+          "exposed_port" => 49152,
+          "instances" => [
+            %{
+              "installation_instance_id" => 1,
+              "slug" => "something-1"
+            }
+          ]
+        },
         "cluster" => %{
           "credential" => %{
             "certificate" => "cert",

@@ -21,12 +21,18 @@ defmodule Uplink.Packages.Deployment.RouterTest do
                   "archive_url" =>
                     "archives/7a363fba-8ca7-4ea4-8e84-f3785ac97102/packages.zip",
                   "metadata" => %{
-                    "instances" => [
-                      %{
-                        "installation_instance_id" => 1,
-                        "slug" => "something-1"
-                      }
-                    ],
+                    "installation" => %{
+                      "id" => 1,
+                      "slug" => "uplink-web",
+                      "service_port" => 4000,
+                      "exposed_port" => 49152,
+                      "instances" => [
+                        %{
+                          "installation_instance_id" => 1,
+                          "slug" => "something-1"
+                        }
+                      ]
+                    },
                     "cluster" => %{
                       "credential" => %{
                         "certificate" => "cert",

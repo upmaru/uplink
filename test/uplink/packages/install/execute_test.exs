@@ -1,15 +1,16 @@
-defmodule Uplink.Packages.Install.ManageTest do
+defmodule Uplink.Packages.Install.ExecuteTest do
   use ExUnit.Case
 
   alias Uplink.{
+    Packages,
     Members,
-    Packages
+    Cache
   }
 
-  alias Packages.{
-    Metadata,
-    Install
-  }
+  alias Packages.Metadata
+
+  import Uplink.Secret.Signature,
+    only: [compute_signature: 1]
 
   @deployment_params %{
     "hash" => "some-hash",
@@ -52,6 +53,11 @@ defmodule Uplink.Packages.Install.ManageTest do
   setup do
     :ok = Ecto.Adapters.SQL.Sandbox.checkout(Uplink.Repo)
 
+    {:ok, actor} =
+      Members.create_actor(%{
+        identifier: "zacksiri"
+      })
+
     metadata = Map.get(@deployment_params, "metadata")
 
     {:ok, metadata} = Packages.parse_metadata(metadata)
@@ -64,31 +70,32 @@ defmodule Uplink.Packages.Install.ManageTest do
     {:ok, deployment} =
       Packages.get_or_create_deployment(app, @deployment_params)
 
+    {:ok, install} = Packages.create_install(deployment, 1)
+
+    signature = compute_signature(deployment.hash)
+
+    Cache.put(
+      {:deployment, signature, install.instellar_installation_id},
+      metadata
+    )
+
+    {:ok, _transition} =
+      Packages.transition_install_with(install, actor, "execute")
+
     {:ok, deployment: deployment}
   end
 
-  describe "create" do
-    alias Install.Manager
+  describe "when container does not exist" do
+    setup do
+      Cache.put(:instances, [])
 
-    test "return installation", %{deployment: deployment} do
-      assert {:ok, %Install{}} = Manager.create(deployment, 1)
-    end
-  end
-
-  describe "transition_with" do
-    alias Install.Manager
-
-    setup %{deployment: deployment} do
-      {:ok, %Install{} = install} = Manager.create(deployment, 1)
-
-      {:ok, actor} = Members.create_actor(%{"identifier" => "zacksiri"})
-
-      {:ok, install: install, actor: actor}
+      :ok
     end
 
-    test "can transition state", %{install: install, actor: actor} do
-      assert {:ok, _transition} =
-               Manager.transition_with(install, actor, "execute")
+    test "return bootstrap instance", %{
+      deployment: deployment,
+      install: install
+    } do
     end
   end
 end

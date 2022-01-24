@@ -4,17 +4,24 @@ defmodule Uplink.Packages.Metadata do
 
   @primary_key false
   embedded_schema do
+    embeds_one :installation, Installation, primary_key: false do
+      field :id, :integer
+      field :slug, :string
+      field :service_port, :integer
+      field :exposed_port, :integer
+
+      embeds_many :instances, Instance, primary_key: false do
+        field :installation_instance_id, :integer
+        field :slug, :string
+      end
+    end
+
     embeds_one :package, Package, primary_key: false do
       field :slug, :string
 
       embeds_one :organization, Organization, primary_key: false do
         field :slug
       end
-    end
-
-    embeds_many :instances, Instance, primary_key: false do
-      field :installation_instance_id, :integer
-      field :slug, :string
     end
 
     embeds_one :cluster, Cluster, primary_key: false do
@@ -32,7 +39,7 @@ defmodule Uplink.Packages.Metadata do
     |> cast(params, [])
     |> cast_embed(:package, required: true, with: &package_changeset/2)
     |> cast_embed(:cluster, required: true, with: &cluster_changeset/2)
-    |> cast_embed(:instances, required: true, with: &instance_changeset/2)
+    |> cast_embed(:installation, required: true, with: &installation_changeset/2)
   end
 
   defp package_changeset(package, params) do
@@ -48,16 +55,23 @@ defmodule Uplink.Packages.Metadata do
     |> cast_embed(:organization, required: true, with: &organization_changeset/2)
   end
 
-  defp instance_changeset(instance, params) do
-    instance
-    |> cast(params, [:installation_instance_id, :slug])
-    |> validate_required([:installation_instance_id, :slug])
-  end
-
   defp organization_changeset(organization, params) do
     organization
     |> cast(params, [:slug])
     |> validate_required([:slug])
+  end
+
+  defp installation_changeset(installation, params) do
+    installation
+    |> cast(params, [:id, :slug])
+    |> validate_required([:id, :slug])
+    |> cast_embed(:instances, required: true, with: &instance_changeset/2)
+  end
+
+  defp instance_changeset(instance, params) do
+    instance
+    |> cast(params, [:installation_instance_id, :slug])
+    |> validate_required([:installation_instance_id, :slug])
   end
 
   def app_slug(%__MODULE__{package: package}) do
