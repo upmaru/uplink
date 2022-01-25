@@ -1,5 +1,5 @@
 defmodule Uplink.Packages.Install.Execute do
-  use Oban.Worker, queue: :execute_install, max_attempts: 1
+  use Oban.Worker, queue: :validate_install, max_attempts: 1
 
   alias Uplink.{
     Clients,
@@ -13,7 +13,10 @@ defmodule Uplink.Packages.Install.Execute do
     Metadata
   }
 
-  alias Clients.Instellar
+  alias Clients.{
+    Instellar,
+    LXD
+  }
 
   import Ecto.Query,
     only: [where: 3, preload: 2]
@@ -27,14 +30,14 @@ defmodule Uplink.Packages.Install.Execute do
       Install
       |> where(
         [i],
-        i.current_state == ^"executing"
+        i.current_state == ^"validating"
       )
       |> preload([:deployment])
       |> Repo.get(install_id)
 
     install
     |> retrieve_metadata()
-    |> sync_profiles()
+    |> ensure_profile_exists()
   end
 
   defp retrieve_metadata(%Install{deployment: deployment} = install) do
@@ -66,11 +69,42 @@ defmodule Uplink.Packages.Install.Execute do
     end
   end
 
-  defp sync_profiles(%{install: install, metadata: metadata} = params) do
-    profile_params = %{
-      "name" => Metadata.Manager.profile_name(metadata)
-    }
+  defp ensure_profile_exists(%{install: install, metadata: metadata} = params) do
+    profile_name = Packages.profile_name(metadata)
 
-    {:ok, install}
+    with %LXD.Profile{config: config} <-
+           LXD.list_profiles()
+           |> Enum.find(fn profile ->
+             profile.name == profile_name
+           end),
+         {:ok, :profile_valid} <- validate_profile(config) do
+    else
+      nil ->
+        profile_params = %{
+          "name" => profile_name,
+          "description" => "installation #{install.instellar_installation_id}",
+          "config" => %{
+            "user.managed_by" => "uplink"
+          }
+        }
+
+        create_profile(profile_params)
+    end
+  end
+
+  defp validate_profile(%LXD.Profile{config: config}) do
+    if Enum.any?(config, &managed_by_uplink/1) do
+      {:ok, :profile_valid}
+    else
+      {:error, :profile_invalid}
+    end
+  end
+
+  defp create_profile(profile_params) do
+    # add code to create profile
+  end
+
+  defp managed_by_uplink({key, value}) do
+    key == "user.managed_by" and value == "uplink"
   end
 end

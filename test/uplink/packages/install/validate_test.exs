@@ -1,4 +1,4 @@
-defmodule Uplink.Packages.Install.ExecuteTest do
+defmodule Uplink.Packages.Install.ValidateTest do
   use ExUnit.Case
 
   alias Uplink.{

@@ -42,6 +42,9 @@ defmodule Uplink.Packages do
 
   alias __MODULE__.Metadata
 
+  defdelegate profile_name(metadata),
+    to: Metadata.Manager
+
   defdelegate parse_metadata(params),
     to: Metadata.Manager,
     as: :parse

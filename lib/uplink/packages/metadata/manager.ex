@@ -5,5 +5,6 @@ defmodule Uplink.Packages.Metadata.Manager do
     to: Metadata
 
   def profile_name(%Metadata{package: package, installation: installation}),
-    do: Enum.join([package.slug, installation.id], "-")
+    do:
+      Enum.join([package.organization.slug, package.slug, installation.id], "-")
 end
