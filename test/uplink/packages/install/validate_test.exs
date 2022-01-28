@@ -79,10 +79,10 @@ defmodule Uplink.Packages.Install.ValidateTest do
       metadata
     )
 
-    {:ok, _transition} =
-      Packages.transition_install_with(install, actor, "execute")
+    {:ok, %{resource: validating_install}} =
+      Packages.transition_install_with(install, actor, "validate")
 
-    {:ok, deployment: deployment}
+    {:ok, install: validating_install, deployment: deployment}
   end
 
   describe "when container does not exist" do

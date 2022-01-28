@@ -1,12 +1,15 @@
-defmodule Uplink.Packages.Install.Execute do
+defmodule Uplink.Packages.Install.Validate do
   use Oban.Worker, queue: :validate_install, max_attempts: 1
 
   alias Uplink.{
     Clients,
+    Members,
     Packages,
     Cache,
     Repo
   }
+
+  alias Members.Actor
 
   alias Packages.{
     Install,
@@ -17,6 +20,8 @@ defmodule Uplink.Packages.Install.Execute do
     Instellar,
     LXD
   }
+  
+  require Logger
 
   import Ecto.Query,
     only: [where: 3, preload: 2]
@@ -24,7 +29,11 @@ defmodule Uplink.Packages.Install.Execute do
   import Uplink.Secret.Signature,
     only: [compute_signature: 1]
 
-  def perform(%Oban.Job{args: %{"install_id" => install_id}}) do
+  def perform(%Oban.Job{
+        args: %{"install_id" => install_id, "actor_id" => actor_id}
+      }) do
+    %Actor{} = actor = Repo.get(Actor, actor_id)
+
     %Install{} =
       install =
       Install
@@ -36,21 +45,23 @@ defmodule Uplink.Packages.Install.Execute do
       |> Repo.get(install_id)
 
     install
-    |> retrieve_metadata()
+    |> build_state(actor)
     |> ensure_profile_exists()
   end
 
-  defp retrieve_metadata(%Install{deployment: deployment} = install) do
+  defp build_state(%Install{deployment: deployment} = install, actor) do
     signature = compute_signature(deployment.hash)
 
     {:deployment, signature, install.instellar_installation_id}
     |> Cache.get()
     |> case do
       %Metadata{} = metadata ->
-        %{install: install, metadata: metadata}
+        %{install: install, metadata: metadata, actor: actor}
 
       nil ->
-        fetch_deployment_metadata(install)
+        install
+        |> fetch_deployment_metadata()
+        |> Map.merge(%{install: install, actor: actor})
     end
   end
 
@@ -65,11 +76,13 @@ defmodule Uplink.Packages.Install.Execute do
         metadata
       )
 
-      %{install: install, metadata: metadata}
+      %{metadata: metadata}
     end
   end
 
-  defp ensure_profile_exists(%{install: install, metadata: metadata} = params) do
+  defp ensure_profile_exists(
+         %{install: install, metadata: metadata, actor: actor}
+       ) do
     profile_name = Packages.profile_name(metadata)
 
     with %LXD.Profile{config: config} <-
@@ -78,17 +91,39 @@ defmodule Uplink.Packages.Install.Execute do
              profile.name == profile_name
            end),
          {:ok, :profile_valid} <- validate_profile(config) do
+      Packages.transition_install_with(install, actor, "execute")
     else
       nil ->
         profile_params = %{
           "name" => profile_name,
-          "description" => "installation #{install.instellar_installation_id}",
+          "description" => "#{install.id}/#{install.instellar_installation_id}",
           "config" => %{
             "user.managed_by" => "uplink"
           }
         }
 
-        create_profile(profile_params)
+        case create_profile(profile_params) do
+          {:ok, :profile_created} ->
+            Packages.transition_install_with(install, actor, "execute")
+
+          {:error, error} ->
+            Logger.error("[Install.Execute] #{install.id} #{error}")
+
+            Packages.transition_install_with(
+              install,
+              actor,
+              "pause",
+              comment: "error occured when attempting to create profile"
+            )
+        end
+
+      {:error, :profile_invalid} ->
+        Packages.transition_install_with(
+          install,
+          actor,
+          "pause",
+          comment: "profile exists but not managed by uplink"
+        )
     end
   end
 
@@ -101,7 +136,15 @@ defmodule Uplink.Packages.Install.Execute do
   end
 
   defp create_profile(profile_params) do
-    # add code to create profile
+    LXD.client()
+    |> Lexdee.create_profile(profile_params)
+    |> case do
+      {:ok, %{body: nil}} ->
+        {:ok, :profile_created}
+
+      {:error, %{"error" => message}} ->
+        {:error, message}
+    end
   end
 
   defp managed_by_uplink({key, value}) do
