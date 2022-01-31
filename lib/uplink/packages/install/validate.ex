@@ -20,7 +20,7 @@ defmodule Uplink.Packages.Install.Validate do
     Instellar,
     LXD
   }
-  
+
   require Logger
 
   import Ecto.Query,
@@ -80,9 +80,11 @@ defmodule Uplink.Packages.Install.Validate do
     end
   end
 
-  defp ensure_profile_exists(
-         %{install: install, metadata: metadata, actor: actor}
-       ) do
+  defp ensure_profile_exists(%{
+         install: install,
+         metadata: metadata,
+         actor: actor
+       }) do
     profile_name = Packages.profile_name(metadata)
 
     with %LXD.Profile{config: config} <-
