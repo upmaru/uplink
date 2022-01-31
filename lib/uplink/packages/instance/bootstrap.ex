@@ -13,5 +13,7 @@ defmodule Uplink.Packages.Instance.Bootstrap do
         "name" => name,
         "profiles" => []
       })
+
+    :ok
   end
 end

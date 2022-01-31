@@ -36,5 +36,7 @@ defmodule Uplink.Packages.Install.Execute do
 
     install
     |> Packages.build_install_state(actor)
+
+    :ok
   end
 end
