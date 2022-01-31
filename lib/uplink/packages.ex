@@ -13,6 +13,10 @@ defmodule Uplink.Packages do
 
   alias __MODULE__.Install
 
+  defdelegate build_install_state(install, actor),
+    to: Install.Manager,
+    as: :build_state
+
   defdelegate create_install(deployment, instellar_installation_id),
     to: Install.Manager,
     as: :create

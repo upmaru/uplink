@@ -58,9 +58,9 @@ defmodule Uplink.Packages.Install.ValidateTest do
 
   setup do
     :ok = Ecto.Adapters.SQL.Sandbox.checkout(Uplink.Repo)
-    
+
     bypass = Bypass.open()
-    
+
     Cache.put(:self, %{
       "credential" => %{
         "endpoint" => "http://localhost:#{bypass.port}"
@@ -75,9 +75,9 @@ defmodule Uplink.Packages.Install.ValidateTest do
     metadata = Map.get(@deployment_params, "metadata")
 
     {:ok, metadata} = Packages.parse_metadata(metadata)
-    
+
     list_profiles = File.read!("test/fixtures/lxd/profiles/list.json")
-    
+
     app =
       metadata
       |> Metadata.app_slug()
@@ -98,19 +98,18 @@ defmodule Uplink.Packages.Install.ValidateTest do
     {:ok, %{resource: validating_install}} =
       Packages.transition_install_with(install, actor, "validate")
 
-    {:ok, 
-      install: validating_install, 
-      deployment: deployment, 
-      actor: actor, 
-      bypass: bypass,
-      list_profiles: list_profiles
-    }
+    {:ok,
+     install: validating_install,
+     deployment: deployment,
+     actor: actor,
+     bypass: bypass,
+     list_profiles: list_profiles}
   end
 
-  describe "when proifle does not exist" do
+  describe "when profile does not exist" do
     setup do
       Cache.put(:instances, [])
-      
+
       create_profile = File.read!("test/fixtures/lxd/profiles/create.json")
 
       {:ok, create_profile: create_profile}
@@ -123,24 +122,24 @@ defmodule Uplink.Packages.Install.ValidateTest do
       list_profiles: list_profiles,
       create_profile: create_profile
     } do
-      Bypass.expect_once(bypass, "GET", "/1.0/profiles", fn conn -> 
+      Bypass.expect_once(bypass, "GET", "/1.0/profiles", fn conn ->
         conn
         |> Plug.Conn.put_resp_header("content-type", "application/json")
         |> Plug.Conn.resp(200, list_profiles)
       end)
-      
-      Bypass.expect_once(bypass, "POST", "/1.0/profiles", fn conn ->         
+
+      Bypass.expect_once(bypass, "POST", "/1.0/profiles", fn conn ->
         conn
         |> Plug.Conn.put_resp_header("content-type", "application/json")
         |> Plug.Conn.resp(200, create_profile)
       end)
-      
+
       assert {:ok, %{resource: install}} =
                perform_job(Validate, %{
                  install_id: install.id,
                  actor_id: actor.id
                })
-      
+
       assert install.current_state == "executing"
     end
   end

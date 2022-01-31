@@ -11,23 +11,14 @@ defmodule Uplink.Packages.Install.Validate do
 
   alias Members.Actor
 
-  alias Packages.{
-    Install,
-    Metadata
-  }
+  alias Packages.Install
 
-  alias Clients.{
-    Instellar,
-    LXD
-  }
+  alias Clients.LXD
 
   require Logger
 
   import Ecto.Query,
     only: [where: 3, preload: 2]
-
-  import Uplink.Secret.Signature,
-    only: [compute_signature: 1]
 
   def perform(%Oban.Job{
         args: %{"install_id" => install_id, "actor_id" => actor_id}
@@ -45,39 +36,8 @@ defmodule Uplink.Packages.Install.Validate do
       |> Repo.get(install_id)
 
     install
-    |> build_state(actor)
+    |> Packages.build_install_state(actor)
     |> ensure_profile_exists()
-  end
-
-  defp build_state(%Install{deployment: deployment} = install, actor) do
-    signature = compute_signature(deployment.hash)
-
-    {:deployment, signature, install.instellar_installation_id}
-    |> Cache.get()
-    |> case do
-      %Metadata{} = metadata ->
-        %{install: install, metadata: metadata, actor: actor}
-
-      nil ->
-        install
-        |> fetch_deployment_metadata()
-        |> Map.merge(%{install: install, actor: actor})
-    end
-  end
-
-  defp fetch_deployment_metadata(%Install{deployment: deployment} = install) do
-    with {:ok, metadata_params} <- Instellar.deployment_metadata(deployment),
-         {:ok, %Metadata{} = metadata} <-
-           Packages.parse_metadata(metadata_params) do
-      signature = compute_signature(deployment.hash)
-
-      Cache.put(
-        {:deployment, signature, install.instellar_installation_id},
-        metadata
-      )
-
-      %{metadata: metadata}
-    end
   end
 
   defp ensure_profile_exists(%{
