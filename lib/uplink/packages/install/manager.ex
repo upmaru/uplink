@@ -12,11 +12,11 @@ defmodule Uplink.Packages.Install.Manager do
     Install,
     Metadata
   }
-  
+
   alias Clients.Instellar
-  
+
   alias Members.Actor
-  
+
   alias Install.Event
 
   import Uplink.Secret.Signature,
