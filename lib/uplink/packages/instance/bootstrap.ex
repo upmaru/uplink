@@ -78,13 +78,20 @@ defmodule Uplink.Packages.Instance.Bootstrap do
       formation_instance =
         Formation.Lxd.Instance.new(%{
           slug: name,
-          # repository url for apk  
-          url: ""
+          # repository url for apk
+          url: "",
+          credential: %{
+            "public_key" => metadata.package.credential.public_key
+          },
+          package: %{
+            slug: metadata.package.slug
+          }
         })
 
       LXD.create_client()
       |> Formation.Lxd.create(node_name, instance_params)
       |> Formation.Lxd.start(name)
+      |> Formation.Lxd.setup(formation_instance)
     end
   end
 end
