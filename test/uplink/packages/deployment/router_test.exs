@@ -52,6 +52,9 @@ defmodule Uplink.Packages.Deployment.RouterTest do
                     "id" => 8000,
                     "package" => %{
                       "slug" => "something-1640927800",
+                      "credential" => %{
+                        "public_key" => "public_key"
+                      },
                       "organization" => %{
                         "slug" => "upmaru"
                       }

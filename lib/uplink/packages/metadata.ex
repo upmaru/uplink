@@ -23,6 +23,10 @@ defmodule Uplink.Packages.Metadata do
     embeds_one :package, Package, primary_key: false do
       field :slug, :string
 
+      embeds_one :credential, Credential, primary_key: false do
+        field :public_key, :string
+      end
+
       embeds_one :organization, Organization, primary_key: false do
         field :slug
       end
@@ -51,6 +55,10 @@ defmodule Uplink.Packages.Metadata do
     |> cast(params, [:slug])
     |> validate_required([:slug])
     |> cast_embed(:organization, required: true, with: &organization_changeset/2)
+    |> cast_embed(:credential,
+      required: true,
+      with: &package_credential_changeset/2
+    )
   end
 
   defp cluster_changeset(cluster, params) do
@@ -63,6 +71,12 @@ defmodule Uplink.Packages.Metadata do
     organization
     |> cast(params, [:slug])
     |> validate_required([:slug])
+  end
+
+  defp package_credential_changeset(package_credential, params) do
+    package_credential
+    |> cast(params, [:public_key])
+    |> validate_required([:public_key])
   end
 
   defp installation_changeset(installation, params) do

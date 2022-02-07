@@ -74,6 +74,17 @@ defmodule Uplink.Packages.Instance.Bootstrap do
             "alias" => install.deployment.stack
           }
         })
+
+      formation_instance =
+        Formation.Lxd.Instance.new(%{
+          slug: name,
+          # repository url for apk  
+          url: ""
+        })
+
+      LXD.create_client()
+      |> Formation.Lxd.create(node_name, instance_params)
+      |> Formation.Lxd.start(name)
     end
   end
 end
