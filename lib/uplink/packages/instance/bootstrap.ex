@@ -7,11 +7,18 @@ defmodule Uplink.Packages.Instance.Bootstrap do
     "type" => "container"
   }
 
-  def perform(%Oban.Job{args: %{
-    "instance" => instance_params, 
-    "install_id" => install_id, 
-    "actor_id" => actor_id
-  }}) do
+  def perform(%Oban.Job{
+        args: %{
+          "instance" => %{
+            "slug" => name,
+            "node" => %{
+              "slug" => node_name
+            }
+          },
+          "install_id" => install_id,
+          "actor_id" => actor_id
+        }
+      }) do
     instance_params =
       Map.merge(@default_params, %{
         "name" => name,

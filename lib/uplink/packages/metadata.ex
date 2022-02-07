@@ -13,7 +13,7 @@ defmodule Uplink.Packages.Metadata do
       embeds_many :instances, Instance, primary_key: false do
         field :installation_instance_id, :integer
         field :slug, :string
-        
+
         embeds_one :node, Node, primary_key: false do
           field :slug, :string
         end
@@ -78,7 +78,7 @@ defmodule Uplink.Packages.Metadata do
     |> validate_required([:installation_instance_id, :slug])
     |> cast_embed(:node, required: true, with: &node_changeset/2)
   end
-  
+
   defp node_changeset(node, params) do
     node
     |> cast(params, [:slug])

@@ -23,7 +23,10 @@ defmodule Uplink.Packages.Install.ManageTest do
         "instances" => [
           %{
             "installation_instance_id" => 1,
-            "slug" => "something-1"
+            "slug" => "something-1",
+            "node" => %{
+              "slug" => "some-node"
+            }
           }
         ]
       },

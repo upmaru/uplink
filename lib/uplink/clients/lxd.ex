@@ -1,6 +1,10 @@
 defmodule Uplink.Clients.LXD do
   alias Uplink.Clients.Instellar
 
+  defdelegate list_cluster_members(),
+    to: __MODULE__.Cluster.Manager,
+    as: :list_members
+
   defdelegate list_profiles(),
     to: __MODULE__.Profile.Manager,
     as: :list

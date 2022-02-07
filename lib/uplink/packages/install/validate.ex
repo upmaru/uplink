@@ -20,6 +20,8 @@ defmodule Uplink.Packages.Install.Validate do
   import Ecto.Query,
     only: [where: 3, preload: 2]
 
+  @state ~s(validating)
+
   def perform(%Oban.Job{
         args: %{"install_id" => install_id, "actor_id" => actor_id}
       }) do
@@ -30,7 +32,7 @@ defmodule Uplink.Packages.Install.Validate do
       Install
       |> where(
         [i],
-        i.current_state == ^"validating"
+        i.current_state == ^@state
       )
       |> preload([:deployment])
       |> Repo.get(install_id)
