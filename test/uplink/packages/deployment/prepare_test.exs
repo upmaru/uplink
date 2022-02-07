@@ -22,6 +22,7 @@ defmodule Uplink.Packages.Deployment.PrepareTest do
     deployment_params = %{
       "hash" => "some-hash",
       "archive_url" => "http://localhost:#{bypass.port}/archives/packages.zip",
+      "stack" => "alpine/3.14",
       "metadata" => %{
         "installation" => %{
           "id" => 1,

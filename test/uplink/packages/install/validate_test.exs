@@ -21,6 +21,7 @@ defmodule Uplink.Packages.Install.ValidateTest do
   @deployment_params %{
     "hash" => "some-hash",
     "archive_url" => "http://localhost/archives/packages.zip",
+    "stack" => "alpine/3.14",
     "metadata" => %{
       "installation" => %{
         "id" => 1,

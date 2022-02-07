@@ -8,12 +8,27 @@ defmodule Uplink.Packages.Deployment do
     Install
   }
 
+  @valid_attrs ~w(
+    hash
+    archive_url
+    metadata
+    stack
+  )a
+
+  @required_attrs ~w(
+    hash
+    archive_url
+    metadata
+    stack
+  )a
+
   use Eventful.Transitable,
     transitions_module: __MODULE__.Transitions
 
   schema "deployments" do
     field :hash, :string
     field :archive_url, :string
+    field :stack, :string
     field :current_state, :string, default: "created"
 
     field :metadata, :map, virtual: true
@@ -29,8 +44,8 @@ defmodule Uplink.Packages.Deployment do
 
   def changeset(deployment, params) do
     deployment
-    |> cast(params, [:hash, :archive_url, :metadata])
-    |> validate_required([:hash, :archive_url, :metadata])
+    |> cast(params, @valid_attrs)
+    |> validate_required(@required_attrs)
   end
 
   def identifier(%__MODULE__{hash: hash, app: app}) do

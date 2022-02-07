@@ -18,6 +18,7 @@ defmodule Uplink.Packages.Deployment.RouterTest do
                 "installation_id" => 1,
                 "deployment" => %{
                   "hash" => "some-hash",
+                  "stack" => "alpine/3.14",
                   "archive_url" =>
                     "archives/7a363fba-8ca7-4ea4-8e84-f3785ac97102/packages.zip",
                   "metadata" => %{
