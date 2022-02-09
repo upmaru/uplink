@@ -1,5 +1,5 @@
 defmodule Uplink.Packages.Install.ExecuteTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case
   use Oban.Testing, repo: Uplink.Repo
 
   alias Uplink.{
@@ -98,6 +98,8 @@ defmodule Uplink.Packages.Install.ExecuteTest do
       metadata
     )
 
+    Cache.delete(:instances)
+
     {:ok, %{resource: validating_install}} =
       Packages.transition_install_with(install, actor, "validate")
 
@@ -116,7 +118,7 @@ defmodule Uplink.Packages.Install.ExecuteTest do
   describe "boostrap instance" do
     alias Uplink.Packages.Install.Execute
 
-    test "choose bootstrap path", %{
+    test "choose execution path", %{
       bypass: bypass,
       install: install,
       actor: actor,
@@ -130,11 +132,13 @@ defmodule Uplink.Packages.Install.ExecuteTest do
         |> Plug.Conn.resp(200, empty_instances)
       end)
 
-      assert {:ok, job} =
+      assert {:ok, jobs} =
                perform_job(Execute, %{
                  install_id: install.id,
                  actor_id: actor.id
                })
+
+      assert Enum.count(jobs) == 1
     end
   end
 end
