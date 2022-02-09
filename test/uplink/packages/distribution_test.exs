@@ -124,7 +124,9 @@ defmodule Uplink.Packages.DistributionTest do
       {:ok, archive} =
         Packages.create_archive(deployment, %{
           node: "nonode@nohost",
-          locations: ["#{deployment.channel}/#{@app_slug}/x86_64/APKINDEX.tar.gz"]
+          locations: [
+            "#{deployment.channel}/#{@app_slug}/x86_64/APKINDEX.tar.gz"
+          ]
         })
 
       {:ok, %{resource: completed_deployment}} =
@@ -135,7 +137,10 @@ defmodule Uplink.Packages.DistributionTest do
 
     test "successfully fetch file", %{deployment: deployment, address: address} do
       conn =
-        conn(:get, "/distribution/#{deployment.channel}/#{@app_slug}/x86_64/APKINDEX.tar.gz")
+        conn(
+          :get,
+          "/distribution/#{deployment.channel}/#{@app_slug}/x86_64/APKINDEX.tar.gz"
+        )
         |> Map.put(:remote_ip, address)
         |> Uplink.Router.call([])
 

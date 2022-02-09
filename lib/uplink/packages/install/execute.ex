@@ -16,7 +16,7 @@ defmodule Uplink.Packages.Install.Execute do
     Instance,
     Metadata
   }
-  
+
   alias Clients.LXD
 
   import Uplink.Secret.Signature,

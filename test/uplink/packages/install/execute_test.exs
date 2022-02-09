@@ -7,11 +7,11 @@ defmodule Uplink.Packages.Install.ExecuteTest do
     Members,
     Packages
   }
-  
+
   alias Packages.{
     Metadata
   }
-  
+
   import Uplink.Secret.Signature,
     only: [compute_signature: 1]
 
