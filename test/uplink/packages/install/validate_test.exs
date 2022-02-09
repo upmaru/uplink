@@ -22,12 +22,25 @@ defmodule Uplink.Packages.Install.ValidateTest do
     "hash" => "some-hash",
     "archive_url" => "http://localhost/archives/packages.zip",
     "stack" => "alpine/3.14",
+    "channel" => "develop",
     "metadata" => %{
       "installation" => %{
         "id" => 1,
         "slug" => "uplink-web",
         "service_port" => 4000,
         "exposed_port" => 49152,
+        "channel" => %{
+          "slug" => "develop",
+          "package" => %{
+            "slug" => "something-1640927800",
+            "credential" => %{
+              "public_key" => "public_key"
+            },
+            "organization" => %{
+              "slug" => "upmaru"
+            }
+          }
+        },
         "instances" => [
           %{
             "installation_instance_id" => 1,
@@ -50,16 +63,7 @@ defmodule Uplink.Packages.Install.ValidateTest do
           "slug" => "upmaru"
         }
       },
-      "id" => 8000,
-      "package" => %{
-        "slug" => "something-1640927800",
-        "credential" => %{
-          "public_key" => "public_key"
-        },
-        "organization" => %{
-          "slug" => "upmaru"
-        }
-      }
+      "id" => 8000
     }
   }
 

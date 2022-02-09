@@ -10,6 +10,7 @@ defmodule Uplink.Packages.Deployment do
 
   @valid_attrs ~w(
     hash
+    channel
     archive_url
     metadata
     stack
@@ -17,6 +18,7 @@ defmodule Uplink.Packages.Deployment do
 
   @required_attrs ~w(
     hash
+    channel
     archive_url
     metadata
     stack
@@ -28,6 +30,7 @@ defmodule Uplink.Packages.Deployment do
   schema "deployments" do
     field :hash, :string
     field :archive_url, :string
+    field :channel, :string
     field :stack, :string
     field :current_state, :string, default: "created"
 

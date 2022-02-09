@@ -5,6 +5,7 @@ defmodule Uplink.Repo.Migrations.CreateDeployments do
     create table(:deployments) do
       add :hash, :string, null: false
       add :archive_url, :string, null: false
+      add :channel, :string, null: false
       add :stack, :string, null: false
       add :current_state, :citext, default: "created"
       

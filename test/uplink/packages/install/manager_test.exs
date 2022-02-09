@@ -14,6 +14,7 @@ defmodule Uplink.Packages.Install.ManagerTest do
   @deployment_params %{
     "hash" => "some-hash",
     "archive_url" => "http://localhost/archives/packages.zip",
+    "channel" => "develop",
     "stack" => "alpine/3.14",
     "metadata" => %{
       "installation" => %{
@@ -21,6 +22,18 @@ defmodule Uplink.Packages.Install.ManagerTest do
         "slug" => "uplink-web",
         "service_port" => 4000,
         "exposed_port" => 49152,
+        "channel" => %{
+          "slug" => "develop",
+          "package" => %{
+            "slug" => "something-1640927800",
+            "credential" => %{
+              "public_key" => "public_key"
+            },
+            "organization" => %{
+              "slug" => "upmaru"
+            }
+          }
+        },
         "instances" => [
           %{
             "installation_instance_id" => 1,
@@ -43,16 +56,7 @@ defmodule Uplink.Packages.Install.ManagerTest do
           "slug" => "upmaru"
         }
       },
-      "id" => 8000,
-      "package" => %{
-        "slug" => "something-1640927800",
-        "credential" => %{
-          "public_key" => "public_key"
-        },
-        "organization" => %{
-          "slug" => "upmaru"
-        }
-      }
+      "id" => 8000
     }
   }
 

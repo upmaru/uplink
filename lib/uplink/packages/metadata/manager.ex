@@ -4,7 +4,14 @@ defmodule Uplink.Packages.Metadata.Manager do
   defdelegate parse(params),
     to: Metadata
 
-  def profile_name(%Metadata{package: package, installation: installation}),
+  def profile_name(%Metadata{installation: installation}),
     do:
-      Enum.join([package.organization.slug, package.slug, installation.id], "-")
+      Enum.join(
+        [
+          installation.channel.package.organization.slug,
+          installation.channel.package.slug,
+          installation.id
+        ],
+        "-"
+      )
 end

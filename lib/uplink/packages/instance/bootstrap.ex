@@ -49,7 +49,8 @@ defmodule Uplink.Packages.Instance.Bootstrap do
       |> preload([:deployment])
       |> Repo.get(install_id)
 
-    with %{metadata: metadata} <- Packages.build_install_state(install, actor),
+    with %{metadata: %{installation: installation} = metadata} <-
+           Packages.build_install_state(install, actor),
          members when is_list(members) <- LXD.list_cluster_members(),
          %Member{server_name: node, architecture: architecture} <-
            members
@@ -78,10 +79,9 @@ defmodule Uplink.Packages.Instance.Bootstrap do
       formation_instance =
         Formation.Lxd.Instance.new(%{
           slug: name,
-          # repository url for apk
-          url: "",
+          url: Packages.distribution_url(metadata),
           credential: %{
-            "public_key" => metadata.package.credential.public_key
+            "public_key" => installation.channel.package.credential.public_key
           },
           package: %{
             slug: metadata.package.slug

@@ -37,6 +37,7 @@ defmodule Uplink.Packages.DistributionTest do
       "deployment" => %{
         "hash" => "some-hash",
         "stack" => "alpine/3.14",
+        "channel" => "develop",
         "archive_url" =>
           "archives/7a363fba-8ca7-4ea4-8e84-f3785ac97102/packages.zip",
         "metadata" => %{

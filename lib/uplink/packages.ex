@@ -52,4 +52,10 @@ defmodule Uplink.Packages do
   defdelegate parse_metadata(params),
     to: Metadata.Manager,
     as: :parse
+
+  alias __MODULE__.Distribution
+
+  defdelegate distribution_url(metadata),
+    to: Distribution.Manager,
+    as: :url
 end

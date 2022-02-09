@@ -19,6 +19,7 @@ defmodule Uplink.Packages.Deployment.RouterTest do
                 "deployment" => %{
                   "hash" => "some-hash",
                   "stack" => "alpine/3.14",
+                  "channel" => "develop",
                   "archive_url" =>
                     "archives/7a363fba-8ca7-4ea4-8e84-f3785ac97102/packages.zip",
                   "metadata" => %{
@@ -27,6 +28,18 @@ defmodule Uplink.Packages.Deployment.RouterTest do
                       "slug" => "uplink-web",
                       "service_port" => 4000,
                       "exposed_port" => 49152,
+                      "channel" => %{
+                        "slug" => "develop",
+                        "package" => %{
+                          "slug" => "something-1640927800",
+                          "credential" => %{
+                            "public_key" => "public_key"
+                          },
+                          "organization" => %{
+                            "slug" => "upmaru"
+                          }
+                        }
+                      },
                       "instances" => [
                         %{
                           "installation_instance_id" => 1,
@@ -49,16 +62,7 @@ defmodule Uplink.Packages.Deployment.RouterTest do
                         "slug" => "upmaru"
                       }
                     },
-                    "id" => 8000,
-                    "package" => %{
-                      "slug" => "something-1640927800",
-                      "credential" => %{
-                        "public_key" => "public_key"
-                      },
-                      "organization" => %{
-                        "slug" => "upmaru"
-                      }
-                    }
+                    "id" => 8000
                   }
                 }
               })
