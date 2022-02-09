@@ -104,13 +104,32 @@ defmodule Uplink.Packages.Install.ExecuteTest do
     {:ok, %{resource: executing_install}} =
       Packages.transition_install_with(validating_install, actor, "execute")
 
-    {:ok, install: executing_install, actor: actor, bypass: bypass}
+    empty_instances = File.read!("test/fixtures/lxd/instances/list/empty.json")
+
+    {:ok,
+     install: executing_install,
+     actor: actor,
+     bypass: bypass,
+     empty_instances: empty_instances}
   end
 
   describe "boostrap instance" do
     alias Uplink.Packages.Install.Execute
 
-    test "choose bootstrap path", %{install: install, actor: actor} do
+    test "choose bootstrap path", %{
+      bypass: bypass,
+      install: install,
+      actor: actor,
+      empty_instances: empty_instances
+    } do
+      Bypass.expect_once(bypass, "GET", "/1.0/instances", fn conn ->
+        %{"recursive" => "1"} = conn.query_params
+
+        conn
+        |> Plug.Conn.put_resp_header("content-type", "application/json")
+        |> Plug.Conn.resp(200, empty_instances)
+      end)
+
       assert {:ok, job} =
                perform_job(Execute, %{
                  install_id: install.id,

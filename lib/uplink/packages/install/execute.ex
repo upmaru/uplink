@@ -61,8 +61,11 @@ defmodule Uplink.Packages.Install.Execute do
         instance.name
       end)
 
-    installation.instances
-    |> Enum.map(&choose_execution_path(&1, existing_instances_name, state))
+    jobs =
+      installation.instances
+      |> Enum.map(&choose_execution_path(&1, existing_instances_name, state))
+
+    {:ok, jobs}
   end
 
   defp only_uplink_instance(instance) do
