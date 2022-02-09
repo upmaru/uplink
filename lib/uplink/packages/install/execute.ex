@@ -13,8 +13,11 @@ defmodule Uplink.Packages.Install.Execute do
 
   alias Packages.{
     Install,
+    Instance,
     Metadata
   }
+  
+  alias Clients.LXD
 
   import Uplink.Secret.Signature,
     only: [compute_signature: 1]
@@ -77,11 +80,11 @@ defmodule Uplink.Packages.Install.Execute do
 
     if instance.slug in existing_instances do
       job_params
-      |> Upgrade.new()
+      |> Instance.Upgrade.new()
       |> Oban.insert()
     else
       job_params
-      |> Bootstrap.new()
+      |> Instance.Bootstrap.new()
       |> Oban.insert()
     end
   end

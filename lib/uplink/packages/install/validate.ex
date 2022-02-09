@@ -5,7 +5,6 @@ defmodule Uplink.Packages.Install.Validate do
     Clients,
     Members,
     Packages,
-    Cache,
     Repo
   }
 

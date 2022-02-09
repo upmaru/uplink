@@ -53,7 +53,7 @@ defmodule Uplink.Packages.Distribution do
   defp serve_or_proxy(conn, _opts) do
     %{"glob" => params} = conn.params
 
-    [org, package] = Enum.take(params, 2)
+    [channel, org, package] = Enum.take(params, 3)
     app_slug = "#{org}/#{package}"
 
     Deployment
@@ -61,13 +61,14 @@ defmodule Uplink.Packages.Distribution do
     |> where(
       [d, app],
       app.slug == ^app_slug and
+        d.channel == ^channel and
         d.current_state == ^"live"
     )
     |> preload([:archive])
     |> limit(1)
     |> Repo.one()
     |> case do
-      %Deployment{archive: archive} ->
+      %Deployment{archive: archive} = deployment ->
         serve(conn, archive)
 
       nil ->

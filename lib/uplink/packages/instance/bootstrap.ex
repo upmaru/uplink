@@ -91,7 +91,7 @@ defmodule Uplink.Packages.Instance.Bootstrap do
       LXD.create_client()
       |> Formation.Lxd.create(node_name, instance_params)
       |> Formation.Lxd.start(name)
-      |> Formation.Lxd.setup(formation_instance)
+      |> Formation.Lxd.Instance.setup(formation_instance)
     end
   end
 end
