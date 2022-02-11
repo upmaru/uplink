@@ -76,7 +76,12 @@ defmodule Uplink.Packages.Install.Execute do
 
   defp choose_execution_path(instance, existing_instances, state) do
     job_params = %{
-      instance: %{slug: instance.slug},
+      instance: %{
+        slug: instance.slug,
+        node: %{
+          slug: instance.node.slug
+        }
+      },
       install_id: state.install.id,
       actor_id: state.actor.id
     }

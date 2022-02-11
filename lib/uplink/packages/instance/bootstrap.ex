@@ -92,6 +92,11 @@ defmodule Uplink.Packages.Instance.Bootstrap do
       |> Formation.Lxd.create(node_name, instance_params)
       |> Formation.Lxd.start(name)
       |> Formation.Lxd.Instance.setup(formation_instance)
+    else
+      nil ->
+        Packages.transition_install_with(install, actor, "fail",
+          comment: "cluster member not found"
+        )
     end
   end
 end
