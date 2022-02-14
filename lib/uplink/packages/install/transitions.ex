@@ -27,7 +27,7 @@ defmodule Uplink.Packages.Install.Transitions do
     [from: "executing", to: "completed", via: "complete"],
     fn changes -> transit(changes) end
   )
-  
+
   Install
   |> transition(
     [from: "executing", to: "failed", via: "fail"],
