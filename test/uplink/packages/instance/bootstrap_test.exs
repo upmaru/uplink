@@ -126,6 +126,8 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
         |> Plug.Conn.put_resp_header("content-type", "application/json")
         |> Plug.Conn.resp(200, cluster_members)
       end)
+      
+      Cache.delete(:cluster_members)
 
       create_instance = File.read!("test/fixtures/lxd/instances/create.json")
 
@@ -218,13 +220,19 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
         end
       )
 
-      Bypass.expect_once(
+      Bypass.expect(
         bypass,
         "POST",
         "/1.0/instances/#{instance_slug}/exec",
         fn conn ->
           assert {:ok, body, conn} = Plug.Conn.read_body(conn)
           assert {:ok, %{"command" => command}} = Jason.decode(body)
+          
+          assert command in [
+                  ["/bin/sh", "-c", "echo 'public_key' > /etc/apk/keys/pakman.rsa.pub\n"],
+                  ["/bin/sh", "-c", "cat /etc/apk/repositories\n"],
+                  ["/bin/sh", "-c", "echo http://:4040/distribution/develop/upmaru/something-1640927800 >> /etc/apk/repositories\n"]
+                ]
 
           conn
           |> Plug.Conn.put_resp_header("content-type", "application/json")
@@ -235,7 +243,7 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
       setup_public_key_params = Jason.decode!(exec_instance)
       setup_public_key_operation_id = setup_public_key_params["metadata"]["id"]
       
-      Bypass.expect_once(
+      Bypass.expect(
         bypass,
         "GET",
         "/1.0/operations/#{setup_public_key_operation_id}/wait",
@@ -245,6 +253,7 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
           |> Plug.Conn.resp(200, wait_for_operation)
         end
       )
+    
 
       assert {:ok, %{resource: install}} =
                perform_job(Bootstrap, %{
