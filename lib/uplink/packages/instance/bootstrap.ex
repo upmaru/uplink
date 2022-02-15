@@ -58,6 +58,7 @@ defmodule Uplink.Packages.Instance.Bootstrap do
              member.server_name == node_name
            end) do
       profile_name = Packages.profile_name(metadata)
+      package = installation.channel.package
 
       instance_params =
         Map.merge(@default_params, %{
@@ -81,10 +82,10 @@ defmodule Uplink.Packages.Instance.Bootstrap do
           slug: name,
           url: Packages.distribution_url(metadata),
           credential: %{
-            "public_key" => installation.channel.package.credential.public_key
+            "public_key" => package.credential.public_key
           },
           package: %{
-            slug: metadata.package.slug
+            slug: package.slug
           }
         })
 
