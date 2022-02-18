@@ -132,10 +132,12 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
       create_instance = File.read!("test/fixtures/lxd/instances/create.json")
 
       wait_for_operation = File.read!("test/fixtures/lxd/operations/wait.json")
-      
-      wait_with_log = File.read!("test/fixtures/lxd/operations/wait_with_log.json")
+
+      wait_with_log =
+        File.read!("test/fixtures/lxd/operations/wait_with_log.json")
 
       start_instance = File.read!("test/fixtures/lxd/instances/start.json")
+      stop_instance = File.read!("test/fixtures/lxd/instances/stop.json")
 
       exec_instance = File.read!("test/fixtures/lxd/instances/exec.json")
 
@@ -144,6 +146,7 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
        wait_for_operation: wait_for_operation,
        wait_with_log: wait_with_log,
        start_instance: start_instance,
+       stop_instance: stop_instance,
        exec_instance: exec_instance}
     end
 
@@ -167,8 +170,10 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
       actor: actor,
       create_instance: create_instance,
       start_instance: start_instance,
+      stop_instance: stop_instance,
       exec_instance: exec_instance,
-      wait_for_operation: wait_for_operation
+      wait_for_operation: wait_for_operation,
+      wait_with_log: wait_with_log
     } do
       instance_slug = "test-02"
 
@@ -242,6 +247,11 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
                      "/bin/sh",
                      "-c",
                      "echo http://:4040/distribution/develop/upmaru/something-1640927800 >> /etc/apk/repositories\n"
+                   ],
+                   [
+                     "/bin/sh",
+                     "-c",
+                     "apk update && apk add something-1640927800\n"
                    ]
                  ]
 
@@ -254,16 +264,53 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
       setup_public_key_params = Jason.decode!(exec_instance)
       setup_public_key_operation_id = setup_public_key_params["metadata"]["id"]
 
-      Bypass.expect_once(
+      Bypass.expect(
         bypass,
         "GET",
         "/1.0/operations/#{setup_public_key_operation_id}/wait",
         fn conn ->
           %{"timeout" => "60"} = conn.query_params
+
+          conn
+          |> Plug.Conn.put_resp_header("content-type", "application/json")
+          |> Plug.Conn.resp(200, wait_with_log)
+        end
+      )
+
+      Bypass.expect(
+        bypass,
+        "GET",
+        "/1.0/instances/#{instance_slug}/logs/stdout.log",
+        fn conn ->
+          conn
+          |> Plug.Conn.resp(
+            200,
+            "http://:4040/distribution/develop/upmaru/something-1640927800"
+          )
+        end
+      )
+
+      Bypass.expect(
+        bypass,
+        "GET",
+        "/1.0/instances/#{instance_slug}/logs/stderr.log",
+        fn conn ->
+          conn
+          |> Plug.Conn.resp(200, "")
+        end
+      )
+
+      Bypass.expect_once(
+        bypass,
+        "PUT",
+        "/1.0/instances/#{instance_slug}/state",
+        fn conn ->
+          assert {:ok, body, conn} = Plug.Conn.read_body(conn)
+          IO.inspect(body)
           
           conn
           |> Plug.Conn.put_resp_header("content-type", "application/json")
-          |> Plug.Conn.resp(200, wait_for_operation)
+          |> Plug.Conn.resp(200, start_instance)
         end
       )
 
