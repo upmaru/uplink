@@ -126,12 +126,14 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
         |> Plug.Conn.put_resp_header("content-type", "application/json")
         |> Plug.Conn.resp(200, cluster_members)
       end)
-      
+
       Cache.delete(:cluster_members)
 
       create_instance = File.read!("test/fixtures/lxd/instances/create.json")
 
       wait_for_operation = File.read!("test/fixtures/lxd/operations/wait.json")
+      
+      wait_with_log = File.read!("test/fixtures/lxd/operations/wait_with_log.json")
 
       start_instance = File.read!("test/fixtures/lxd/instances/start.json")
 
@@ -140,6 +142,7 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
       {:ok,
        create_instance: create_instance,
        wait_for_operation: wait_for_operation,
+       wait_with_log: wait_with_log,
        start_instance: start_instance,
        exec_instance: exec_instance}
     end
@@ -227,12 +230,20 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
         fn conn ->
           assert {:ok, body, conn} = Plug.Conn.read_body(conn)
           assert {:ok, %{"command" => command}} = Jason.decode(body)
-          
+
           assert command in [
-                  ["/bin/sh", "-c", "echo 'public_key' > /etc/apk/keys/pakman.rsa.pub\n"],
-                  ["/bin/sh", "-c", "cat /etc/apk/repositories\n"],
-                  ["/bin/sh", "-c", "echo http://:4040/distribution/develop/upmaru/something-1640927800 >> /etc/apk/repositories\n"]
-                ]
+                   [
+                     "/bin/sh",
+                     "-c",
+                     "echo 'public_key' > /etc/apk/keys/pakman.rsa.pub\n"
+                   ],
+                   ["/bin/sh", "-c", "cat /etc/apk/repositories\n"],
+                   [
+                     "/bin/sh",
+                     "-c",
+                     "echo http://:4040/distribution/develop/upmaru/something-1640927800 >> /etc/apk/repositories\n"
+                   ]
+                 ]
 
           conn
           |> Plug.Conn.put_resp_header("content-type", "application/json")
@@ -242,18 +253,19 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
 
       setup_public_key_params = Jason.decode!(exec_instance)
       setup_public_key_operation_id = setup_public_key_params["metadata"]["id"]
-      
-      Bypass.expect(
+
+      Bypass.expect_once(
         bypass,
         "GET",
         "/1.0/operations/#{setup_public_key_operation_id}/wait",
         fn conn ->
+          %{"timeout" => "60"} = conn.query_params
+          
           conn
           |> Plug.Conn.put_resp_header("content-type", "application/json")
           |> Plug.Conn.resp(200, wait_for_operation)
         end
       )
-    
 
       assert {:ok, %{resource: install}} =
                perform_job(Bootstrap, %{

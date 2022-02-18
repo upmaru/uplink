@@ -9,7 +9,12 @@
     "id": "8839664a-c4be-4e9f-978e-78d858635817",
     "location": "ubuntu-s-2vcpu-2gb-sgp1-01",
     "may_cancel": false,
-    "metadata": null,
+    "metadata": {
+      "output": {
+        "1": "stdout.log",
+        "2": "stderr.log"
+      }
+    },
     "resources": {
       "containers": ["/1.0/containers/test-02"],
       "instances": ["/1.0/instances/test-02"]
