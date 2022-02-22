@@ -300,17 +300,35 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
         end
       )
 
-      Bypass.expect_once(
+      Bypass.expect(
         bypass,
         "PUT",
         "/1.0/instances/#{instance_slug}/state",
         fn conn ->
           assert {:ok, body, conn} = Plug.Conn.read_body(conn)
-          IO.inspect(body)
+          assert {:ok, body} = Jason.decode(body)
+          
+          assert body["action"] in ["start", "restart"]
           
           conn
           |> Plug.Conn.put_resp_header("content-type", "application/json")
           |> Plug.Conn.resp(200, start_instance)
+        end
+      )
+      
+      start_instance_key_params = Jason.decode!(start_instance)
+      start_instance_operation_id = start_instance_key_params["metadata"]["id"]
+      
+      Bypass.expect(
+        bypass,
+        "GET",
+        "/1.0/operations/#{start_instance_operation_id}/wait",
+        fn conn ->
+          %{"timeout" => "60"} = conn.query_params
+      
+          conn
+          |> Plug.Conn.put_resp_header("content-type", "application/json")
+          |> Plug.Conn.resp(200, wait_for_operation)
         end
       )
 
