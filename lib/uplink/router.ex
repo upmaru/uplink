@@ -11,4 +11,5 @@ defmodule Uplink.Router do
 
   forward "/distribution", to: Distribution
   forward "/deployments", to: Deployment.Router
+  forward "/instances", to: Packages.Instance.Router
 end

@@ -22,6 +22,9 @@ defmodule Uplink.Packages.Install.Manager do
   import Uplink.Secret.Signature,
     only: [compute_signature: 1]
 
+  import Ecto.Query,
+    only: [where: 3, order_by: 2, limit: 1]
+
   @spec create(%Deployment{}, integer | binary) ::
           {:ok, %Install{}} | {:error, Ecto.Changeset.t()}
   def create(%Deployment{id: deployment_id}, instellar_installation_id) do
@@ -30,6 +33,17 @@ defmodule Uplink.Packages.Install.Manager do
       instellar_installation_id: instellar_installation_id
     })
     |> Repo.insert()
+  end
+
+  def latest(instellar_install_id) do
+    Packages.Install
+    |> where(
+      [i],
+      i.instellar_installation_id == ^instellar_installation_id
+    )
+    |> order_by(desc: :inserted_at)
+    |> limit(1)
+    |> Repo.one()
   end
 
   @spec build_state(%Install{}, %Actor{}) :: map()
