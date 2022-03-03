@@ -26,28 +26,28 @@ defmodule Uplink.Packages.Instance.Router do
 
   plug :dispatch
 
-  impor(Ecto.Query, only: [where: 3, order_by: 2, limit: 1])
+  import Ecto.Query, only: [where: 3, order_by: 2, limit: 2]
 
   post "/bootstrap" do
     %{
       "actor" => actor_params,
       "installation_id" => instellar_installation_id,
       "instance" => instance_params
-    }
+    } = conn.body_params
 
     with %Members.Actor{id: actor_id} <- Members.get_actor(actor_params),
          %Packages.Install{id: install_id} <-
            Packages.latest_install(instellar_installation_id) do
       {:ok, %{id: job_id}} =
         %{
-          instance: instace_params,
+          instance: instance_params,
           install_id: install_id,
           actor_id: actor_id
         }
         |> Instance.Bootstrap.new()
         |> Oban.insert()
 
-      json(conn, :created, %{id: job.id})
+      json(conn, :created, %{id: job_id})
     else
       nil ->
         json(conn, :unprocessable_entity, %{

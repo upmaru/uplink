@@ -48,6 +48,9 @@ defmodule Uplink.MixProject do
       # One time password
       {:pot, "~> 1.0.2"},
 
+      # Certificate
+      {:x509, "~> 0.8.4"},
+
       # Infrastructure
       {:formation, "~> 0.1.2"},
       {:lexdee, "~> 1.0.1"},

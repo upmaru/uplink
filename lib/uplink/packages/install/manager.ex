@@ -23,7 +23,7 @@ defmodule Uplink.Packages.Install.Manager do
     only: [compute_signature: 1]
 
   import Ecto.Query,
-    only: [where: 3, order_by: 2, limit: 1]
+    only: [where: 3, order_by: 2, limit: 2]
 
   @spec create(%Deployment{}, integer | binary) ::
           {:ok, %Install{}} | {:error, Ecto.Changeset.t()}
@@ -35,7 +35,7 @@ defmodule Uplink.Packages.Install.Manager do
     |> Repo.insert()
   end
 
-  def latest(instellar_install_id) do
+  def latest(instellar_installation_id) do
     Packages.Install
     |> where(
       [i],
