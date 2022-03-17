@@ -76,6 +76,12 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
       }
     })
 
+    Application.put_env(
+      :uplink,
+      Uplink.Clients.Instellar,
+      endpoint: "http://localhost:#{bypass.port}/uplink"
+    )
+
     {:ok, actor} =
       Members.create_actor(%{
         identifier: "zacksiri"
@@ -170,7 +176,6 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
       actor: actor,
       create_instance: create_instance,
       start_instance: start_instance,
-      stop_instance: stop_instance,
       exec_instance: exec_instance,
       wait_for_operation: wait_for_operation,
       wait_with_log: wait_with_log
@@ -332,7 +337,25 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
         end
       )
 
-      assert {:ok, %{resource: install}} =
+      Bypass.expect_once(
+        bypass,
+        "POST",
+        "/uplink/installations/#{install.instellar_installation_id}/instances/#{instance_slug}/events",
+        fn conn ->
+          assert {:ok, body, conn} = Plug.Conn.read_body(conn)
+          assert {:ok, body} = Jason.decode(body)
+
+          %{"event" => %{"name" => "complete"}} = body
+
+          conn
+          |> Plug.Conn.put_resp_header("content-type", "application/json")
+          |> Plug.Conn.resp(201, Jason.encode!(%{
+            "data" => %{"attributes" => %{"id" => 1, "name" => "complete"}}
+          }))
+        end
+      )
+
+      assert {:ok, %{"id" => _id}} =
                perform_job(Bootstrap, %{
                  instance: %{
                    slug: instance_slug,

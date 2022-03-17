@@ -8,7 +8,11 @@ defmodule Uplink.Packages.Instance.Bootstrap do
     Repo
   }
 
-  alias Clients.LXD
+  alias Clients.{
+    LXD,
+    Instellar
+  }
+
   alias LXD.Cluster
   alias Cluster.Member
 
@@ -93,6 +97,13 @@ defmodule Uplink.Packages.Instance.Bootstrap do
       |> Formation.Lxd.create(node_name, instance_params)
       |> Formation.Lxd.start(name)
       |> Formation.Lxd.Instance.setup(formation_instance)
+      |> case do
+        {:ok, _repo_path} ->
+          Instellar.transition_instance(name, install, "complete")
+
+        _ ->
+          Instellar.transition_instance(name, install, "fail")
+      end
     else
       nil ->
         Packages.transition_install_with(install, actor, "fail",

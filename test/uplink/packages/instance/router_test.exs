@@ -25,7 +25,7 @@ defmodule Uplink.Packages.Instance.RouterTest do
                   }
                 }
               })
-              
+
   @deployment_params %{
     "hash" => "some-hash",
     "archive_url" => "http://localhost:4000/archives/packages.zip",
@@ -68,7 +68,7 @@ defmodule Uplink.Packages.Instance.RouterTest do
 
   setup do
     :ok = Ecto.Adapters.SQL.Sandbox.checkout(Uplink.Repo)
-    
+
     {:ok, actor} =
       Members.create_actor(%{
         identifier: "zacksiri"
@@ -85,7 +85,7 @@ defmodule Uplink.Packages.Instance.RouterTest do
     {:ok, _transition} =
       Packages.transition_deployment_with(deployment, actor, "complete")
 
-    {:ok, install} = Packages.create_install(deployment, 1)
+    {:ok, _install} = Packages.create_install(deployment, 1)
 
     :ok
   end
@@ -106,6 +106,15 @@ defmodule Uplink.Packages.Instance.RouterTest do
       assert conn.status == 201
 
       assert %{"data" => %{"id" => _job_id}} = Jason.decode!(conn.resp_body)
+    end
+
+    test "return unauthorized when request sent without signature" do
+      conn =
+        conn(:post, "/bootstrap", @valid_body)
+        |> put_req_header("content-type", "application/json")
+        |> Router.call(@opts)
+
+      assert conn.status == 401
     end
   end
 end
