@@ -349,9 +349,12 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
 
           conn
           |> Plug.Conn.put_resp_header("content-type", "application/json")
-          |> Plug.Conn.resp(201, Jason.encode!(%{
-            "data" => %{"attributes" => %{"id" => 1, "name" => "complete"}}
-          }))
+          |> Plug.Conn.resp(
+            201,
+            Jason.encode!(%{
+              "data" => %{"attributes" => %{"id" => 1, "name" => "complete"}}
+            })
+          )
         end
       )
 
