@@ -292,7 +292,7 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
           conn
           |> Plug.Conn.resp(
             200,
-            "http://:4040/distribution/develop/upmaru/something-1640927800"
+            "http://#{hostname}:4040/distribution/develop/upmaru/something-1640927800"
           )
         end
       )
