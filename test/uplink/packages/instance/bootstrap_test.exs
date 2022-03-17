@@ -233,6 +233,8 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
         end
       )
 
+      hostname = System.get_env("HOSTNAME")
+
       Bypass.expect(
         bypass,
         "POST",
@@ -251,7 +253,7 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
                    [
                      "/bin/sh",
                      "-c",
-                     "echo http://:4040/distribution/develop/upmaru/something-1640927800 >> /etc/apk/repositories\n"
+                     "echo http://#{hostname}:4040/distribution/develop/upmaru/something-1640927800 >> /etc/apk/repositories\n"
                    ],
                    [
                      "/bin/sh",
