@@ -49,6 +49,11 @@ defmodule Uplink.Packages.Instance.Router do
 
       json(conn, :created, %{id: job_id})
     else
+      {:actor, :not_found} ->
+        json(conn, :not_found, %{
+          error: %{message: "actor not found"}
+        })
+
       nil ->
         json(conn, :unprocessable_entity, %{
           error: %{message: "install not available, create a deployment first"}
