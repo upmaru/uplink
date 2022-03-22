@@ -50,7 +50,7 @@ defmodule Uplink.Packages.Install.Execute do
   defp validate_and_execute_instances(
          %{
            install: install,
-           metadata: %Metadata{installation: installation},
+           metadata: %Metadata{instances: instances},
            actor: actor
          } = state
        ) do
@@ -62,7 +62,7 @@ defmodule Uplink.Packages.Install.Execute do
       end)
 
     jobs =
-      installation.instances
+      instances
       |> Enum.map(&choose_execution_path(&1, existing_instances_name, state))
 
     {:ok, jobs}

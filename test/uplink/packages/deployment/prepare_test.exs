@@ -49,13 +49,7 @@ defmodule Uplink.Packages.Deployment.PrepareTest do
             "slug" => "upmaru"
           }
         },
-        "id" => 8000,
-        "package" => %{
-          "slug" => "something-1640927800",
-          "organization" => %{
-            "slug" => "upmaru"
-          }
-        }
+        "id" => 8000
       }
     }
 

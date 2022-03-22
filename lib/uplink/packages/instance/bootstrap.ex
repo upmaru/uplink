@@ -53,7 +53,7 @@ defmodule Uplink.Packages.Instance.Bootstrap do
       |> preload([:deployment])
       |> Repo.get(install_id)
 
-    with %{metadata: %{installation: installation} = metadata} <-
+    with %{metadata: %{channel: channel} = metadata} <-
            Packages.build_install_state(install, actor),
          members when is_list(members) <- LXD.list_cluster_members(),
          %Member{server_name: node, architecture: architecture} <-
@@ -62,7 +62,7 @@ defmodule Uplink.Packages.Instance.Bootstrap do
              member.server_name == node_name
            end) do
       profile_name = Packages.profile_name(metadata)
-      package = installation.channel.package
+      package = channel.package
 
       instance_params =
         Map.merge(@default_params, %{

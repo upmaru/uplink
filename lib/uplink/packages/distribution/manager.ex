@@ -1,16 +1,15 @@
 defmodule Uplink.Packages.Distribution.Manager do
   alias Uplink.Packages
 
-  def url(%Packages.Metadata{installation: installation}) do
+  def url(%Packages.Metadata{channel: channel}) do
     hostname = System.get_env("HOSTNAME")
     router_config = Application.get_env(:uplink, Uplink.Router)
 
     port = Keyword.get(router_config, :port)
 
-    channel = installation.channel.slug
-    organization = installation.channel.package.organization.slug
-    package = installation.channel.package.slug
+    organization = channel.package.organization.slug
+    package = channel.package.slug
 
-    "http://#{hostname}:#{port}/distribution/#{channel}/#{organization}/#{package}"
+    "http://#{hostname}:#{port}/distribution/#{channel.slug}/#{organization}/#{package}"
   end
 end

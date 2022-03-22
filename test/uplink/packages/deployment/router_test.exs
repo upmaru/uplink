@@ -23,46 +23,31 @@ defmodule Uplink.Packages.Deployment.RouterTest do
                   "archive_url" =>
                     "archives/7a363fba-8ca7-4ea4-8e84-f3785ac97102/packages.zip",
                   "metadata" => %{
-                    "installation" => %{
-                      "id" => 1,
-                      "slug" => "uplink-web",
-                      "service_port" => 4000,
-                      "exposed_port" => 49152,
-                      "channel" => %{
-                        "slug" => "develop",
-                        "package" => %{
-                          "slug" => "something-1640927800",
-                          "credential" => %{
-                            "public_key" => "public_key"
-                          },
-                          "organization" => %{
-                            "slug" => "upmaru"
-                          }
+                    "id" => 1,
+                    "slug" => "uplink-web",
+                    "service_port" => 4000,
+                    "exposed_port" => 49152,
+                    "channel" => %{
+                      "slug" => "develop",
+                      "package" => %{
+                        "slug" => "something-1640927800",
+                        "credential" => %{
+                          "public_key" => "public_key"
+                        },
+                        "organization" => %{
+                          "slug" => "upmaru"
                         }
-                      },
-                      "instances" => [
-                        %{
-                          "installation_instance_id" => 1,
-                          "slug" => "something-1",
-                          "node" => %{
-                            "slug" => "some-node"
-                          }
-                        }
-                      ]
-                    },
-                    "cluster" => %{
-                      "credential" => %{
-                        "certificate" => "cert",
-                        "endpoint" => "https://127.0.0.1:8443",
-                        "password" => "somepassword",
-                        "password_confirmation" => "somepassword",
-                        "private_key" => "key"
-                      },
-                      "organization" => %{
-                        "slug" => "upmaru"
                       }
                     },
-                    "id" => 8000
+                    "instances" => [
+                      %{
+                        "installation_instance_id" => 1,
+                        "slug" => "something-1",
+                        "node" => %{
+                          "slug" => "some-node"
+                        }
+                      }
+                    ]
                   }
                 }
               })
