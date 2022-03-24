@@ -56,7 +56,7 @@ defmodule Uplink.Packages.Instance.Bootstrap do
     with %{metadata: %{channel: channel} = metadata} <-
            Packages.build_install_state(install, actor),
          members when is_list(members) <- LXD.list_cluster_members(),
-         %Member{server_name: node, architecture: architecture} <-
+         %Member{architecture: architecture} <-
            members
            |> Enum.find(fn member ->
              member.server_name == node_name

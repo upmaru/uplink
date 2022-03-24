@@ -5,7 +5,6 @@ defmodule Uplink.Packages.Install.Execute do
     Clients,
     Members,
     Packages,
-    Cache,
     Repo
   }
 
@@ -18,9 +17,6 @@ defmodule Uplink.Packages.Install.Execute do
   }
 
   alias Clients.LXD
-
-  import Uplink.Secret.Signature,
-    only: [compute_signature: 1]
 
   import Ecto.Query,
     only: [where: 3, preload: 2]
@@ -49,9 +45,7 @@ defmodule Uplink.Packages.Install.Execute do
 
   defp validate_and_execute_instances(
          %{
-           install: install,
-           metadata: %Metadata{instances: instances},
-           actor: actor
+           metadata: %Metadata{instances: instances}
          } = state
        ) do
     existing_instances_name =

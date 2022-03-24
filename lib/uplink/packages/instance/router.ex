@@ -12,9 +12,6 @@ defmodule Uplink.Packages.Instance.Router do
     Instance
   }
 
-  import Uplink.Secret.Signature,
-    only: [compute_signature: 1]
-
   plug :match
 
   plug Deployment.Secret
@@ -25,8 +22,6 @@ defmodule Uplink.Packages.Instance.Router do
     json_decoder: Jason
 
   plug :dispatch
-
-  import Ecto.Query, only: [where: 3, order_by: 2, limit: 2]
 
   post "/bootstrap" do
     %{
