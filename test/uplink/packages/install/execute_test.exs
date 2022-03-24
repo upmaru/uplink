@@ -45,7 +45,7 @@ defmodule Uplink.Packages.Install.ExecuteTest do
             "slug" => "some-node"
           }
         }
-      ]      
+      ]
     }
   }
 
