@@ -46,7 +46,7 @@ defmodule Uplink.Packages.Install.Manager do
     |> Repo.one()
   end
 
-  @spec build_state(%Install{}, %Actor{}) :: map()
+  @spec build_state(%Install{}, %Actor{}) :: %{install: %Install{}, metadata: %Metadata{}, actor: %Members.Actor{}}
   def build_state(%Install{deployment: deployment} = install, actor) do
     signature = compute_signature(deployment.hash)
 
