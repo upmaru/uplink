@@ -1,0 +1,24 @@
+{
+  "type": "sync",
+  "status": "Success",
+  "status_code": 200,
+  "operation": "",
+  "error_code": 0,
+  "error": "",
+  "metadata": [
+    {
+      "roles": [
+        "database"
+      ],
+      "failure_domain": "",
+      "description": "",
+      "config": null,
+      "server_name": "ubuntu-s-1vcpu-1gb-sgp1-01",
+      "url": "https://10.130.0.3:8443",
+      "database": true,
+      "status": "Online",
+      "message": "Fully operational",
+      "architecture": "x86_64"
+    }
+  ]
+}

@@ -1,4 +1,4 @@
-defmodule Uplink.Packages.Install.ManageTest do
+defmodule Uplink.Packages.Install.ManagerTest do
   use ExUnit.Case
 
   alias Uplink.{
@@ -14,32 +14,34 @@ defmodule Uplink.Packages.Install.ManageTest do
   @deployment_params %{
     "hash" => "some-hash",
     "archive_url" => "http://localhost/archives/packages.zip",
+    "channel" => "develop",
+    "stack" => "alpine/3.14",
     "metadata" => %{
+      "id" => 1,
+      "slug" => "uplink-web",
+      "service_port" => 4000,
+      "exposed_port" => 49152,
+      "channel" => %{
+        "slug" => "develop",
+        "package" => %{
+          "slug" => "something-1640927800",
+          "credential" => %{
+            "public_key" => "public_key"
+          },
+          "organization" => %{
+            "slug" => "upmaru"
+          }
+        }
+      },
       "instances" => [
         %{
           "installation_instance_id" => 1,
-          "slug" => "something-1"
+          "slug" => "something-1",
+          "node" => %{
+            "slug" => "some-node"
+          }
         }
-      ],
-      "cluster" => %{
-        "credential" => %{
-          "certificate" => "cert",
-          "endpoint" => "https://127.0.0.1:8443",
-          "password" => "somepassword",
-          "password_confirmation" => "somepassword",
-          "private_key" => "key"
-        },
-        "organization" => %{
-          "slug" => "upmaru"
-        }
-      },
-      "id" => 8000,
-      "package" => %{
-        "slug" => "something-1640927800",
-        "organization" => %{
-          "slug" => "upmaru"
-        }
-      }
+      ]
     }
   }
 
@@ -82,7 +84,7 @@ defmodule Uplink.Packages.Install.ManageTest do
 
     test "can transition state", %{install: install, actor: actor} do
       assert {:ok, _transition} =
-               Manager.transition_with(install, actor, "execute")
+               Manager.transition_with(install, actor, "validate")
     end
   end
 end

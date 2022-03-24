@@ -1,6 +1,7 @@
 defmodule Uplink.Clients.Instellar do
   alias __MODULE__.{
     Installation,
+    Instance,
     Self
   }
 
@@ -13,6 +14,10 @@ defmodule Uplink.Clients.Instellar do
   defdelegate deployment_metadata(deployment),
     to: Installation,
     as: :metadata
+
+  defdelegate transition_instance(instance, install, event_name),
+    to: Instance,
+    as: :transition
 
   def endpoint, do: config(:endpoint) || @endpoint
 

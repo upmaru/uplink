@@ -19,23 +19,23 @@ defmodule Uplink.Packages.Deployment.Prepare do
   def perform(%Oban.Job{
         args: %{"deployment_id" => deployment_id, "actor_id" => actor_id}
       }) do
+    actor = Repo.get(Members.Actor, actor_id)
+
     %Deployment{} =
       deployment =
       Deployment
       |> Repo.get(deployment_id)
       |> Repo.preload([:app])
 
-    Members.Actor
-    |> Repo.get(actor_id)
-    |> execute(deployment)
+    handle_prepare(deployment, actor)
   end
 
-  defp execute(
-         %Members.Actor{} = actor,
+  defp handle_prepare(
          %Deployment{
            hash: hash,
            archive_url: archive_url
-         } = deployment
+         } = deployment,
+         %Members.Actor{} = actor
        ) do
     identifier = Deployment.identifier(deployment)
 
@@ -81,7 +81,7 @@ defmodule Uplink.Packages.Deployment.Prepare do
     |> :zip.unzip([{:cwd, to_charlist(extraction_path)}])
     |> case do
       {:ok, paths} ->
-        tmp_path = Path.join("tmp", "deployments")
+        tmp_path = Path.join(["tmp", "deployments", deployment.channel])
         File.mkdir_p!(tmp_path)
 
         [_, org, package, _] = String.split(identifier, "/")

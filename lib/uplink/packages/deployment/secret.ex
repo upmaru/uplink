@@ -11,16 +11,22 @@ defmodule Uplink.Packages.Deployment.Secret do
   def call(conn, _opts) do
     {:ok, body, _} = read_body(conn)
 
-    [request_signature] = get_req_header(conn, "x-uplink-signature-256")
+    case get_req_header(conn, "x-uplink-signature-256") do
+      [request_signature] ->
+        signature = compute_signature(body)
 
-    signature = compute_signature(body)
+        if "sha256=#{signature}" == request_signature do
+          conn
+        else
+          conn
+          |> json(:not_acceptable, %{error: %{message: "invalid signature"}})
+          |> halt()
+        end
 
-    if "sha256=#{signature}" == request_signature do
-      conn
-    else
-      conn
-      |> json(:not_acceptable, %{error: %{message: "invalid signature"}})
-      |> halt()
+      [] ->
+        conn
+        |> json(:unauthorized, %{error: %{message: "unauthorized"}})
+        |> halt()
     end
   end
 end

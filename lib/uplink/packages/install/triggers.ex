@@ -9,12 +9,12 @@ defmodule Uplink.Packages.Install.Triggers do
     Install
   }
 
-  alias Install.Execute
+  alias Install.Validate
 
   Install
-  |> trigger([currently: "executing"], fn event, install ->
+  |> trigger([currently: "validating"], fn event, install ->
     %{install_id: install.id, actor_id: event.actor_id}
-    |> Execute.new()
+    |> Validate.new()
     |> Oban.insert()
   end)
 end

@@ -1,0 +1,64 @@
+{
+  "type": "sync",
+  "status": "Success",
+  "status_code": 200,
+  "operation": "",
+  "error_code": 0,
+  "error": "",
+  "metadata": [
+    {
+      "config": {},
+      "description": "installation 1",
+      "devices": {
+        "web": {
+          "connect": "tcp:127.0.0.1:80",
+          "listen": "tcp:0.0.0.0:49152",
+          "type": "proxy"
+        }
+      },
+      "name": "artellectual-master-web",
+      "used_by": [
+        "/1.0/instances/artellectual-web-01"
+      ]
+    },
+    {
+      "config": {},
+      "description": "Default LXD profile",
+      "devices": {
+        "eth0": {
+          "name": "eth0",
+          "network": "lxdfan0",
+          "type": "nic"
+        },
+        "root": {
+          "path": "/",
+          "pool": "local",
+          "type": "disk"
+        }
+      },
+      "name": "default",
+      "used_by": [
+        "/1.0/instances/artellectual-web-01",
+        "/1.0/instances/helipad-web-test-01"
+      ]
+    },
+    {
+      "config": {
+        "user.INSTELLAR_BOT_TOKEN": "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJpbnN0ZWxsYXIiLCJleHAiOjE2MTQxNDgxMDIsImlhdCI6MTYxMzI4NDEwMiwiaXNzIjoiaW5zdGVsbGFyIiwianRpIjoiNTUzOTljZmMtYjI4ZS00OWEzLThlYjItM2Q1ZDg4MThhY2Y3IiwibmJmIjoxNjEzMjg0MTAxLCJzdWIiOiIzIiwidHlwIjoiY29uZmlndXJhdGlvbiJ9.gP9M-O1c4pH4hxYUlDAukHelXJ9ElXjBEwVXNLdXDKr5aqvcoP6CdT4fPrPpfkQSGITeXlw1J0HHiWrG0wDbew",
+        "user.INSTELLAR_INSTALLATION_ENDPOINT": "https://instellar.app/runtime/installations/2"
+      },
+      "description": "installation 2",
+      "devices": {
+        "web": {
+          "connect": "tcp:127.0.0.1:4000",
+          "listen": "tcp:0.0.0.0:49153",
+          "type": "proxy"
+        }
+      },
+      "name": "helipad-master-web-test",
+      "used_by": [
+        "/1.0/instances/helipad-web-test-01"
+      ]
+    }
+  ]
+}

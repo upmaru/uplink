@@ -13,6 +13,14 @@ defmodule Uplink.Packages do
 
   alias __MODULE__.Install
 
+  defdelegate build_install_state(install, actor),
+    to: Install.Manager,
+    as: :build_state
+
+  defdelegate latest_install(instellar_installation_id),
+    to: Install.Manager,
+    as: :latest
+
   defdelegate create_install(deployment, instellar_installation_id),
     to: Install.Manager,
     as: :create
@@ -42,7 +50,16 @@ defmodule Uplink.Packages do
 
   alias __MODULE__.Metadata
 
+  defdelegate profile_name(metadata),
+    to: Metadata.Manager
+
   defdelegate parse_metadata(params),
     to: Metadata.Manager,
     as: :parse
+
+  alias __MODULE__.Distribution
+
+  defdelegate distribution_url(metadata),
+    to: Distribution.Manager,
+    as: :url
 end
