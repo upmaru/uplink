@@ -68,7 +68,7 @@ defmodule Uplink.Packages.Distribution do
     |> limit(1)
     |> Repo.one()
     |> case do
-      %Deployment{archive: archive} = deployment ->
+      %Deployment{archive: archive} ->
         serve(conn, archive)
 
       nil ->

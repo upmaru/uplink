@@ -11,21 +11,29 @@ defmodule Uplink.Application do
     router_config = Application.get_env(:uplink, Uplink.Router, port: 4040)
     port = Keyword.get(router_config, :port)
 
-    children = [
-      {Uplink.Cache, []},
-      {Uplink.Repo, []},
-      {Oban, oban_config},
-      {
-        Plug.Cowboy,
-        plug: Uplink.Router,
-        scheme: :https,
-        port: port,
-        key: {:RSAPrivateKey, key},
-        cert: cert
-      }
-    ]
+    children =
+      [
+        {Uplink.Cache, []},
+        {Uplink.Repo, []},
+        {Oban, oban_config},
+        {
+          Plug.Cowboy,
+          plug: Uplink.Router,
+          scheme: :https,
+          port: port,
+          key: {:RSAPrivateKey, key},
+          cert: cert
+        }
+      ]
+      |> append_live_only_services(Application.get_env(:uplink, :environment))
 
     opts = [strategy: :one_for_one, name: Uplink.Supervisor]
     Supervisor.start_link(children, opts)
   end
+
+  defp append_live_only_services(children, :test),
+    do: children
+
+  defp append_live_only_services(children, _),
+    do: children ++ [{Uplink.Boot, []}]
 end
