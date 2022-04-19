@@ -18,8 +18,6 @@ defmodule Uplink.Web do
     @default_name "uplink"
     @default_hostnames ["localhost"]
 
-    alias Uplink.Cache
-
     def generate do
       private_key = X509.PrivateKey.new_rsa(@key_size)
 
