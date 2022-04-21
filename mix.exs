@@ -8,7 +8,12 @@ defmodule Uplink.MixProject do
       elixir: "~> 1.9",
       start_permanent: Mix.env() == :prod,
       deps: deps(),
-      aliases: aliases()
+      aliases: aliases(),
+      releases: [
+        uplink: [
+          include_executables_for: [:unix]
+        ]
+      ]
     ]
   end
 

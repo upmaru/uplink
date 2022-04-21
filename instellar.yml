@@ -2,7 +2,6 @@ dependencies:
   build:
     - elixir
   runtime:
-    - nginx
     - bash
     - curl
     - jq
@@ -29,6 +28,10 @@ run:
     call: 'start'
   stop:
     call: 'stop'
+  command:
+    call: 'eval'
+    variations:
+      migrate: Uplink.Release.Tasks.migrate
 
 hook:
   post-install: |
