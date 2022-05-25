@@ -1,4 +1,4 @@
-import Mix.Config
+import Config
 
 config :uplink, Uplink.Repo, url: System.get_env("DATABASE_URL")
 
