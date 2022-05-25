@@ -14,8 +14,8 @@ defmodule Uplink.BootTest do
       {:ok, bypass: bypass}
     end
 
-    test "calls /uplink/registerations", %{bypass: bypass} do
-      Bypass.expect_once(bypass, "POST", "/uplink/registrations", fn conn ->
+    test "calls /uplink/self/registeration", %{bypass: bypass} do
+      Bypass.expect_once(bypass, "POST", "/uplink/self/registration", fn conn ->
         conn
         |> Plug.Conn.put_resp_header("content-type", "application/json")
         |> Plug.Conn.resp(200, Jason.encode!(%{data: %{attributes: 1}}))

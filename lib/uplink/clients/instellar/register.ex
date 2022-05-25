@@ -5,7 +5,7 @@ defmodule Uplink.Clients.Instellar.Register do
   def perform do
     headers = Instellar.Self.headers()
 
-    [Clients.Instellar.endpoint(), "registrations"]
+    [Clients.Instellar.endpoint(), "self", "registration"]
     |> Path.join()
     |> Req.post!({:json, %{}}, headers: headers)
     |> case do
