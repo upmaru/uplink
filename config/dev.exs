@@ -1,4 +1,4 @@
-use Mix.Config
+import Config
 
 config :uplink, Uplink.Repo,
   database: System.get_env("UPLINK_DB_NAME"),
