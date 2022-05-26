@@ -36,6 +36,8 @@ defmodule Uplink.Packages.Deployment.Router do
       "deployment" => deployment_params
     } = conn.body_params
 
+    IO.inspect(conn)
+
     with {:ok, %Metadata{} = metadata} <-
            deployment_params
            |> Map.get("metadata")
