@@ -29,16 +29,12 @@ defmodule Uplink.Packages.Deployment.Router do
 
   plug :dispatch
 
-  require Logger
-
   post "/" do
     %{
       "actor" => actor_params,
       "installation_id" => instellar_installation_id,
       "deployment" => deployment_params
     } = conn.body_params
-
-    Logger.info("[Deployments.Router] #{conn}")
 
     with {:ok, %Metadata{} = metadata} <-
            deployment_params
