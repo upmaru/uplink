@@ -28,7 +28,11 @@ defmodule Uplink.Packages.Deployment.Router do
 
   plug :dispatch
 
+  require Logger
+
   post "/" do
+    Logger.info("Conn:", conn)
+
     instellar_installation_id = conn.body_params["installation_id"]
     deployment_params = conn.body_params["deployment"]
     actor_params = conn.body_params["actor"]
