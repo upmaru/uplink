@@ -13,10 +13,18 @@ defmodule Uplink.Web do
     end
   end
 
+  defmodule CacheBodyReader do
+    def read_body(conn, opts) do
+      {:ok, body, conn} = Plug.Conn.read_body(conn, opts)
+      conn = update_in(conn.assigns[:raw_body], &[body | &1 || []])
+      {:ok, body, conn}
+    end
+  end
+
   defmodule Certificate do
     @key_size 2048
     @default_name "uplink"
-    @default_hostnames ["something"]
+    @default_hostnames ["localhost"]
 
     def generate do
       private_key = X509.PrivateKey.new_rsa(@key_size)

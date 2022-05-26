@@ -3,22 +3,23 @@ defmodule Uplink.Packages.Instance.Router do
   use Uplink.Web
 
   alias Uplink.{
+    Secret,
     Members,
     Packages
   }
 
   alias Packages.{
-    Deployment,
     Instance
   }
 
   plug :match
 
-  plug Deployment.Secret
-
   plug Plug.Parsers,
     parsers: [:urlencoded, :json],
+    body_reader: {Uplink.Web.CacheBodyReader, :read_body, []},
     json_decoder: Jason
+
+  plug Secret.VerificationPlug
 
   plug :dispatch
 
