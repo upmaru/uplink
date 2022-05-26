@@ -20,7 +20,7 @@ defmodule Uplink.Packages.Deployment.Router do
 
   plug :match
 
-  # plug Deployment.Secret
+  plug Deployment.Secret
 
   plug Plug.Parsers,
     parsers: [:urlencoded, :json],
@@ -28,16 +28,10 @@ defmodule Uplink.Packages.Deployment.Router do
 
   plug :dispatch
 
-  require Logger
-
   post "/" do
-    Logger.info("#{conn}")
-
-    %{
-      "actor" => actor_params,
-      "installation_id" => instellar_installation_id,
-      "deployment" => deployment_params
-    } = conn.body_params
+    instellar_installation_id = conn.body_params["installation_id"]
+    deployment_params = conn.body_params["deployment"]
+    actor_params = conn.body_params["actor"]
 
     with {:ok, %Metadata{} = metadata} <-
            deployment_params
