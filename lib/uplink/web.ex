@@ -16,7 +16,7 @@ defmodule Uplink.Web do
   defmodule Certificate do
     @key_size 2048
     @default_name "uplink"
-    @default_hostnames ["localhost"]
+    @default_hostnames ["something"]
 
     def generate do
       private_key = X509.PrivateKey.new_rsa(@key_size)
