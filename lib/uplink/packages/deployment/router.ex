@@ -29,6 +29,8 @@ defmodule Uplink.Packages.Deployment.Router do
 
   plug :dispatch
 
+  require Logger
+
   post "/" do
     %{
       "actor" => actor_params,
@@ -36,7 +38,7 @@ defmodule Uplink.Packages.Deployment.Router do
       "deployment" => deployment_params
     } = conn.body_params
 
-    IO.inspect(conn)
+    Logger.info("[Deployments.Router] #{conn}")
 
     with {:ok, %Metadata{} = metadata} <-
            deployment_params
