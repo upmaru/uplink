@@ -20,7 +20,7 @@ defmodule Uplink.Packages.Deployment.Router do
 
   plug :match
 
-  #plug Deployment.Secret
+  # plug Deployment.Secret
 
   plug Plug.Parsers,
     parsers: [:urlencoded, :json],
@@ -38,7 +38,6 @@ defmodule Uplink.Packages.Deployment.Router do
       "installation_id" => instellar_installation_id,
       "deployment" => deployment_params
     } = conn.body_params
-
 
     with {:ok, %Metadata{} = metadata} <-
            deployment_params
