@@ -18,7 +18,6 @@ defmodule Uplink.Packages.Instance.Router do
 
   plug Plug.Parsers,
     parsers: [:urlencoded, :json],
-    pass: ["application/*"],
     json_decoder: Jason
 
   plug :dispatch
