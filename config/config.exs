@@ -12,7 +12,8 @@ config :uplink, Oban,
   repo: Uplink.Repo,
   queues: [
     prepare_deployment: 1,
-    execute_install: 1
+    execute_install: 1,
+    validate_install: 1
   ]
 
 config :uplink, Uplink.Cluster,
