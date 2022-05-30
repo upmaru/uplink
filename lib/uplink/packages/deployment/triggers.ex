@@ -38,7 +38,7 @@ defmodule Uplink.Packages.Deployment.Triggers do
     Repo.transaction(fn ->
       stream
       |> Enum.each(fn install ->
-        Packages.transition_install_with(install, event.actor, "execute")
+        Packages.transition_install_with(install, event.actor, "validate")
       end)
     end)
 
