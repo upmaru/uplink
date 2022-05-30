@@ -79,7 +79,8 @@ defmodule Uplink.Packages.Install.Manager do
   end
 
   defp fetch_deployment_metadata(%Install{deployment: deployment} = install) do
-    with {:ok, metadata_params} <- Instellar.deployment_metadata(deployment),
+    with {:ok, metadata_params} <-
+           Instellar.deployment_metadata(install),
          {:ok, %Metadata{} = metadata} <-
            Packages.parse_metadata(metadata_params) do
       signature = compute_signature(deployment.hash)

@@ -3,7 +3,8 @@ defmodule Uplink.Packages.Install.ManagerTest do
 
   alias Uplink.{
     Members,
-    Packages
+    Packages,
+    Repo
   }
 
   alias Packages.{
@@ -85,6 +86,80 @@ defmodule Uplink.Packages.Install.ManagerTest do
     test "can transition state", %{install: install, actor: actor} do
       assert {:ok, _transition} =
                Manager.transition_with(install, actor, "validate")
+    end
+  end
+
+  @uplink_installation_state_response %{
+    "data" => %{
+      "attributes" => %{
+        "id" => 1,
+        "slug" => "uplink-web",
+        "service_port" => 4000,
+        "exposed_port" => 49152,
+        "channel" => %{
+          "slug" => "develop",
+          "package" => %{
+            "slug" => "something-1640927800",
+            "credential" => %{
+              "public_key" => "public_key"
+            },
+            "organization" => %{
+              "slug" => "upmaru"
+            }
+          }
+        },
+        "instances" => [
+          %{
+            "installation_instance_id" => 1,
+            "slug" => "something-1",
+            "node" => %{
+              "slug" => "some-node"
+            }
+          }
+        ]
+      }
+    }
+  }
+
+  describe "build state" do
+    alias Install.Manager
+
+    setup %{deployment: deployment} do
+      {:ok, %Install{} = install} = Manager.create(deployment, 1)
+
+      {:ok, actor} = Members.create_actor(%{"identifier" => "zacksiri"})
+
+      install = Repo.preload(install, [:deployment])
+
+      Uplink.Cache.flush()
+
+      bypass = Bypass.open()
+
+      Application.put_env(
+        :uplink,
+        Uplink.Clients.Instellar,
+        endpoint: "http://localhost:#{bypass.port}/uplink"
+      )
+
+      {:ok, bypass: bypass, install: install, actor: actor}
+    end
+
+    test "can build state by fetching from instellar", %{
+      bypass: bypass,
+      install: install,
+      actor: actor
+    } do
+      Bypass.expect_once(bypass, "GET", "/uplink/installations/1", fn conn ->
+        conn
+        |> Plug.Conn.put_resp_header("content-type", "application/json")
+        |> Plug.Conn.resp(
+          200,
+          Jason.encode!(@uplink_installation_state_response)
+        )
+      end)
+
+      assert %{install: _install, metadata: _metadata, actor: _actor} =
+               Manager.build_state(install, actor)
     end
   end
 end
