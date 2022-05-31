@@ -87,6 +87,14 @@ defmodule Uplink.Packages.Install.ManagerTest do
       assert {:ok, _transition} =
                Manager.transition_with(install, actor, "validate")
     end
+
+    test "can transition to executing", %{install: install, actor: actor} do
+      {:ok, %{resource: validating_install}} =
+        Manager.transition_with(install, actor, "validate")
+
+      assert {:ok, _transition} =
+               Manager.transition_with(validating_install, actor, "execute")
+    end
   end
 
   @uplink_installation_state_response %{
