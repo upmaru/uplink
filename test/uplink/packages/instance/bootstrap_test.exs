@@ -40,7 +40,7 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
       },
       "instances" => [
         %{
-          "installation_instance_id" => 1,
+          "id" => 1,
           "slug" => "something-1",
           "node" => %{
             "slug" => "some-node"

@@ -36,7 +36,7 @@ defmodule Uplink.Packages.Install.ManagerTest do
       },
       "instances" => [
         %{
-          "installation_instance_id" => 1,
+          "id" => 1,
           "slug" => "something-1",
           "node" => %{
             "slug" => "some-node"
@@ -110,7 +110,7 @@ defmodule Uplink.Packages.Install.ManagerTest do
         },
         "instances" => [
           %{
-            "installation_instance_id" => 1,
+            "id" => 1,
             "slug" => "something-1",
             "node" => %{
               "slug" => "some-node"

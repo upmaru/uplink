@@ -26,7 +26,7 @@ defmodule Uplink.Packages.Metadata do
     end
 
     embeds_many :instances, Instance, primary_key: false do
-      field :installation_instance_id, :integer
+      field :id, :integer
       field :slug, :string
 
       embeds_one :node, Node, primary_key: false do
@@ -75,8 +75,8 @@ defmodule Uplink.Packages.Metadata do
 
   defp instance_changeset(instance, params) do
     instance
-    |> cast(params, [:installation_instance_id, :slug])
-    |> validate_required([:installation_instance_id, :slug])
+    |> cast(params, [:id, :slug])
+    |> validate_required([:id, :slug])
     |> cast_embed(:node, required: true, with: &node_changeset/2)
   end
 
