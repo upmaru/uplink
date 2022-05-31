@@ -110,7 +110,7 @@ defmodule Uplink.Packages.Install.ExecuteTest do
       empty_instances: empty_instances
     } do
       Bypass.expect_once(bypass, "GET", "/1.0/instances", fn conn ->
-        %{"recursive" => "1"} = conn.query_params
+        %{"recursion" => "1"} = conn.query_params
 
         conn
         |> Plug.Conn.put_resp_header("content-type", "application/json")

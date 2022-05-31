@@ -11,7 +11,7 @@ defmodule Uplink.Clients.LXD.Cluster.Manager do
   def list_members do
     Cache.get(:cluster_members) ||
       LXD.client()
-      |> Lexdee.list_cluster_members(query: [recursive: 1])
+      |> Lexdee.list_cluster_members(query: [recursion: 1])
       |> case do
         {:ok, %{body: members}} ->
           members =

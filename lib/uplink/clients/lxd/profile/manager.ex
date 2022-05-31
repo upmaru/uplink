@@ -10,7 +10,7 @@ defmodule Uplink.Clients.LXD.Profile.Manager do
   def list do
     Cache.get(:profiles) ||
       LXD.client()
-      |> Lexdee.list_profiles(query: [recursive: 1])
+      |> Lexdee.list_profiles(query: [recursion: 1])
       |> case do
         {:ok, %{body: profiles}} ->
           profiles =

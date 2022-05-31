@@ -23,7 +23,7 @@ defmodule Uplink.Clients.LXD.Network.Manager do
   def managed do
     Cache.get({:networks, "managed"}) ||
       LXD.client()
-      |> Lexdee.list_networks(query: [recursive: 1])
+      |> Lexdee.list_networks(query: [recursion: 1])
       |> case do
         {:ok, %{body: networks}} ->
           network =

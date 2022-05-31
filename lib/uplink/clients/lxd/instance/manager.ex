@@ -10,7 +10,7 @@ defmodule Uplink.Clients.LXD.Instance.Manager do
   def list do
     Cache.get(:instances) ||
       LXD.client()
-      |> Lexdee.list_instances(query: [recursive: 1])
+      |> Lexdee.list_instances(query: [recursion: 1])
       |> case do
         {:ok, %{body: instances}} ->
           instances =

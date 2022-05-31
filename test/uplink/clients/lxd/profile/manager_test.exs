@@ -30,7 +30,7 @@ defmodule Uplink.Clients.LXD.Profile.ManagerTest do
 
     test "return profiles", %{bypass: bypass, response: response} do
       Bypass.expect_once(bypass, "GET", "/1.0/profiles", fn conn ->
-        assert %{"recursive" => "1"} = conn.query_params
+        assert %{"recursion" => "1"} = conn.query_params
 
         conn
         |> Plug.Conn.put_resp_header("content-type", "application/json")

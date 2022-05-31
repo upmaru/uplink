@@ -11,7 +11,7 @@ defmodule Uplink.Clients.Instellar do
     to: Self,
     as: :show
 
-  defdelegate deployment_metadata(deployment),
+  defdelegate deployment_metadata(install),
     to: Installation,
     as: :metadata
 
