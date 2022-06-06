@@ -24,7 +24,9 @@ defmodule Uplink.Application do
         {Uplink.Repo, []},
         {Oban, oban_config},
         {Plug.Cowboy,
-         plug: Uplink.Packages.Distribution.Router, scheme: :http, port: distribution_port},
+         plug: Uplink.Packages.Distribution.Router,
+         scheme: :http,
+         port: distribution_port},
         {
           Plug.Cowboy,
           plug: Uplink.Router,

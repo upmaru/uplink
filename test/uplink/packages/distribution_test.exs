@@ -142,7 +142,7 @@ defmodule Uplink.Packages.DistributionTest do
           "/distribution/#{deployment.channel}/#{@app_slug}/x86_64/APKINDEX.tar.gz"
         )
         |> Map.put(:remote_ip, address)
-        |> Uplink.Router.call([])
+        |> Uplink.Packages.Distribution.Router.call([])
 
       assert conn.status == 200
     end
