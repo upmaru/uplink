@@ -7,6 +7,20 @@ defmodule Uplink.Web do
     |> send_resp(status, Jason.encode!(%{data: response}))
   end
 
+  def translate_errors(%Ecto.Changeset{} = changeset) do
+    Ecto.Changeset.traverse_errors(changeset, fn {msg, opts} ->
+      Regex.replace(~r"%{(\w+)}", msg, fn _, key ->
+        opts |> Keyword.get(String.to_existing_atom(key), key) |> to_string()
+      end)
+    end)
+  end
+
+  def handle_changeset(%Ecto.Changeset{} = changeset) do
+    # When encoded, the changeset returns its errors
+    # as a JSON object. So we just pass it forward.
+    %{errors: translate_errors(changeset)}
+  end
+
   defmacro __using__(_opts) do
     quote do
       import Uplink.Web

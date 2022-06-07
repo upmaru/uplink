@@ -111,7 +111,7 @@ defmodule Uplink.Packages.Deployment.RouterTest do
 
       assert conn.status == 422
 
-      assert %{"data" => %{"error" => _error}} = Jason.decode!(conn.resp_body)
+      assert %{"data" => %{"errors" => _errors}} = Jason.decode!(conn.resp_body)
     end
   end
 end

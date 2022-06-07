@@ -30,6 +30,8 @@ defmodule Uplink.Packages.Deployment.Router do
 
   plug :dispatch
 
+  require Logger
+
   post "/" do
     %{
       "actor" => actor_params,
@@ -62,10 +64,8 @@ defmodule Uplink.Packages.Deployment.Router do
 
       json(conn, :created, %{id: deployment.id})
     else
-      {:error, _error} ->
-        json(conn, :unprocessable_entity, %{
-          error: %{message: "invalid deployment parameters"}
-        })
+      {:error, %Ecto.Changeset{} = error} ->
+        json(conn, :unprocessable_entity, handle_changeset(error))
 
       {:actor, :not_found} ->
         json(conn, :not_found, %{error: %{message: "actor not found"}})

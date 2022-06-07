@@ -19,6 +19,11 @@ config :uplink, Oban,
     process_instance: 1
   ]
 
+config :logger,
+  backends: [:console]
+
+config :logger, :console, format: "[$level] $message\n"
+
 config :uplink, Uplink.Cluster,
   installation_id: System.get_env("UPLINK_INSTALLATION_ID")
 
