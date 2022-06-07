@@ -6,6 +6,8 @@ config :uplink, Uplink.Cache,
     backend: :shards
   ]
 
+config :uplink, Uplink.Packages.Distribution.Router, port: 4080
+
 config :uplink, Uplink.Router, port: 4040
 
 config :uplink, Oban,

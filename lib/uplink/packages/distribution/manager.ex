@@ -3,9 +3,11 @@ defmodule Uplink.Packages.Distribution.Manager do
 
   def url(%Packages.Metadata{channel: channel}) do
     hostname = System.get_env("HOSTNAME")
-    router_config = Application.get_env(:uplink, Uplink.Router)
 
-    port = Keyword.get(router_config, :port)
+    distribution_router_config =
+      Application.get_env(:uplink, Uplink.Packages.Distribution.Router)
+
+    port = Keyword.get(distribution_router_config, :port)
 
     organization = channel.package.organization.slug
     package = channel.package.slug

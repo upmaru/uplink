@@ -220,6 +220,10 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
 
       hostname = System.get_env("HOSTNAME")
 
+      distribution_port =
+        Application.get_env(:uplink, Uplink.Packages.Distribution.Router)
+        |> Keyword.get(:port)
+
       Bypass.expect(
         bypass,
         "POST",
@@ -238,7 +242,7 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
                    [
                      "/bin/sh",
                      "-c",
-                     "echo http://#{hostname}:4040/distribution/develop/upmaru/something-1640927800 >> /etc/apk/repositories\n"
+                     "echo http://#{hostname}:#{distribution_port}/distribution/develop/upmaru/something-1640927800 >> /etc/apk/repositories\n"
                    ],
                    [
                      "/bin/sh",
@@ -277,7 +281,7 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
           conn
           |> Plug.Conn.resp(
             200,
-            "http://#{hostname}:4040/distribution/develop/upmaru/something-1640927800"
+            "http://#{hostname}:#{distribution_port}/distribution/develop/upmaru/something-1640927800"
           )
         end
       )

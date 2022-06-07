@@ -4,8 +4,7 @@ defmodule Uplink.Router do
 
   alias Uplink.Packages.{
     Instance,
-    Deployment,
-    Distribution
+    Deployment
   }
 
   plug :match
@@ -15,7 +14,10 @@ defmodule Uplink.Router do
     json(conn, :ok, %{message: "Live long, and prosper."})
   end
 
-  forward "/distribution", to: Distribution
   forward "/deployments", to: Deployment.Router
   forward "/instances", to: Instance.Router
+
+  match _ do
+    send_resp(conn, 404, "not found")
+  end
 end
