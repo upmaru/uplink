@@ -48,12 +48,12 @@ defmodule Uplink.Packages.Install.Validate do
        }) do
     profile_name = Packages.profile_name(metadata)
 
-    with %LXD.Profile{config: config} <-
+    with %LXD.Profile{} = profile <-
            LXD.list_profiles()
            |> Enum.find(fn profile ->
              profile.name == profile_name
            end),
-         {:ok, :profile_valid} <- validate_profile(config) do
+         {:ok, :profile_valid} <- validate_profile(profile) do
       Packages.transition_install_with(install, actor, "execute")
     else
       nil ->

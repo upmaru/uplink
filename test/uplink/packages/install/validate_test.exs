@@ -139,4 +139,10 @@ defmodule Uplink.Packages.Install.ValidateTest do
       assert install.current_state == "executing"
     end
   end
+
+  describe "when profile exists" do
+    test "transition install to execute" do
+      # TODO add test for when profile already exists
+    end
+  end
 end
