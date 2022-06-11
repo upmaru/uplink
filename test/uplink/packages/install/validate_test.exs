@@ -56,6 +56,8 @@ defmodule Uplink.Packages.Install.ValidateTest do
     :ok = Ecto.Adapters.SQL.Sandbox.checkout(Uplink.Repo)
 
     bypass = Bypass.open()
+    
+    Cache.delete(:profiles)
 
     Cache.put(:self, %{
       "credential" => %{
@@ -141,8 +143,32 @@ defmodule Uplink.Packages.Install.ValidateTest do
   end
 
   describe "when profile exists" do
-    test "transition install to execute" do
-      # TODO add test for when profile already exists
+    setup do
+      list_profiles =
+        File.read!("test/fixtures/lxd/profiles/list_profile_exists.json")
+
+      {:ok, list_profiles: list_profiles}
+    end
+
+    test "transition install to execute", %{
+      bypass: bypass,
+      install: install,
+      actor: actor,
+      list_profiles: list_profiles
+    } do
+      Bypass.expect_once(bypass, "GET", "/1.0/profiles", fn conn ->
+        conn
+        |> Plug.Conn.put_resp_header("content-type", "application/json")
+        |> Plug.Conn.resp(200, list_profiles)
+      end)
+
+      assert {:ok, %{resource: install}} =
+               perform_job(Validate, %{
+                 install_id: install.id,
+                 actor_id: actor.id
+               })
+
+      assert install.current_state == "executing"
     end
   end
 end
