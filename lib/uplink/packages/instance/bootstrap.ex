@@ -102,11 +102,13 @@ defmodule Uplink.Packages.Instance.Bootstrap do
       |> Formation.Lxd.start(name)
       |> Formation.Lxd.Instance.setup(formation_instance)
       |> case do
-        {:ok, _repo_path} ->
-          Instellar.transition_instance(name, install, "complete")
+        {:ok, repo_path} ->
+          Instellar.transition_instance(name, install, "complete",
+            comment: repo_path
+          )
 
-        _ ->
-          Instellar.transition_instance(name, install, "fail")
+        {:error, error} ->
+          Instellar.transition_instance(name, install, "fail", comment: error)
       end
     else
       {:error, error} ->
