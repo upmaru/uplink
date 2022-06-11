@@ -62,7 +62,9 @@ defmodule Uplink.Packages.Instance.Bootstrap do
              member.server_name == node_name
            end),
          {:ok, _transition} <-
-           Instellar.transition_instance(name, install, "boot") do
+           Instellar.transition_instance(name, install, "boot",
+             comment: "[Uplink.Packages.Instance.Bootstrap]"
+           ) do
       profile_name = Packages.profile_name(metadata)
       package = channel.package
 
