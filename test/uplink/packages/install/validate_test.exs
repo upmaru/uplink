@@ -57,6 +57,8 @@ defmodule Uplink.Packages.Install.ValidateTest do
 
     bypass = Bypass.open()
 
+    Cache.delete(:profiles)
+
     Cache.put(:self, %{
       "credential" => %{
         "endpoint" => "http://localhost:#{bypass.port}"
@@ -128,6 +130,36 @@ defmodule Uplink.Packages.Install.ValidateTest do
         conn
         |> Plug.Conn.put_resp_header("content-type", "application/json")
         |> Plug.Conn.resp(200, create_profile)
+      end)
+
+      assert {:ok, %{resource: install}} =
+               perform_job(Validate, %{
+                 install_id: install.id,
+                 actor_id: actor.id
+               })
+
+      assert install.current_state == "executing"
+    end
+  end
+
+  describe "when profile exists" do
+    setup do
+      list_profiles =
+        File.read!("test/fixtures/lxd/profiles/list_profile_exists.json")
+
+      {:ok, list_profiles: list_profiles}
+    end
+
+    test "transition install to execute", %{
+      bypass: bypass,
+      install: install,
+      actor: actor,
+      list_profiles: list_profiles
+    } do
+      Bypass.expect_once(bypass, "GET", "/1.0/profiles", fn conn ->
+        conn
+        |> Plug.Conn.put_resp_header("content-type", "application/json")
+        |> Plug.Conn.resp(200, list_profiles)
       end)
 
       assert {:ok, %{resource: install}} =
