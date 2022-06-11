@@ -56,7 +56,7 @@ defmodule Uplink.Packages.Install.ValidateTest do
     :ok = Ecto.Adapters.SQL.Sandbox.checkout(Uplink.Repo)
 
     bypass = Bypass.open()
-    
+
     Cache.delete(:profiles)
 
     Cache.put(:self, %{
