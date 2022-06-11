@@ -107,6 +107,9 @@ defmodule Uplink.Packages.Instance.Bootstrap do
           Instellar.transition_instance(name, install, "fail")
       end
     else
+      {:error, error} ->
+        Packages.transition_install_with(install, actor, "fail", comment: error)
+
       nil ->
         Packages.transition_install_with(install, actor, "fail",
           comment: "cluster member not found"
