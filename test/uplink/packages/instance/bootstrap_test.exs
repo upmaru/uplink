@@ -328,7 +328,7 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
         end
       )
 
-      Bypass.expect_once(
+      Bypass.expect(
         bypass,
         "POST",
         "/uplink/installations/#{install.instellar_installation_id}/instances/#{instance_slug}/events",
@@ -336,14 +336,14 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
           assert {:ok, body, conn} = Plug.Conn.read_body(conn)
           assert {:ok, body} = Jason.decode(body)
 
-          %{"event" => %{"name" => "complete"}} = body
+          %{"event" => %{"name" => event_name}} = body
 
           conn
           |> Plug.Conn.put_resp_header("content-type", "application/json")
           |> Plug.Conn.resp(
             201,
             Jason.encode!(%{
-              "data" => %{"attributes" => %{"id" => 1, "name" => "complete"}}
+              "data" => %{"attributes" => %{"id" => 1, "name" => event_name}}
             })
           )
         end

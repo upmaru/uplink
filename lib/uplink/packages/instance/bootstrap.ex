@@ -60,7 +60,9 @@ defmodule Uplink.Packages.Instance.Bootstrap do
            members
            |> Enum.find(fn member ->
              member.server_name == node_name
-           end) do
+           end),
+         {:ok, _transition} <-
+           Instellar.transition_instance(name, install, "boot") do
       profile_name = Packages.profile_name(metadata)
       package = channel.package
 
