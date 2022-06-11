@@ -7,7 +7,7 @@ defmodule Uplink.Clients.Instellar.Instance do
   import Uplink.Secret.Signature,
     only: [compute_signature: 1]
 
-  def transition(instance, install, event_name) do
+  def transition(instance, install, event_name, options \\ []) do
     installation_id = install.instellar_installation_id
 
     [
@@ -19,7 +19,14 @@ defmodule Uplink.Clients.Instellar.Instance do
       "events"
     ]
     |> Path.join()
-    |> Req.post!({:json, %{"event" => %{"name" => event_name}}},
+    |> Req.post!(
+      {:json,
+       %{
+         "event" => %{
+           "name" => event_name,
+           "comment" => Keyword.get(options, :comment)
+         }
+       }},
       headers: headers(install.deployment.hash)
     )
     |> case do
