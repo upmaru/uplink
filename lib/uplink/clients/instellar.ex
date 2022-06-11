@@ -15,7 +15,7 @@ defmodule Uplink.Clients.Instellar do
     to: Installation,
     as: :metadata
 
-  defdelegate transition_instance(instance, install, event_name),
+  defdelegate transition_instance(instance, install, event_name, options \\ []),
     to: Instance,
     as: :transition
 
