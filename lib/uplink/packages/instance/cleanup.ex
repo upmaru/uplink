@@ -26,7 +26,12 @@ defmodule Uplink.Packages.Instance.Cleanup do
         }
       }) do
     client = LXD.client()
-    %Install{} = install = Repo.get(Install, install_id)
+
+    %Install{} =
+      install =
+      Install
+      |> Repo.get(install_id)
+      |> Repo.preload([:deployment])
 
     with {:ok, _} <- Formation.Lxd.stop(client, name),
          {:ok, _} <- Formation.Lxd.delete(client, name) do
