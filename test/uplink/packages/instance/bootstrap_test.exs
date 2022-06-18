@@ -359,5 +359,213 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
                  actor_id: actor.id
                })
     end
+
+    test "enqueue cleanup when instance setup fails", %{
+      bypass: bypass,
+      install: install,
+      actor: actor,
+      create_instance: create_instance,
+      start_instance: start_instance,
+      exec_instance: exec_instance,
+      wait_for_operation: wait_for_operation,
+      wait_with_log: wait_with_log
+    } do
+      instance_slug = "test-02"
+
+      Bypass.expect_once(bypass, "POST", "/1.0/instances", fn conn ->
+        assert %{"target" => "ubuntu-s-1vcpu-1gb-sgp1-01"} = conn.query_params
+
+        conn
+        |> Plug.Conn.put_resp_header("content-type", "application/json")
+        |> Plug.Conn.resp(200, create_instance)
+      end)
+
+      create_instance_params = Jason.decode!(create_instance)
+      create_instance_operation_id = create_instance_params["metadata"]["id"]
+
+      Bypass.expect_once(
+        bypass,
+        "GET",
+        "/1.0/operations/#{create_instance_operation_id}/wait",
+        fn conn ->
+          assert %{"timeout" => "60"} = conn.query_params
+
+          conn
+          |> Plug.Conn.put_resp_header("content-type", "application/json")
+          |> Plug.Conn.resp(200, wait_for_operation)
+        end
+      )
+
+      Bypass.expect_once(
+        bypass,
+        "PUT",
+        "/1.0/instances/#{instance_slug}/state",
+        fn conn ->
+          conn
+          |> Plug.Conn.put_resp_header("content-type", "application/json")
+          |> Plug.Conn.resp(200, start_instance)
+        end
+      )
+
+      start_instance_params = Jason.decode!(start_instance)
+      start_instance_operation_id = start_instance_params["metadata"]["id"]
+
+      Bypass.expect_once(
+        bypass,
+        "GET",
+        "/1.0/operations/#{start_instance_operation_id}/wait",
+        fn conn ->
+          assert %{"timeout" => "60"} = conn.query_params
+
+          conn
+          |> Plug.Conn.put_resp_header("content-type", "application/json")
+          |> Plug.Conn.resp(200, wait_for_operation)
+        end
+      )
+
+      hostname = System.get_env("HOSTNAME")
+
+      distribution_port =
+        Application.get_env(:uplink, Uplink.Packages.Distribution.Router)
+        |> Keyword.get(:port)
+
+      Bypass.expect(
+        bypass,
+        "POST",
+        "/1.0/instances/#{instance_slug}/exec",
+        fn conn ->
+          assert {:ok, body, conn} = Plug.Conn.read_body(conn)
+          assert {:ok, %{"command" => command}} = Jason.decode(body)
+
+          assert command in [
+                   [
+                     "/bin/sh",
+                     "-c",
+                     "echo 'public_key' > /etc/apk/keys/pakman.rsa.pub\n"
+                   ],
+                   ["/bin/sh", "-c", "cat /etc/apk/repositories\n"],
+                   [
+                     "/bin/sh",
+                     "-c",
+                     "echo http://#{hostname}:#{distribution_port}/distribution/develop/upmaru/something-1640927800 >> /etc/apk/repositories\n"
+                   ],
+                   [
+                     "/bin/sh",
+                     "-c",
+                     "apk update && apk add something-1640927800\n"
+                   ]
+                 ]
+
+          conn
+          |> Plug.Conn.put_resp_header("content-type", "application/json")
+          |> Plug.Conn.resp(200, exec_instance)
+        end
+      )
+
+      setup_public_key_params = Jason.decode!(exec_instance)
+      setup_public_key_operation_id = setup_public_key_params["metadata"]["id"]
+
+      Bypass.expect(
+        bypass,
+        "GET",
+        "/1.0/operations/#{setup_public_key_operation_id}/wait",
+        fn conn ->
+          %{"timeout" => "60"} = conn.query_params
+
+          conn
+          |> Plug.Conn.put_resp_header("content-type", "application/json")
+          |> Plug.Conn.resp(200, wait_with_log)
+        end
+      )
+
+      Bypass.expect(
+        bypass,
+        "GET",
+        "/1.0/instances/#{instance_slug}/logs/stdout.log",
+        fn conn ->
+          conn
+          |> Plug.Conn.resp(
+            200,
+            "http://#{hostname}:#{distribution_port}/distribution/develop/upmaru/something-1640927800"
+          )
+        end
+      )
+
+      Bypass.expect(
+        bypass,
+        "GET",
+        "/1.0/instances/#{instance_slug}/logs/stderr.log",
+        fn conn ->
+          conn
+          |> Plug.Conn.resp(200, "something went wrong")
+        end
+      )
+
+      Bypass.expect(
+        bypass,
+        "PUT",
+        "/1.0/instances/#{instance_slug}/state",
+        fn conn ->
+          assert {:ok, body, conn} = Plug.Conn.read_body(conn)
+          assert {:ok, body} = Jason.decode(body)
+
+          assert body["action"] in ["start", "restart"]
+
+          conn
+          |> Plug.Conn.put_resp_header("content-type", "application/json")
+          |> Plug.Conn.resp(200, start_instance)
+        end
+      )
+
+      start_instance_key_params = Jason.decode!(start_instance)
+      start_instance_operation_id = start_instance_key_params["metadata"]["id"]
+
+      Bypass.expect(
+        bypass,
+        "GET",
+        "/1.0/operations/#{start_instance_operation_id}/wait",
+        fn conn ->
+          %{"timeout" => "60"} = conn.query_params
+
+          conn
+          |> Plug.Conn.put_resp_header("content-type", "application/json")
+          |> Plug.Conn.resp(200, wait_for_operation)
+        end
+      )
+
+      Bypass.expect(
+        bypass,
+        "POST",
+        "/uplink/installations/#{install.instellar_installation_id}/instances/#{instance_slug}/events",
+        fn conn ->
+          assert {:ok, body, conn} = Plug.Conn.read_body(conn)
+          assert {:ok, body} = Jason.decode(body)
+
+          %{"event" => %{"name" => event_name}} = body
+
+          conn
+          |> Plug.Conn.put_resp_header("content-type", "application/json")
+          |> Plug.Conn.resp(
+            201,
+            Jason.encode!(%{
+              "data" => %{"attributes" => %{"id" => 1, "name" => event_name}}
+            })
+          )
+        end
+      )
+
+      args = %{
+        instance: %{
+          slug: instance_slug,
+          node: %{slug: "ubuntu-s-1vcpu-1gb-sgp1-01"}
+        },
+        install_id: install.id,
+        actor_id: actor.id
+      }
+
+      assert {:ok, %{"id" => _id}} = perform_job(Bootstrap, args)
+
+      assert_enqueued(worker: Uplink.Packages.Instance.Cleanup, args: args)
+    end
   end
 end

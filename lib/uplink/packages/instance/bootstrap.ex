@@ -30,16 +30,17 @@ defmodule Uplink.Packages.Instance.Bootstrap do
   import Ecto.Query, only: [where: 3, preload: 2]
 
   def perform(%Oban.Job{
-        args: %{
-          "instance" => %{
-            "slug" => name,
-            "node" => %{
-              "slug" => node_name
-            }
-          },
-          "install_id" => install_id,
-          "actor_id" => actor_id
-        }
+        args:
+          %{
+            "instance" => %{
+              "slug" => name,
+              "node" => %{
+                "slug" => node_name
+              }
+            },
+            "install_id" => install_id,
+            "actor_id" => actor_id
+          } = job_args
       }) do
     %Actor{} = actor = Repo.get(Actor, actor_id)
 
@@ -108,6 +109,10 @@ defmodule Uplink.Packages.Instance.Bootstrap do
           )
 
         {:error, error} ->
+          job_args
+          |> Packages.Instance.Cleanup.new()
+          |> Oban.insert()
+
           Instellar.transition_instance(name, install, "fail", comment: error)
       end
     else
