@@ -1,5 +1,5 @@
 defmodule Uplink.Packages.Instance.Cleanup do
-  use Oban.Worker, queue: :process_instance, max_attempts: 1
+  use Oban.Worker, queue: :cleanup_instance, max_attempts: 1
 
   alias Uplink.{
     Clients,
