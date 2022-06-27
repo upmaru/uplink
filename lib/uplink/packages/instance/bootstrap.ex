@@ -18,7 +18,10 @@ defmodule Uplink.Packages.Instance.Bootstrap do
 
   alias Members.Actor
 
-  alias Packages.Install
+  alias Packages.{
+    Install,
+    Instance
+  }
 
   @default_params %{
     "ephemeral" => false,
@@ -86,10 +89,23 @@ defmodule Uplink.Packages.Instance.Bootstrap do
           }
         })
 
+      package_distribution_url = Packages.distribution_url(metadata)
+
+      formation_instance_params = %{
+        "slug" => name,
+        "url" => package_distribution_url,
+        "credential" => %{
+          "public_key" => package.credential.public_key
+        },
+        "package" => %{
+          "slug" => package.slug
+        }
+      }
+
       formation_instance =
         Formation.Lxd.Instance.new(%{
           slug: name,
-          url: Packages.distribution_url(metadata),
+          url: package_distribution_url,
           credential: %{
             "public_key" => package.credential.public_key
           },
@@ -103,10 +119,13 @@ defmodule Uplink.Packages.Instance.Bootstrap do
       |> Formation.Lxd.start(name)
       |> Formation.Lxd.Instance.setup(formation_instance)
       |> case do
-        {:ok, repo_path} ->
-          Instellar.transition_instance(name, install, "complete",
-            comment: repo_path
-          )
+        {:ok, _message} ->
+          %{
+            formation_instance: formation_instance_params,
+            install_id: install.id
+          }
+          |> Instance.Install.new()
+          |> Oban.insert()
 
         {:error, error} ->
           job_args

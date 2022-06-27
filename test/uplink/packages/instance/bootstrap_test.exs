@@ -243,11 +243,6 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
                      "/bin/sh",
                      "-c",
                      "echo http://#{hostname}:#{distribution_port}/distribution/develop/upmaru/something-1640927800 >> /etc/apk/repositories\n"
-                   ],
-                   [
-                     "/bin/sh",
-                     "-c",
-                     "apk update && apk add something-1640927800\n"
                    ]
                  ]
 
@@ -296,7 +291,7 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
         end
       )
 
-      Bypass.expect(
+      Bypass.expect_once(
         bypass,
         "PUT",
         "/1.0/instances/#{instance_slug}/state",
@@ -304,7 +299,7 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
           assert {:ok, body, conn} = Plug.Conn.read_body(conn)
           assert {:ok, body} = Jason.decode(body)
 
-          assert body["action"] in ["start", "restart"]
+          assert body["action"] == "start"
 
           conn
           |> Plug.Conn.put_resp_header("content-type", "application/json")
@@ -328,7 +323,7 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
         end
       )
 
-      Bypass.expect(
+      Bypass.expect_once(
         bypass,
         "POST",
         "/uplink/installations/#{install.instellar_installation_id}/instances/#{instance_slug}/events",
@@ -336,7 +331,7 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
           assert {:ok, body, conn} = Plug.Conn.read_body(conn)
           assert {:ok, body} = Jason.decode(body)
 
-          %{"event" => %{"name" => event_name}} = body
+          %{"event" => %{"name" => "boot" = event_name}} = body
 
           conn
           |> Plug.Conn.put_resp_header("content-type", "application/json")
@@ -349,7 +344,7 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
         end
       )
 
-      assert {:ok, %{"id" => _id}} =
+      assert {:ok, job} =
                perform_job(Bootstrap, %{
                  instance: %{
                    slug: instance_slug,
@@ -358,6 +353,8 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
                  install_id: install.id,
                  actor_id: actor.id
                })
+
+      assert_enqueued(worker: Uplink.Packages.Instance.Install, args: job.args)
     end
 
     test "enqueue cleanup when instance setup fails", %{
@@ -448,11 +445,6 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
                      "/bin/sh",
                      "-c",
                      "echo http://#{hostname}:#{distribution_port}/distribution/develop/upmaru/something-1640927800 >> /etc/apk/repositories\n"
-                   ],
-                   [
-                     "/bin/sh",
-                     "-c",
-                     "apk update && apk add something-1640927800\n"
                    ]
                  ]
 
@@ -501,7 +493,7 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
         end
       )
 
-      Bypass.expect(
+      Bypass.expect_once(
         bypass,
         "PUT",
         "/1.0/instances/#{instance_slug}/state",
@@ -509,7 +501,7 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
           assert {:ok, body, conn} = Plug.Conn.read_body(conn)
           assert {:ok, body} = Jason.decode(body)
 
-          assert body["action"] in ["start", "restart"]
+          assert body["action"] == "start"
 
           conn
           |> Plug.Conn.put_resp_header("content-type", "application/json")
