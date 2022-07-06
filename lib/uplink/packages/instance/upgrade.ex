@@ -119,7 +119,7 @@ defmodule Uplink.Packages.Instance.Upgrade do
   end
 
   defp handle_upgrade(
-         {:deactivate_and_bootsrap, _formation_instance, _install},
+         {:deactivate_and_bootstrap, _formation_instance, _install},
          args
        ) do
     args
