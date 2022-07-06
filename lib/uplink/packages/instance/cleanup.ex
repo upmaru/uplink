@@ -39,17 +39,17 @@ defmodule Uplink.Packages.Instance.Cleanup do
 
     with {:ok, _} <- Formation.Lxd.stop(client, name),
          {:ok, _} <- Formation.Lxd.delete(client, name) do
-      finalize(name, install, Map.get(args, "mode", "cleanup"))
+      finalize(name, install, Map.get(args, "mode", "cleanup"), args)
     end
   end
 
-  defp finalize(name, install, "cleanup") do
+  defp finalize(name, install, "cleanup", _args) do
     Instellar.transition_instance(name, install, "fail",
       comment: "[Uplink.Packages.Instance.Cleanup]"
     )
   end
 
-  defp finalize(name, install, "deactivate_and_boot") do
+  defp finalize(name, install, "deactivate_and_boot", args) do
     with {:ok, _transition} <-
            Instellar.transition_instance(name, install, "deactivate",
              comment: "[Uplink.Packages.Instance.Cleanup]"

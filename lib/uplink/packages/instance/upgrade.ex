@@ -56,7 +56,7 @@ defmodule Uplink.Packages.Instance.Upgrade do
         credential: %{"public_key" => nil}
       })
       |> validate_stack(install)
-      |> handle_upgrade()
+      |> handle_upgrade(install, args)
     end
   end
 
@@ -77,16 +77,18 @@ defmodule Uplink.Packages.Instance.Upgrade do
 
     if previous_install.deployment.stack == current_deployment.stack do
       {:upgrade, formation_instance}
+    else
+      {:deactivate_and_bootstrap, formation_instance}
     end
   end
 
-  defp handle_upgrade({:upgrade, formation_instance}) do
+  defp handle_upgrade({:upgrade, formation_instance}, install) do
     LXD.client()
     |> Formation.Lxd.Alpine.upgrade_package(formation_instance)
     |> case do
       {:ok, upgrade_package_output} ->
         Instellar.transition_instance(
-          name,
+          formation_instance.slug,
           install,
           "complete",
           comment: upgrade_package_output
@@ -104,7 +106,11 @@ defmodule Uplink.Packages.Instance.Upgrade do
     end
   end
 
-  defp handle_upgrade({:deactivate_and_bootsrap, formation_instance}) do
+  defp handle_upgrade(
+         {:deactivate_and_bootsrap, formation_instance},
+         _install,
+         args
+       ) do
     args
     |> Map.merge(%{"mode" => "deactivate_and_boot"})
     |> Instance.Cleanup.new()
