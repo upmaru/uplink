@@ -15,6 +15,11 @@ defmodule Uplink.Packages.Instance.Upgrade do
     Instance
   }
 
+  alias Clients.{
+    LXD,
+    Instellar
+  }
+
   import Ecto.Query, only: [where: 3, preload: 2, order_by: 2]
 
   @install_state ~s(executing)
@@ -41,7 +46,7 @@ defmodule Uplink.Packages.Instance.Upgrade do
       |> preload([:deployment])
       |> Repo.get(install_id)
 
-    with %{metadata: %{channel: channel} = metadata} <-
+    with %{metadata: %{channel: channel}} <-
            Packages.build_install_state(install, actor),
          {:ok, _transition} <-
            Instellar.transition_instance(name, install, "upgrade",
@@ -56,33 +61,40 @@ defmodule Uplink.Packages.Instance.Upgrade do
         credential: %{"public_key" => nil}
       })
       |> validate_stack(install)
-      |> handle_upgrade(install, args)
+      |> handle_upgrade(args)
     end
   end
 
-  defp validate_stack(formation_instance, %Install{
-         id: install_id,
-         deployment: current_deployment
-       }) do
-    previous_install =
-      Install
-      |> where(
-        [i],
-        i.id != ^install_id and
-          i.current_state == "completed"
-      )
-      |> order_by(desc: :inserted_at)
-      |> preload([:deployment])
-      |> Repo.one()
+  defp validate_stack(
+         formation_instance,
+         %Install{
+           id: install_id,
+           deployment: incoming_deployment
+         } = install
+       ) do
+    Install
+    |> where(
+      [i],
+      i.id != ^install_id and
+        i.current_state == "completed"
+    )
+    |> order_by(desc: :inserted_at)
+    |> preload([:deployment])
+    |> Repo.one()
+    |> case do
+      %Install{deployment: %{stack: previous_stack}} ->
+        if previous_stack == incoming_deployment.stack do
+          {:upgrade, formation_instance, install}
+        else
+          {:deactivate_and_bootstrap, formation_instance, install}
+        end
 
-    if previous_install.deployment.stack == current_deployment.stack do
-      {:upgrade, formation_instance}
-    else
-      {:deactivate_and_bootstrap, formation_instance}
+      nil ->
+        {:upgrade, formation_instance, install}
     end
   end
 
-  defp handle_upgrade({:upgrade, formation_instance}, install) do
+  defp handle_upgrade({:upgrade, formation_instance, install}, _args) do
     LXD.client()
     |> Formation.Lxd.Alpine.upgrade_package(formation_instance)
     |> case do
@@ -107,8 +119,7 @@ defmodule Uplink.Packages.Instance.Upgrade do
   end
 
   defp handle_upgrade(
-         {:deactivate_and_bootsrap, formation_instance},
-         _install,
+         {:deactivate_and_bootsrap, _formation_instance, _install},
          args
        ) do
     args

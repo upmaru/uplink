@@ -237,7 +237,7 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
           assert {:ok, body, conn} = Plug.Conn.read_body(conn)
           assert {:ok, body} = Jason.decode(body)
 
-          %{"event" => %{"name" => "boot" = event_name}} = body
+          assert %{"event" => %{"name" => "boot" = event_name}} = body
 
           conn
           |> Plug.Conn.put_resp_header("content-type", "application/json")
