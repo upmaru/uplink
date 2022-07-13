@@ -46,12 +46,12 @@ defmodule Uplink.Packages.Install.Manager do
     |> Repo.one()
   end
 
-  @spec build_state(%Install{}, %Actor{}) :: %{
+  @spec build_state(%Install{}, %Actor{} | nil) :: %{
           install: %Install{},
           metadata: %Metadata{},
           actor: %Members.Actor{}
         }
-  def build_state(%Install{deployment: deployment} = install, actor) do
+  def build_state(%Install{deployment: deployment} = install, actor \\ nil) do
     signature = compute_signature(deployment.hash)
 
     {:deployment, signature, install.instellar_installation_id}
