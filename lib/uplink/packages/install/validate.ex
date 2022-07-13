@@ -68,7 +68,7 @@ defmodule Uplink.Packages.Install.Validate do
           "config" => %{
             "user.managed_by" => "uplink",
             "user.install_variables_endpoint" =>
-              "http://localhost:#{internal_router_port}/installs/#{install.id}/variables"
+              "http://localhost:#{internal_router_port}/installs/#{install.instellar_installation_id}/variables"
           }
         }
 

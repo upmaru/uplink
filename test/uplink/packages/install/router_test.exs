@@ -60,7 +60,7 @@ defmodule Uplink.Packages.Install.RouterTest do
   describe "renders variables" do
     test "successfully returns variables", %{install: install, address: address} do
       conn =
-        conn(:get, "/#{install.id}/variables")
+        conn(:get, "/#{install.instellar_installation_id}/variables")
         |> Map.put(:remote_ip, address)
         |> put_req_header("content-type", "application/json")
         |> Router.call(@opts)

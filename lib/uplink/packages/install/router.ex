@@ -22,11 +22,14 @@ defmodule Uplink.Packages.Install.Router do
 
   plug :dispatch
 
-  get "/:install_id/variables" do
+  import Ecto.Query, only: [order_by: 2]
+
+  get "/:instellar_installation_id/variables" do
     with :ok <- Firewall.allowed?(conn),
          %Install{} = install <-
            Install
-           |> Repo.get(install_id)
+           |> order_by(desc: :inserted_at)
+           |> Repo.get_by(instellar_installation_id: instellar_installation_id)
            |> Repo.preload([:deployment]),
          %{metadata: %{variables: variables}} <-
            Packages.build_install_state(install) do
