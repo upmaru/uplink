@@ -13,7 +13,7 @@ defmodule Uplink.Packages do
 
   alias __MODULE__.Install
 
-  defdelegate build_install_state(install, actor),
+  defdelegate build_install_state(install, actor \\ nil),
     to: Install.Manager,
     as: :build_state
 

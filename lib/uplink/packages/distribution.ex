@@ -3,19 +3,17 @@ defmodule Uplink.Packages.Distribution do
   plug Plug.Logger
 
   alias Uplink.{
-    Clients,
+    Internal,
     Packages,
     Repo
   }
-
-  alias Clients.LXD
 
   alias Packages.{
     Deployment,
     Archive
   }
 
-  alias __MODULE__.Firewall
+  alias Internal.Firewall
 
   plug :validate
 
@@ -81,8 +79,8 @@ defmodule Uplink.Packages.Distribution do
       |> Plug.Static.call(static_options)
     else
       [_app, node_host_name] = String.split(node, "@")
-      router_config = Application.get_env(:uplink, Uplink.Router)
-      port = Keyword.get(router_config, :port, 4040)
+      internal_router_config = Application.get_env(:uplink, Uplink.Internal)
+      port = Keyword.get(internal_router_config, :port, 4080)
 
       upstream =
         ["#{conn.scheme}://", "#{node_host_name}:#{port}", conn.request_path]

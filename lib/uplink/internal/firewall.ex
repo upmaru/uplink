@@ -1,4 +1,4 @@
-defmodule Uplink.Packages.Distribution.Firewall do
+defmodule Uplink.Internal.Firewall do
   alias Uplink.Clients
   alias Clients.LXD
 

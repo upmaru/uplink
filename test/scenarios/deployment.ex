@@ -20,6 +20,9 @@ defmodule Uplink.Scenarios.Deployment do
       "slug" => "uplink-web",
       "service_port" => 4000,
       "exposed_port" => 49152,
+      "variables" => [
+        %{"key" => "SOMETHING", "value" => "blah"}
+      ],
       "channel" => %{
         "slug" => "develop",
         "package" => %{
