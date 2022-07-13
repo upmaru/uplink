@@ -57,11 +57,21 @@ defmodule Uplink.Packages.Install.Validate do
       Packages.transition_install_with(install, actor, "execute")
     else
       nil ->
+        distribution_router_config =
+          Application.get_env(:uplink, Uplink.Packages.Distribution.Router,
+            port: 4080
+          )
+
+        distribution_router_port =
+          Keyword.get(distribution_router_config, :port)
+
         profile_params = %{
           "name" => profile_name,
           "description" => "#{install.id}/#{install.instellar_installation_id}",
           "config" => %{
-            "user.managed_by" => "uplink"
+            "user.managed_by" => "uplink",
+            "user.install_variables_endpoint" =>
+              "http://localhost:#{distribution_router_port}/installs/#{install.id}/variables"
           }
         }
 

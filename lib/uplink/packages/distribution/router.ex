@@ -10,6 +10,9 @@ defmodule Uplink.Packages.Distribution.Router do
 
   forward "/distribution", to: Distribution
 
+  get "/installs/:install_id/variables" do
+  end
+
   match _ do
     send_resp(conn, 404, "not found")
   end

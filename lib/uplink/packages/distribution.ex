@@ -15,6 +15,8 @@ defmodule Uplink.Packages.Distribution do
     Archive
   }
 
+  alias __MODULE__.Firewall
+
   plug :validate
 
   plug :serve_or_proxy
@@ -25,27 +27,16 @@ defmodule Uplink.Packages.Distribution do
     only: [where: 3, join: 4, preload: 2, limit: 2]
 
   defp validate(conn, _opts) do
-    case LXD.network_leases() do
-      leases when is_list(leases) ->
-        ip_addresses =
-          Enum.map(leases, fn lease ->
-            lease.address
-          end)
+    case Firewall.allowed?(conn) do
+      :ok ->
+        conn
 
-        detected_ip_address =
-          conn.remote_ip
-          |> :inet.ntoa()
-          |> to_string()
+      {:error, :forbidden} ->
+        conn
+        |> send_resp(:forbidden, "")
+        |> halt()
 
-        if detected_ip_address in ip_addresses do
-          conn
-        else
-          conn
-          |> send_resp(:forbidden, "")
-          |> halt()
-        end
-
-      {:error, _error} ->
+      _ ->
         halt(conn)
     end
   end

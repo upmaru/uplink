@@ -68,6 +68,11 @@ defmodule Uplink.Packages.Install.Execute do
     managed_by == "uplink"
   end
 
+  alias Instance.{
+    Upgrade,
+    Bootstrap
+  }
+
   defp choose_execution_path(instance, existing_instances, state) do
     job_params = %{
       instance: %{
@@ -82,11 +87,11 @@ defmodule Uplink.Packages.Install.Execute do
 
     if instance.slug in existing_instances do
       job_params
-      |> Instance.Upgrade.new()
+      |> Upgrade.new()
       |> Oban.insert()
     else
       job_params
-      |> Instance.Bootstrap.new()
+      |> Bootstrap.new()
       |> Oban.insert()
     end
   end
