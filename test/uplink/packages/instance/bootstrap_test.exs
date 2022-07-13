@@ -127,7 +127,7 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
       hostname = System.get_env("HOSTNAME")
 
       distribution_port =
-        Application.get_env(:uplink, Uplink.Packages.Distribution.Router)
+        Application.get_env(:uplink, Uplink.Internal)
         |> Keyword.get(:port)
 
       Bypass.expect(
@@ -329,7 +329,7 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
       hostname = System.get_env("HOSTNAME")
 
       distribution_port =
-        Application.get_env(:uplink, Uplink.Packages.Distribution.Router)
+        Application.get_env(:uplink, Uplink.Internal)
         |> Keyword.get(:port)
 
       Bypass.expect(

@@ -104,6 +104,9 @@ defmodule Uplink.Packages.Install.ManagerTest do
         "slug" => "uplink-web",
         "service_port" => 4000,
         "exposed_port" => 49152,
+        "variables" => [
+          %{"key" => "SOMETHING", "value" => "somevalue"}
+        ],
         "channel" => %{
           "slug" => "develop",
           "package" => %{

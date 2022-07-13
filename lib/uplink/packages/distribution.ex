@@ -3,17 +3,17 @@ defmodule Uplink.Packages.Distribution do
   plug Plug.Logger
 
   alias Uplink.{
-    Clients,
+    Internal,
     Packages,
     Repo
   }
-
-  alias Clients.LXD
 
   alias Packages.{
     Deployment,
     Archive
   }
+
+  alias Internal.Firewall
 
   plug :validate
 
@@ -25,27 +25,16 @@ defmodule Uplink.Packages.Distribution do
     only: [where: 3, join: 4, preload: 2, limit: 2]
 
   defp validate(conn, _opts) do
-    case LXD.network_leases() do
-      leases when is_list(leases) ->
-        ip_addresses =
-          Enum.map(leases, fn lease ->
-            lease.address
-          end)
+    case Firewall.allowed?(conn) do
+      :ok ->
+        conn
 
-        detected_ip_address =
-          conn.remote_ip
-          |> :inet.ntoa()
-          |> to_string()
+      {:error, :forbidden} ->
+        conn
+        |> send_resp(:forbidden, "")
+        |> halt()
 
-        if detected_ip_address in ip_addresses do
-          conn
-        else
-          conn
-          |> send_resp(:forbidden, "")
-          |> halt()
-        end
-
-      {:error, _error} ->
+      _ ->
         halt(conn)
     end
   end
@@ -90,8 +79,8 @@ defmodule Uplink.Packages.Distribution do
       |> Plug.Static.call(static_options)
     else
       [_app, node_host_name] = String.split(node, "@")
-      router_config = Application.get_env(:uplink, Uplink.Router)
-      port = Keyword.get(router_config, :port, 4040)
+      internal_router_config = Application.get_env(:uplink, Uplink.Internal)
+      port = Keyword.get(internal_router_config, :port, 4080)
 
       upstream =
         ["#{conn.scheme}://", "#{node_host_name}:#{port}", conn.request_path]

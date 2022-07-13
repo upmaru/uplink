@@ -120,7 +120,7 @@ defmodule Uplink.Packages.Instance.Upgrade do
        ),
        do: deactivate_and_boot(args)
 
-  defp handle_error(comment, %Job{attempt: attempt, args: args}),
+  defp handle_error(comment, %Job{attempt: _attempt, args: args}),
     do: deactivate_and_boot(args, comment: comment)
 
   defp deactivate_and_boot(args, options \\ []) do

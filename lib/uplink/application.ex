@@ -10,13 +10,11 @@ defmodule Uplink.Application do
     %{key: key, cert: cert} = Web.Certificate.generate()
     router_config = Application.get_env(:uplink, Uplink.Router, port: 4040)
 
-    distribution_router_config =
-      Application.get_env(:uplink, Uplink.Packages.Distribution.Router,
-        port: 4080
-      )
+    internal_router_config =
+      Application.get_env(:uplink, Uplink.Internal, port: 4080)
 
     port = Keyword.get(router_config, :port)
-    distribution_port = Keyword.get(distribution_router_config, :port)
+    internal_port = Keyword.get(internal_router_config, :port)
 
     children =
       [
@@ -24,9 +22,7 @@ defmodule Uplink.Application do
         {Uplink.Repo, []},
         {Oban, oban_config},
         {Plug.Cowboy,
-         plug: Uplink.Packages.Distribution.Router,
-         scheme: :http,
-         port: distribution_port},
+         plug: Uplink.Internal, scheme: :http, port: internal_port},
         {
           Plug.Cowboy,
           plug: Uplink.Router,

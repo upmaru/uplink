@@ -25,6 +25,11 @@ defmodule Uplink.Packages.Metadata do
       end
     end
 
+    embeds_many :variables, Variable, primary_key: false do
+      field :key, :string
+      field :value, :string
+    end
+
     embeds_many :instances, Instance, primary_key: false do
       field :id, :integer
       field :slug, :string
@@ -41,12 +46,19 @@ defmodule Uplink.Packages.Metadata do
     |> validate_required([:id, :slug])
     |> cast_embed(:channel, required: true, with: &channel_changeset/2)
     |> cast_embed(:instances, required: true, with: &instance_changeset/2)
+    |> cast_embed(:variables, with: &variable_changeset/2)
   end
 
   defp organization_changeset(organization, params) do
     organization
     |> cast(params, [:slug])
     |> validate_required([:slug])
+  end
+
+  defp variable_changeset(variable, params) do
+    variable
+    |> cast(params, [:key, :value])
+    |> validate_required([:key, :value])
   end
 
   defp package_changeset(package, params) do

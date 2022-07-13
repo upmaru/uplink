@@ -7,7 +7,6 @@ defmodule Uplink.Scenarios.Deployment do
   }
 
   alias Packages.{
-    Instance,
     Metadata
   }
 
@@ -21,6 +20,9 @@ defmodule Uplink.Scenarios.Deployment do
       "slug" => "uplink-web",
       "service_port" => 4000,
       "exposed_port" => 49152,
+      "variables" => [
+        %{"key" => "SOMETHING", "value" => "blah"}
+      ],
       "channel" => %{
         "slug" => "develop",
         "package" => %{
@@ -45,7 +47,7 @@ defmodule Uplink.Scenarios.Deployment do
     }
   }
 
-  def setup_endpoints(context) do
+  def setup_endpoints(_context) do
     :ok = Ecto.Adapters.SQL.Sandbox.checkout(Uplink.Repo)
 
     bypass = Bypass.open()
@@ -65,7 +67,7 @@ defmodule Uplink.Scenarios.Deployment do
     {:ok, bypass: bypass}
   end
 
-  def setup_base(context) do
+  def setup_base(_context) do
     {:ok, actor} =
       Members.create_actor(%{
         identifier: "zacksiri"
