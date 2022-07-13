@@ -2,114 +2,20 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
   use ExUnit.Case
   use Oban.Testing, repo: Uplink.Repo
 
-  import Uplink.Secret.Signature,
-    only: [compute_signature: 1]
+  import Uplink.Scenarios.Deployment
 
-  alias Uplink.{
-    Packages,
-    Members,
-    Cache
-  }
+  alias Uplink.Cache
 
-  alias Packages.{
-    Instance,
-    Metadata
-  }
-
-  @deployment_params %{
-    "hash" => "some-hash",
-    "archive_url" => "http://localhost/archives/packages.zip",
-    "stack" => "alpine/3.14",
-    "channel" => "develop",
-    "metadata" => %{
-      "id" => 1,
-      "slug" => "uplink-web",
-      "service_port" => 4000,
-      "exposed_port" => 49152,
-      "channel" => %{
-        "slug" => "develop",
-        "package" => %{
-          "slug" => "something-1640927800",
-          "credential" => %{
-            "public_key" => "public_key"
-          },
-          "organization" => %{
-            "slug" => "upmaru"
-          }
-        }
-      },
-      "instances" => [
-        %{
-          "id" => 1,
-          "slug" => "something-1",
-          "node" => %{
-            "slug" => "some-node"
-          }
-        }
-      ]
-    }
-  }
+  setup [:setup_endpoints, :setup_base]
 
   setup do
-    :ok = Ecto.Adapters.SQL.Sandbox.checkout(Uplink.Repo)
-
-    bypass = Bypass.open()
-
-    Cache.put(:self, %{
-      "credential" => %{
-        "endpoint" => "http://localhost:#{bypass.port}"
-      }
-    })
-
-    Application.put_env(
-      :uplink,
-      Uplink.Clients.Instellar,
-      endpoint: "http://localhost:#{bypass.port}/uplink"
-    )
-
-    {:ok, actor} =
-      Members.create_actor(%{
-        identifier: "zacksiri"
-      })
-
-    metadata = Map.get(@deployment_params, "metadata")
-
-    {:ok, metadata} = Packages.parse_metadata(metadata)
-
-    app =
-      metadata
-      |> Metadata.app_slug()
-      |> Packages.get_or_create_app()
-
-    {:ok, deployment} =
-      Packages.get_or_create_deployment(app, @deployment_params)
-
-    {:ok, install} = Packages.create_install(deployment, 1)
-
-    signature = compute_signature(deployment.hash)
-
-    Cache.put(
-      {:deployment, signature, install.instellar_installation_id},
-      metadata
-    )
-
-    {:ok, %{resource: validating_install}} =
-      Packages.transition_install_with(install, actor, "validate")
-
-    {:ok, %{resource: executing_install}} =
-      Packages.transition_install_with(validating_install, actor, "execute")
-
     cluster_members = File.read!("test/fixtures/lxd/cluster/members/list.json")
 
-    {:ok,
-     install: executing_install,
-     bypass: bypass,
-     actor: actor,
-     cluster_members: cluster_members}
+    {:ok, cluster_members: cluster_members}
   end
 
   describe "bootstrap instance" do
-    alias Instance.Bootstrap
+    alias Uplink.Packages.Instance.Bootstrap
 
     setup %{bypass: bypass, cluster_members: cluster_members} do
       Bypass.expect_once(bypass, "GET", "/1.0/cluster/members", fn conn ->
@@ -331,7 +237,7 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
           assert {:ok, body, conn} = Plug.Conn.read_body(conn)
           assert {:ok, body} = Jason.decode(body)
 
-          %{"event" => %{"name" => "boot" = event_name}} = body
+          assert %{"event" => %{"name" => "boot" = event_name}} = body
 
           conn
           |> Plug.Conn.put_resp_header("content-type", "application/json")
