@@ -50,9 +50,11 @@ defmodule Uplink.Packages.Instance.Cleanup do
   end
 
   defp finalize(name, install, "deactivate_and_boot", args) do
+    comment = Map.get(args, "comment", "[Uplink.Packages.Instance.Cleanup]")
+
     with {:ok, _transition} <-
            Instellar.transition_instance(name, install, "deactivate",
-             comment: "[Uplink.Packages.Instance.Cleanup]"
+             comment: comment
            ) do
       args
       |> Instance.Bootstrap.new()

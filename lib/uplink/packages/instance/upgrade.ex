@@ -1,5 +1,7 @@
 defmodule Uplink.Packages.Instance.Upgrade do
-  use Oban.Worker, queue: :process_instance, max_attempts: 1
+  use Oban.Worker,
+    queue: :process_instance,
+    max_attempts: 1
 
   alias Uplink.{
     Members,
@@ -24,16 +26,17 @@ defmodule Uplink.Packages.Instance.Upgrade do
 
   @install_state ~s(executing)
 
-  def perform(%Oban.Job{
-        args:
-          %{
+  def perform(
+        %Oban.Job{
+          args: %{
             "instance" => %{
               "slug" => name
             },
             "install_id" => install_id,
             "actor_id" => actor_id
-          } = args
-      }) do
+          }
+        } = job
+      ) do
     %Actor{} = actor = Repo.get(Actor, actor_id)
 
     %Install{} =
@@ -61,7 +64,7 @@ defmodule Uplink.Packages.Instance.Upgrade do
         credential: %{"public_key" => nil}
       })
       |> validate_stack(install)
-      |> handle_upgrade(args)
+      |> handle_upgrade(job)
     end
   end
 
@@ -94,7 +97,7 @@ defmodule Uplink.Packages.Instance.Upgrade do
     end
   end
 
-  defp handle_upgrade({:upgrade, formation_instance, install}, _args) do
+  defp handle_upgrade({:upgrade, formation_instance, install}, %Job{} = job) do
     LXD.client()
     |> Formation.Lxd.Alpine.upgrade_package(formation_instance)
     |> case do
@@ -107,23 +110,25 @@ defmodule Uplink.Packages.Instance.Upgrade do
         )
 
       {:error, error} ->
-        Instellar.transition_instance(
-          formation_instance.slug,
-          install,
-          "fail",
-          comment: error
-        )
-
-        {:error, error}
+        handle_error(error, job)
     end
   end
 
   defp handle_upgrade(
          {:deactivate_and_bootstrap, _formation_instance, _install},
-         args
-       ) do
+         %Job{args: args}
+       ),
+       do: deactivate_and_boot(args)
+
+  defp handle_error(comment, %Job{attempt: attempt, args: args}),
+    do: deactivate_and_boot(args, comment: comment)
+
+  defp deactivate_and_boot(args, options \\ []) do
     args
-    |> Map.merge(%{"mode" => "deactivate_and_boot"})
+    |> Map.merge(%{
+      "mode" => "deactivate_and_boot",
+      "comment" => Keyword.get(options, :comment)
+    })
     |> Instance.Cleanup.new()
     |> Oban.insert()
   end
