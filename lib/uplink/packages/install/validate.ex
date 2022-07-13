@@ -57,6 +57,8 @@ defmodule Uplink.Packages.Install.Validate do
       Packages.transition_install_with(install, actor, "execute")
     else
       nil ->
+        hostname = System.get_env("HOSTNAME")
+
         internal_router_config =
           Application.get_env(:uplink, Uplink.Internal, port: 4080)
 
@@ -68,7 +70,7 @@ defmodule Uplink.Packages.Install.Validate do
           "config" => %{
             "user.managed_by" => "uplink",
             "user.install_variables_endpoint" =>
-              "http://localhost:#{internal_router_port}/installs/#{install.instellar_installation_id}/variables"
+              "http://#{hostname}:#{internal_router_port}/installs/#{install.instellar_installation_id}/variables"
           }
         }
 
