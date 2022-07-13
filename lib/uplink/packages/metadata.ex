@@ -26,7 +26,8 @@ defmodule Uplink.Packages.Metadata do
     end
 
     embeds_many :variables, Variable, primary_key: false do
-
+      field :key, :string
+      field :value, :string
     end
 
     embeds_many :instances, Instance, primary_key: false do
@@ -55,7 +56,9 @@ defmodule Uplink.Packages.Metadata do
   end
 
   defp variable_chagneset(variable, params) do
-
+    variable
+    |> cast(params, [:key, :value])
+    |> validate_required([:key, :value])
   end
 
   defp package_changeset(package, params) do
