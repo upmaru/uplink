@@ -32,6 +32,8 @@ defmodule Uplink.Packages.Deployment.Router do
 
   require Logger
 
+  import Ecto.Query, only: [where: 3]
+
   post "/" do
     %{
       "actor" => actor_params,
@@ -69,6 +71,41 @@ defmodule Uplink.Packages.Deployment.Router do
 
       {:actor, :not_found} ->
         json(conn, :not_found, %{error: %{message: "actor not found"}})
+    end
+  end
+
+  post "/:hash/installs/:instellar_installation_id/events" do
+    %{
+      "actor" => actor_params,
+      "installation_id" => instellar_installation_id,
+      "event" => event_params
+    } = conn.body_params
+
+    query =
+      from(
+        i in Install,
+        join: d in assoc(i, :deployment),
+        where:
+          d.hash == ^hash and
+            i.instellar_installation_id == ^installar_installation_id
+      )
+
+    with %Install{} = install <- Repo.one(query),
+         %Members.Actor{} = actor <- Members.get_actor(actor_params),
+         {:ok, %{event: event}} <-
+           Packages.transition_install_with(
+             install,
+             actor,
+             Map.get(event_params, "name"),
+             comment: Map.get(event_params, "comment")
+           ) do
+      json(conn, :created, %{id: event.id, name: event.name})
+    else
+      {:error, error} ->
+        json(conn, :unprocessable_entity, %{error: %{message: error}})
+
+      {:error, error, _} ->
+        json(conn, :unprocessable_entity, %{error: %{message: error}})
     end
   end
 end
