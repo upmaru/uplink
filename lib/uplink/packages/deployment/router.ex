@@ -6,7 +6,8 @@ defmodule Uplink.Packages.Deployment.Router do
     Secret,
     Members,
     Packages,
-    Cache
+    Cache,
+    Repo
   }
 
   alias Packages.{
@@ -32,7 +33,7 @@ defmodule Uplink.Packages.Deployment.Router do
 
   require Logger
 
-  import Ecto.Query, only: [where: 3]
+  import Ecto.Query, only: [from: 2]
 
   post "/" do
     %{
@@ -87,7 +88,7 @@ defmodule Uplink.Packages.Deployment.Router do
         join: d in assoc(i, :deployment),
         where:
           d.hash == ^hash and
-            i.instellar_installation_id == ^installar_installation_id
+            i.instellar_installation_id == ^instellar_installation_id
       )
 
     with %Install{} = install <- Repo.one(query),
