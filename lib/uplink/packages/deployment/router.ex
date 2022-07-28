@@ -78,7 +78,6 @@ defmodule Uplink.Packages.Deployment.Router do
   post "/:hash/installs/:instellar_installation_id/events" do
     %{
       "actor" => actor_params,
-      "installation_id" => instellar_installation_id,
       "event" => event_params
     } = conn.body_params
 
@@ -107,6 +106,12 @@ defmodule Uplink.Packages.Deployment.Router do
 
       {:error, error, _} ->
         json(conn, :unprocessable_entity, %{error: %{message: error}})
+
+      {:error, error, _, _} ->
+        json(conn, :unprocessable_entity, %{error: %{message: error}})
+
+      {:actor, :not_found} ->
+        json(conn, :not_found, %{error: %{message: "actor not found"}})
     end
   end
 end

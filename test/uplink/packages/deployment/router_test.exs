@@ -11,6 +11,8 @@ defmodule Uplink.Packages.Deployment.RouterTest do
 
   @opts Router.init([])
 
+  @app_slug "upmaru/something-1640927800"
+
   @valid_body Jason.encode!(%{
                 "actor" => %{
                   "identifier" => "zacksiri"
@@ -68,12 +70,12 @@ defmodule Uplink.Packages.Deployment.RouterTest do
   setup do
     :ok = Ecto.Adapters.SQL.Sandbox.checkout(Uplink.Repo)
 
-    {:ok, _actor} =
+    {:ok, actor} =
       Members.create_actor(%{
         identifier: "zacksiri"
       })
 
-    :ok
+    {:ok, actor: actor}
   end
 
   describe "valid body" do
@@ -112,6 +114,70 @@ defmodule Uplink.Packages.Deployment.RouterTest do
       assert conn.status == 422
 
       assert %{"data" => %{"errors" => _errors}} = Jason.decode!(conn.resp_body)
+    end
+  end
+
+  describe "create install event" do
+    setup %{actor: actor} do
+      deployment = Map.get(Jason.decode!(@valid_body), "deployment")
+
+      {:ok, metadata} = Packages.parse_metadata(deployment["metadata"])
+
+      app = Packages.get_or_create_app(@app_slug)
+
+      {:ok, deployment} = Packages.get_or_create_deployment(app, deployment)
+
+      {:ok, install} = Packages.create_install(deployment, metadata.id)
+
+      {:ok, %{resource: validating_install}} =
+        Packages.transition_install_with(install, actor, "validate")
+
+      {:ok, %{resource: _executing_install}} =
+        Packages.transition_install_with(validating_install, actor, "execute")
+
+      body =
+        Jason.encode!(%{
+          "actor" => %{
+            "identifier" => "zacksiri"
+          },
+          "event" => %{
+            "name" => "complete",
+            "comment" => "installation synced successful"
+          }
+        })
+
+      signature =
+        :crypto.mac(:hmac, :sha256, Uplink.Secret.get(), body)
+        |> Base.encode16()
+        |> String.downcase()
+
+      {:ok,
+       body: body,
+       install: validating_install,
+       signature: signature,
+       deployment: deployment,
+       metadata: metadata}
+    end
+
+    test "can mark install complete", %{
+      body: body,
+      deployment: deployment,
+      install: install,
+      signature: signature,
+      metadata: metadata
+    } do
+      {:ok, %{resource: _executing_install}} =
+        Packages.transition_install_with(validating_install, actor, "execute")
+      
+      conn =
+        conn(:post, "/#{deployment.hash}/installs/#{metadata.id}/events", body)
+        |> put_req_header("x-uplink-signature-256", "sha256=#{signature}")
+        |> put_req_header("content-type", "application/json")
+        |> Router.call(@opts)
+
+      assert conn.status == 201
+      assert %{"data" => data} = Jason.decode!(conn.resp_body)
+      assert %{"id" => _id, "name" => "complete"} = data
     end
   end
 end
