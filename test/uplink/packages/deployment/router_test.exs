@@ -183,7 +183,7 @@ defmodule Uplink.Packages.Deployment.RouterTest do
       deployment: deployment,
       signature: signature,
       metadata: metadata
-    } do      
+    } do
       conn =
         conn(:post, "/#{deployment.hash}/installs/#{metadata.id}/events", body)
         |> put_req_header("x-uplink-signature-256", "sha256=#{signature}")
