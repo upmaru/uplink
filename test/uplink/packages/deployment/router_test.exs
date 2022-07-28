@@ -168,7 +168,7 @@ defmodule Uplink.Packages.Deployment.RouterTest do
     } do
       {:ok, %{resource: _executing_install}} =
         Packages.transition_install_with(validating_install, actor, "execute")
-      
+
       conn =
         conn(:post, "/#{deployment.hash}/installs/#{metadata.id}/events", body)
         |> put_req_header("x-uplink-signature-256", "sha256=#{signature}")
