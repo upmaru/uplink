@@ -132,9 +132,6 @@ defmodule Uplink.Packages.Deployment.RouterTest do
       {:ok, %{resource: validating_install}} =
         Packages.transition_install_with(install, actor, "validate")
 
-      {:ok, %{resource: _executing_install}} =
-        Packages.transition_install_with(validating_install, actor, "execute")
-
       body =
         Jason.encode!(%{
           "actor" => %{
@@ -161,13 +158,14 @@ defmodule Uplink.Packages.Deployment.RouterTest do
 
     test "can mark install complete", %{
       body: body,
+      actor: actor,
       deployment: deployment,
       install: install,
       signature: signature,
       metadata: metadata
     } do
       {:ok, %{resource: _executing_install}} =
-        Packages.transition_install_with(validating_install, actor, "execute")
+        Packages.transition_install_with(install, actor, "execute")
 
       conn =
         conn(:post, "/#{deployment.hash}/installs/#{metadata.id}/events", body)
@@ -178,6 +176,22 @@ defmodule Uplink.Packages.Deployment.RouterTest do
       assert conn.status == 201
       assert %{"data" => data} = Jason.decode!(conn.resp_body)
       assert %{"id" => _id, "name" => "complete"} = data
+    end
+
+    test "return 422 when invalid state", %{
+      body: body,
+      deployment: deployment,
+      signature: signature,
+      metadata: metadata
+    } do      
+      conn =
+        conn(:post, "/#{deployment.hash}/installs/#{metadata.id}/events", body)
+        |> put_req_header("x-uplink-signature-256", "sha256=#{signature}")
+        |> put_req_header("content-type", "application/json")
+        |> Router.call(@opts)
+
+      assert conn.status == 422
+      assert %{"data" => _data} = Jason.decode!(conn.resp_body)
     end
   end
 end
