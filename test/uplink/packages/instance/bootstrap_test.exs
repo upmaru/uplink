@@ -89,7 +89,7 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
         "GET",
         "/1.0/operations/#{create_instance_operation_id}/wait",
         fn conn ->
-          assert %{"timeout" => "60"} = conn.query_params
+          assert %{"timeout" => "120"} = conn.query_params
 
           conn
           |> Plug.Conn.put_resp_header("content-type", "application/json")
@@ -116,7 +116,7 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
         "GET",
         "/1.0/operations/#{start_instance_operation_id}/wait",
         fn conn ->
-          assert %{"timeout" => "60"} = conn.query_params
+          assert %{"timeout" => "120"} = conn.query_params
 
           conn
           |> Plug.Conn.put_resp_header("content-type", "application/json")
@@ -166,7 +166,7 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
         "GET",
         "/1.0/operations/#{setup_public_key_operation_id}/wait",
         fn conn ->
-          %{"timeout" => "60"} = conn.query_params
+          assert %{"timeout" => _timeout} = conn.query_params
 
           conn
           |> Plug.Conn.put_resp_header("content-type", "application/json")
@@ -221,7 +221,7 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
         "GET",
         "/1.0/operations/#{start_instance_operation_id}/wait",
         fn conn ->
-          %{"timeout" => "60"} = conn.query_params
+          %{"timeout" => "120"} = conn.query_params
 
           conn
           |> Plug.Conn.put_resp_header("content-type", "application/json")
@@ -291,7 +291,7 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
         "GET",
         "/1.0/operations/#{create_instance_operation_id}/wait",
         fn conn ->
-          assert %{"timeout" => "60"} = conn.query_params
+          assert %{"timeout" => "120"} = conn.query_params
 
           conn
           |> Plug.Conn.put_resp_header("content-type", "application/json")
@@ -368,7 +368,7 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
         "GET",
         "/1.0/operations/#{setup_public_key_operation_id}/wait",
         fn conn ->
-          %{"timeout" => "60"} = conn.query_params
+          assert %{"timeout" => _timeout} = conn.query_params
 
           conn
           |> Plug.Conn.put_resp_header("content-type", "application/json")
@@ -423,7 +423,7 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
         "GET",
         "/1.0/operations/#{start_instance_operation_id}/wait",
         fn conn ->
-          %{"timeout" => "60"} = conn.query_params
+          assert %{"timeout" => "120"} = conn.query_params
 
           conn
           |> Plug.Conn.put_resp_header("content-type", "application/json")
