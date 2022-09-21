@@ -35,6 +35,10 @@ defmodule Uplink.Packages do
     to: Deployment.Manager,
     as: :get
 
+  defdelegate get_latest_deployment(slug, channel),
+    to: Deployment.Manager,
+    as: :get_latest
+
   defdelegate get_or_create_deployment(app, params),
     to: Deployment.Manager,
     as: :get_or_create

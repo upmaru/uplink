@@ -4,8 +4,7 @@ defmodule Uplink.Packages.Distribution do
 
   alias Uplink.{
     Internal,
-    Packages,
-    Repo
+    Packages
   }
 
   alias Packages.{
@@ -20,9 +19,6 @@ defmodule Uplink.Packages.Distribution do
   plug :serve_or_proxy
 
   plug :respond
-
-  import Ecto.Query,
-    only: [where: 3, join: 4, preload: 2, limit: 2, order_by: 3]
 
   defp validate(conn, _opts) do
     case Firewall.allowed?(conn) do
@@ -45,18 +41,8 @@ defmodule Uplink.Packages.Distribution do
     [channel, org, package] = Enum.take(params, 3)
     app_slug = "#{org}/#{package}"
 
-    Deployment
-    |> join(:inner, [d], app in assoc(d, :app))
-    |> where(
-      [d, app],
-      app.slug == ^app_slug and
-        d.channel == ^channel and
-        d.current_state == ^"live"
-    )
-    |> order_by([d], desc: d.inserted_at)
-    |> preload([:archive])
-    |> limit(1)
-    |> Repo.one()
+    app_slug
+    |> Packages.get_latest_deployment(channel)
     |> case do
       %Deployment{archive: archive} ->
         serve(conn, archive)
