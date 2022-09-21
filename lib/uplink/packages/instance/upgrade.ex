@@ -22,7 +22,7 @@ defmodule Uplink.Packages.Instance.Upgrade do
     Instellar
   }
 
-  import Ecto.Query, only: [where: 3, preload: 2, order_by: 2]
+  import Ecto.Query, only: [limit: 2, where: 3, preload: 2, order_by: 2]
 
   @install_state ~s(executing)
 
@@ -83,6 +83,7 @@ defmodule Uplink.Packages.Instance.Upgrade do
     )
     |> order_by(desc: :inserted_at)
     |> preload([:deployment])
+    |> limit(1)
     |> Repo.one()
     |> case do
       %Install{deployment: %{stack: previous_stack}} ->

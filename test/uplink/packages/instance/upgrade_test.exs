@@ -4,13 +4,110 @@ defmodule Uplink.Packages.Instance.UpgradeTest do
 
   import Uplink.Scenarios.Deployment
 
+  alias Uplink.{
+    Packages,
+    Repo
+  }
+
   setup [:setup_endpoints, :setup_base]
+
+  @first_deployment %{
+    "hash" => "some-hash-1",
+    "archive_url" => "http://localhost/archives/packages.zip",
+    "stack" => "alpine/3.14",
+    "channel" => "develop",
+    "metadata" => %{
+      "id" => 1,
+      "slug" => "uplink-web",
+      "service_port" => 4000,
+      "exposed_port" => 49152,
+      "variables" => [
+        %{"key" => "SOMETHING", "value" => "blah"}
+      ],
+      "channel" => %{
+        "slug" => "develop",
+        "package" => %{
+          "slug" => "something-1640927800",
+          "credential" => %{
+            "public_key" => "public_key"
+          },
+          "organization" => %{
+            "slug" => "upmaru"
+          }
+        }
+      },
+      "instances" => [
+        %{
+          "id" => 1,
+          "slug" => "something-1",
+          "node" => %{
+            "slug" => "some-node"
+          }
+        }
+      ]
+    }
+  }
+
+  @second_deployment %{
+    "hash" => "some-hash-2",
+    "archive_url" => "http://localhost/archives/packages.zip",
+    "stack" => "alpine/3.14",
+    "channel" => "develop",
+    "metadata" => %{
+      "id" => 1,
+      "slug" => "uplink-web",
+      "service_port" => 4000,
+      "exposed_port" => 49152,
+      "variables" => [
+        %{"key" => "SOMETHING", "value" => "blah"}
+      ],
+      "channel" => %{
+        "slug" => "develop",
+        "package" => %{
+          "slug" => "something-1640927800",
+          "credential" => %{
+            "public_key" => "public_key"
+          },
+          "organization" => %{
+            "slug" => "upmaru"
+          }
+        }
+      },
+      "instances" => [
+        %{
+          "id" => 1,
+          "slug" => "something-1",
+          "node" => %{
+            "slug" => "some-node"
+          }
+        }
+      ]
+    }
+  }
 
   describe "upgrade instance" do
     alias Uplink.Packages.Instance.Upgrade
 
-    setup do
+    setup %{app: app} do
+      {:ok, first_deployment} =
+        Packages.get_or_create_deployment(app, @first_deployment)
+
+      {:ok, second_deployment} =
+        Packages.get_or_create_deployment(app, @second_deployment)
+
       exec_instance = File.read!("test/fixtures/lxd/instances/exec.json")
+
+      {:ok, first_install} = Packages.create_install(first_deployment, 1)
+
+      first_install
+      |> Ecto.Changeset.cast(%{current_state: "completed"}, [:current_state])
+      |> Repo.update()
+
+      {:ok, second_install} = Packages.create_install(second_deployment, 1)
+
+      second_install
+      |> Ecto.Changeset.cast(%{current_state: "completed"}, [:current_state])
+      |> Repo.update()
 
       wait_with_log =
         File.read!("test/fixtures/lxd/operations/wait_with_log.json")
