@@ -72,4 +72,14 @@ defmodule Uplink.Packages.Deployment.ManagerTest do
 
     assert second_deployment.id == latest_deployment.id
   end
+
+  test "packages get_latest_deployment", %{
+    app: app,
+    second_deployment: second_deployment
+  } do
+    latest_deployment =
+      Packages.get_latest_deployment(app.slug, second_deployment.channel)
+
+    assert second_deployment.id == latest_deployment.id
+  end
 end
