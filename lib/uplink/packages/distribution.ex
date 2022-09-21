@@ -18,8 +18,6 @@ defmodule Uplink.Packages.Distribution do
 
   plug :serve_or_proxy
 
-  plug :respond
-
   defp validate(conn, _opts) do
     case Firewall.allowed?(conn) do
       :ok ->
@@ -80,7 +78,4 @@ defmodule Uplink.Packages.Distribution do
       |> ReverseProxyPlug.call(reverse_proxy_options)
     end
   end
-
-  defp respond(conn, _opts),
-    do: send_resp(conn)
 end
