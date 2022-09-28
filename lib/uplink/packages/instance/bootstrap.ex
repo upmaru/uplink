@@ -2,7 +2,7 @@ defmodule Uplink.Packages.Instance.Bootstrap do
   use Oban.Worker,
     queue: :process_instance,
     max_attempts: 2,
-    unique: [fields: [:args, :worker], keys: [:install_id]]
+    unique: [fields: [:args, :worker], keys: [:install_id], states: [:executing]]
 
   alias Uplink.{
     Members,
