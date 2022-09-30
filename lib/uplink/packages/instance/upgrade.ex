@@ -1,12 +1,7 @@
 defmodule Uplink.Packages.Instance.Upgrade do
   use Oban.Worker,
     queue: :process_instance,
-    max_attempts: 1,
-    unique: [
-      fields: [:args, :worker],
-      keys: [:install_id],
-      states: [:executing]
-    ]
+    max_attempts: 1
 
   alias Uplink.{
     Members,
