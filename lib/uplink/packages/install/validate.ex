@@ -47,33 +47,18 @@ defmodule Uplink.Packages.Install.Validate do
          actor: actor
        }) do
     profile_name = Packages.profile_name(metadata)
+    profile_params = build_profile_params(profile_name, install, metadata)
 
     with %LXD.Profile{} = profile <-
            LXD.list_profiles()
            |> Enum.find(fn profile ->
              profile.name == profile_name
            end),
-         {:ok, :profile_valid} <- validate_profile(profile) do
+         {:ok, :profile_valid} <- validate_profile(profile),
+         {:ok, :profile_updated} <- update_profile(profile, profile_params) do
       Packages.transition_install_with(install, actor, "execute")
     else
       nil ->
-        hostname = System.get_env("HOSTNAME")
-
-        internal_router_config =
-          Application.get_env(:uplink, Uplink.Internal, port: 4080)
-
-        internal_router_port = Keyword.get(internal_router_config, :port)
-
-        profile_params = %{
-          "name" => profile_name,
-          "description" => "#{install.id}/#{install.instellar_installation_id}",
-          "config" => %{
-            "user.managed_by" => "uplink",
-            "user.install_variables_endpoint" =>
-              "http://#{hostname}:#{internal_router_port}/installs/#{install.instellar_installation_id}/variables"
-          }
-        }
-
         case create_profile(profile_params) do
           {:ok, :profile_created} ->
             Packages.transition_install_with(install, actor, "execute")
@@ -119,7 +104,37 @@ defmodule Uplink.Packages.Install.Validate do
     end
   end
 
-  defp managed_by_uplink({key, value}) do
-    key == "user.managed_by" and value == "uplink"
+  defp update_profile(%LXD.Profile{name: profile_id}, profile_params) do
+    LXD.client()
+    |> Lexdee.update_profile(profile_id, profile_params)
+    |> case do
+      {:ok, %{body: _body}} ->
+        {:ok, :profile_updated}
+
+      {:error, %{"error" => message}} ->
+        {:error, message}
+    end
   end
+
+  defp build_profile_params(profile_name, %Install{} = install, metadata) do
+    hostname = System.get_env("HOSTNAME")
+
+    internal_router_config =
+      Application.get_env(:uplink, Uplink.Internal, port: 4080)
+
+    internal_router_port = Keyword.get(internal_router_config, :port)
+
+    %{
+      "name" => profile_name,
+      "description" => "#{install.id}/#{install.instellar_installation_id}",
+      "config" => %{
+        "user.managed_by" => "uplink",
+        "user.install_variables_endpoint" =>
+          "http://#{hostname}:#{internal_router_port}/installs/#{install.instellar_installation_id}/variables"
+      }
+    }
+  end
+
+  defp managed_by_uplink({key, value}),
+    do: key == "user.managed_by" and value == "uplink"
 end
