@@ -10,7 +10,10 @@ defmodule Uplink.Packages.Install.Validate do
 
   alias Members.Actor
 
-  alias Packages.Install
+  alias Packages.{
+    Install,
+    Metadata
+  }
 
   alias Clients.LXD
 
@@ -127,10 +130,26 @@ defmodule Uplink.Packages.Install.Validate do
     %{
       "name" => profile_name,
       "description" => "#{install.id}/#{install.instellar_installation_id}",
+      "devices" => build_proxy(metadata),
       "config" => %{
         "user.managed_by" => "uplink",
         "user.install_variables_endpoint" =>
           "http://#{hostname}:#{internal_router_port}/installs/#{install.instellar_installation_id}/variables"
+      }
+    }
+  end
+
+  defp build_proxy(%Metadata{service_port: nil, exposed_port: nil}), do: %{}
+
+  defp build_proxy(%Metadata{
+         service_port: service_port,
+         exposed_port: exposed_port
+       }) do
+    %{
+      "web" => %{
+        "type" => "proxy",
+        "connect" => "tcp:127.0.0.1:#{service_port}",
+        "listen" => "tcp:0.0.0.0:#{exposed_port}"
       }
     }
   end
