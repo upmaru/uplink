@@ -99,6 +99,7 @@ defmodule Uplink.Packages.Install.ValidateTest do
     {:ok,
      install: validating_install,
      deployment: deployment,
+     metadata: metadata,
      actor: actor,
      bypass: bypass,
      list_profiles: list_profiles}
@@ -147,20 +148,37 @@ defmodule Uplink.Packages.Install.ValidateTest do
       list_profiles =
         File.read!("test/fixtures/lxd/profiles/list_profile_exists.json")
 
-      {:ok, list_profiles: list_profiles}
+      update_profile = File.read!("test/fixtures/lxd/profiles/update.json")
+
+      {:ok, list_profiles: list_profiles, update_profile: update_profile}
     end
 
     test "transition install to execute", %{
       bypass: bypass,
       install: install,
       actor: actor,
-      list_profiles: list_profiles
+      metadata: metadata,
+      list_profiles: list_profiles,
+      update_profile: update_profile
     } do
+      profile_name = Packages.profile_name(metadata)
+
       Bypass.expect_once(bypass, "GET", "/1.0/profiles", fn conn ->
         conn
         |> Plug.Conn.put_resp_header("content-type", "application/json")
         |> Plug.Conn.resp(200, list_profiles)
       end)
+
+      Bypass.expect_once(
+        bypass,
+        "PATCH",
+        "/1.0/profiles/#{profile_name}",
+        fn conn ->
+          conn
+          |> Plug.Conn.put_resp_header("content-type", "application/json")
+          |> Plug.Conn.resp(200, update_profile)
+        end
+      )
 
       assert {:ok, %{resource: install}} =
                perform_job(Validate, %{
