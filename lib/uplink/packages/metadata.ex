@@ -42,7 +42,7 @@ defmodule Uplink.Packages.Metadata do
 
   def changeset(%__MODULE__{} = metadata, params) do
     metadata
-    |> cast(params, [:id, :slug])
+    |> cast(params, [:id, :slug, :service_port, :exposed_port])
     |> validate_required([:id, :slug])
     |> cast_embed(:channel, required: true, with: &channel_changeset/2)
     |> cast_embed(:instances, required: true, with: &instance_changeset/2)
