@@ -2,6 +2,7 @@ dependencies:
   build:
     - elixir
   runtime:
+    - caddy
     - bash
     - curl
     - jq
@@ -35,6 +36,7 @@ run:
 
 hook:
   post-install: |
+    rc-update add caddy
     rc-update add uplink
 
   pre-upgrade: |
