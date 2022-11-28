@@ -11,7 +11,7 @@ defmodule Uplink.Clients.Caddy.Config do
         {:error, body}
     end
   end
-  
+
   def load(params) do
     [Uplink.Clients.Caddy.default_endpoint(), "load"]
     |> Path.join()
@@ -19,7 +19,7 @@ defmodule Uplink.Clients.Caddy.Config do
     |> case do
       %{status: 200, body: body} ->
         {:ok, body}
-        
+
       %{status: _, body: body} ->
         {:error, body}
     end
