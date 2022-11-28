@@ -36,11 +36,26 @@ defmodule Uplink.Clients.Caddy.Apps.Handler.ReverseProxy do
 
   defp health_checks_changeset(health_checks, params) do
     health_checks
-    |> cast_embed(:active, with: &active_changeset/2)
+    |> cast_embed(:active, with: &active_health_check_changeset/2)
   end
 
   defp upstream_changeset(upstream, params) do
     upstream
     |> cast(params, [:dial, :max_requests])
+  end
+
+  defp active_health_check_changeset(active_health_check, params) do
+    active_health_check
+    |> cast(params, [
+      :path,
+      :uri,
+      :port,
+      :headers,
+      :interval,
+      :timeout,
+      :max_size,
+      :expect_status,
+      :expect_body
+    ])
   end
 end
