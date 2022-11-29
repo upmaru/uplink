@@ -6,7 +6,7 @@ defmodule Uplink.Clients.Caddy.Admin do
 
   @primary_key false
   embedded_schema do
-    embeds_one :identity, primary_key: false do
+    embeds_one :identity, Identity, primary_key: false do
       field :identifiers, {:array, :string}
 
       embeds_many :issuers, Issuer
