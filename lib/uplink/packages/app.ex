@@ -18,5 +18,6 @@ defmodule Uplink.Packages.App do
     app
     |> cast(params, [:slug])
     |> validate_required([:slug])
+    |> unique_constraint(:slug)
   end
 end

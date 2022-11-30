@@ -20,7 +20,7 @@ defmodule Uplink.Clients.Caddy.Apps.Server do
     |> cast(params, [:listen])
     |> cast_assoc(:routes, with: &route_changeset/2)
   end
-  
+
   def parse(params) do
     %__MODULE__{}
     |> changeset(params)

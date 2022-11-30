@@ -1,7 +1,7 @@
 defmodule Uplink.Clients.Caddy.Apps do
   use Ecto.Schema
   import Ecto.Changeset
-  
+
   alias __MODULE__.Server
 
   @primary_key false
@@ -10,25 +10,31 @@ defmodule Uplink.Clients.Caddy.Apps do
       field :servers, :map
     end
   end
-  
+
   def changeset(apps, params) do
     apps
     |> cast(params, [:servers])
     |> maybe_cast_servers()
   end
-  
-  def maybe_cast_servers(changeset) do
+
+  def parse(params) do
+    %__MODULE__{}
+    |> changeset(params)
+    |> apply_action!(:insert)
+  end
+
+  defp maybe_cast_servers(changeset) do
     if servers = get_change(changeset, :servers) do
       servers =
         servers
-        |> Enum.map(fn {key, value} -> 
+        |> Enum.map(fn {key, value} ->
           {key, Server.parse(value)}
         end)
         |> Enum.into(%{})
-      
+
       put_change(changeset, :servers, servers)
     else
       changeset
     end
-  end 
+  end
 end

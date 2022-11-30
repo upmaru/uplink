@@ -24,7 +24,7 @@ defmodule Uplink.Clients.Caddy.Admin do
     |> changeset(params)
     |> apply_action!(:insert)
   end
-  
+
   defp identity_changeset(identity, params) do
     identity
     |> cast(params, [:identifiers])
