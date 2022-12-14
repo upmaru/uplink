@@ -10,11 +10,13 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
   alias Caddy.Apps
 
   def new do
-    installs = 
+    install_states =
       Packages.Install.latest_by_installation_id(1)
-      |> Repo.preload([deployment: [:app]])
+      |> Repo.preload(deployment: [:app])
+      |> Enum.map(&Packages.build_install_state/1)
+      |> Enum.reject(&is_nil(&1.metadata.host))
 
-    %{admin: admin(), apps: apps(installs)}
+    %{admin: admin(), apps: apps(install_states)}
   end
 
   def admin do
@@ -31,10 +33,10 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
     |> Admin.parse()
   end
 
-  def apps(installs) do
+  def apps(install_states) do
     %{
       http: %{
-        servers: servers(installs)
+        servers: servers(install_states)
       }
     }
     |> Apps.parse()
@@ -48,8 +50,24 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
       }
     }
   end
-  
-  defp build_route(%{deployment: %{app: app}} = install) do
-    %{metadata: metadata} = Packages.build_install_state(install)
+
+  defp build_route(
+         %{install: %{deployment: %{app: _app}}, metadata: metadata} = _state
+       ) do
+    %{
+      match: [host: metadata.hosts],
+      handle: [
+        %{
+          handler: "reverse_proxy",
+          upstreams:
+            Enum.map(metadata.instances, fn instance ->
+              %{
+                dial: "#{instance.slug}:#{metadata.service_port}",
+                max_requests: 10
+              }
+            end)
+        }
+      ]
+    }
   end
 end
