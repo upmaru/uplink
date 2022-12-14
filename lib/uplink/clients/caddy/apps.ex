@@ -13,6 +13,12 @@ defmodule Uplink.Clients.Caddy.Apps do
 
   def changeset(apps, params) do
     apps
+    |> cast(params, [])
+    |> cast_embed(:http, with: &http_changeset/2)
+  end
+
+  defp http_changeset(http, params) do
+    http
     |> cast(params, [:servers])
     |> maybe_cast_servers()
   end

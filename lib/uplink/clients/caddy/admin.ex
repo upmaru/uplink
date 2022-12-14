@@ -2,14 +2,16 @@ defmodule Uplink.Clients.Caddy.Admin do
   use Ecto.Schema
   import Ecto.Changeset
 
-  alias __MODULE__.Issuer
+  @mappings %{
+    "zerossl" => __MODULE__.Issuer.ZeroSSL
+  }
 
   @primary_key false
   embedded_schema do
     embeds_one :identity, Identity, primary_key: false do
       field :identifiers, {:array, :string}
 
-      embeds_many :issuers, Issuer
+      field :issuers, {:array, :map}, default: []
     end
   end
 
@@ -27,7 +29,25 @@ defmodule Uplink.Clients.Caddy.Admin do
 
   defp identity_changeset(identity, params) do
     identity
-    |> cast(params, [:identifiers])
-    |> cast_embed(:issuers)
+    |> cast(params, [:identifiers, :issuers])
+    |> maybe_cast_issuers()
+  end
+
+  defp maybe_cast_issuers(changeset) do
+    if issuers = get_change(changeset, :issuers) do
+      issuers =
+        issuers
+        |> Enum.map(fn issuer ->
+          module =
+            Map.get(@mappings, issuer["module"]) ||
+              Map.get(@mappings, issuer[:module])
+
+          module.parse(issuer)
+        end)
+
+      put_change(changeset, :issuers, issuers)
+    else
+      changeset
+    end
   end
 end

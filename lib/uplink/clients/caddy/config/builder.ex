@@ -12,9 +12,12 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
   def new do
     install_states =
       Packages.Install.latest_by_installation_id(1)
+      |> Repo.all()
       |> Repo.preload(deployment: [:app])
       |> Enum.map(&Packages.build_install_state/1)
-      |> Enum.reject(&is_nil(&1.metadata.host))
+      |> Enum.reject(fn %{metadata: metadata} ->
+        metadata.hosts == []
+      end)
 
     %{admin: admin(), apps: apps(install_states)}
   end
@@ -55,7 +58,7 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
          %{install: %{deployment: %{app: _app}}, metadata: metadata} = _state
        ) do
     %{
-      match: [host: metadata.hosts],
+      match: [%{host: metadata.hosts}],
       handle: [
         %{
           handler: "reverse_proxy",

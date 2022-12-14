@@ -8,7 +8,7 @@ defmodule Uplink.Packages.Metadata do
     field :slug, :string
     field :service_port, :integer
     field :exposed_port, :integer
-    field :hosts, {:array, :string}
+    field :hosts, {:array, :string}, default: []
 
     embeds_one :channel, Channel, primary_key: false do
       field :slug, :string

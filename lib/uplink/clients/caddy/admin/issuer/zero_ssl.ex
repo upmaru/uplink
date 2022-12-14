@@ -1,4 +1,4 @@
-defmodule Uplink.Clients.Caddy.Admin.ZeroSSL do
+defmodule Uplink.Clients.Caddy.Admin.Issuer.ZeroSSL do
   use Ecto.Schema
   import Ecto.Changeset
 
@@ -15,5 +15,11 @@ defmodule Uplink.Clients.Caddy.Admin.ZeroSSL do
   def changeset(issuer, params) do
     issuer
     |> cast(params, @valid_attrs)
+  end
+
+  def parse(params) do
+    %__MODULE__{}
+    |> changeset(params)
+    |> apply_action!(:insert)
   end
 end
