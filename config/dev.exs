@@ -4,6 +4,8 @@ config :uplink, Uplink.Secret, "secretsomethingsixteen"
 
 config :uplink, Uplink.Clients.Instellar, endpoint: "http://localhost/uplink"
 
+config :uplink, :environment, :dev
+
 config :uplink, Uplink.Repo,
   database: System.get_env("UPLINK_DB_NAME", "uplink_dev"),
   username: System.get_env("UPLINK_DB_USERNAME"),

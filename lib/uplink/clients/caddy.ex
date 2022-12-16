@@ -1,9 +1,24 @@
 defmodule Uplink.Clients.Caddy do
   @endpoint "http://localhost:2019"
 
+  alias __MODULE__.{
+    Config
+  }
+
   def default_endpoint, do: @endpoint
 
-  defdelegate get_config, to: __MODULE__.Config, as: :get
+  def get_config do
+    case Config.get() do
+      {:ok, nil} ->
+        {:ok, nil}
+
+      {:ok, body} ->
+        {:ok, Config.parse(body)}
+
+      error ->
+        error
+    end
+  end
 
   defdelegate load_config(params), to: __MODULE__.Config, as: :load
 
