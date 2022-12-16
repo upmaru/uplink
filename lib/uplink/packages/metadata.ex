@@ -8,6 +8,7 @@ defmodule Uplink.Packages.Metadata do
     field :slug, :string
     field :service_port, :integer
     field :exposed_port, :integer
+    field :hosts, {:array, :string}, default: []
 
     embeds_one :channel, Channel, primary_key: false do
       field :slug, :string
@@ -42,7 +43,7 @@ defmodule Uplink.Packages.Metadata do
 
   def changeset(%__MODULE__{} = metadata, params) do
     metadata
-    |> cast(params, [:id, :slug, :service_port, :exposed_port])
+    |> cast(params, [:id, :slug, :service_port, :exposed_port, :hosts])
     |> validate_required([:id, :slug])
     |> cast_embed(:channel, required: true, with: &channel_changeset/2)
     |> cast_embed(:instances, required: true, with: &instance_changeset/2)

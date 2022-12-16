@@ -38,7 +38,7 @@ defmodule Uplink.Application do
     Supervisor.start_link(children, opts)
   end
 
-  defp append_live_only_services(children, :test),
+  defp append_live_only_services(children, env) when env in [:test, :dev],
     do: children
 
   defp append_live_only_services(children, _),

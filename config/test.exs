@@ -13,6 +13,9 @@ config :uplink, Uplink.Repo,
   queue_interval: 50_000,
   pool: Ecto.Adapters.SQL.Sandbox
 
+config :uplink, Uplink.Clients.Caddy,
+  zero_ssl_api_key: System.get_env("ZERO_SSL_API_KEY", "")
+
 config :uplink, :environment, :test
 config :lexdee, :environment, :test
 
