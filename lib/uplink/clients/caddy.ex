@@ -1,11 +1,7 @@
 defmodule Uplink.Clients.Caddy do
-  @endpoint "http://localhost:2019"
-
   alias __MODULE__.{
     Config
   }
-
-  def default_endpoint, do: @endpoint
 
   def get_config do
     case Config.get() do

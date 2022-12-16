@@ -1,5 +1,7 @@
 defmodule Uplink.Clients.Caddy.Config do
-  alias Uplink.Clients.Caddy.{
+  alias Uplink.Clients.Caddy
+
+  alias Caddy.{
     Apps,
     Admin
   }
@@ -24,10 +26,10 @@ defmodule Uplink.Clients.Caddy.Config do
 
   def get do
     config_path =
-      [Uplink.Clients.Caddy.default_endpoint(), "config"]
+      [Caddy.config(:endpoint), "config"]
       |> Path.join()
 
-    config_path <> "/"
+    (config_path <> "/")
     |> Req.get!()
     |> case do
       %{status: 200, body: body} ->
@@ -39,7 +41,7 @@ defmodule Uplink.Clients.Caddy.Config do
   end
 
   def load(params) do
-    [Uplink.Clients.Caddy.default_endpoint(), "load"]
+    [Caddy.config(:endpoint), "load"]
     |> Path.join()
     |> Req.post!({:json, params})
     |> case do
