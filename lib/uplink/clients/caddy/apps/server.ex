@@ -2,14 +2,20 @@ defmodule Uplink.Clients.Caddy.Apps.Server do
   use Ecto.Schema
   import Ecto.Changeset
 
+  @derive Jason.Encoder
+
   @primary_key false
   embedded_schema do
     field :listen, {:array, :string}
 
     embeds_many :routes, Route, primary_key: false do
+      @derive Jason.Encoder
+
       field :group, :string, default: ""
 
       embeds_many :match, Match, primary_key: false do
+        @derive Jason.Encoder
+
         field :host, {:array, :string}
       end
 

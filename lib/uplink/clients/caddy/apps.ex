@@ -4,9 +4,13 @@ defmodule Uplink.Clients.Caddy.Apps do
 
   alias __MODULE__.Server
 
+  @derive Jason.Encoder
+
   @primary_key false
   embedded_schema do
     embeds_one :http, Http, primary_key: false do
+      @derive Jason.Encoder
+
       field :servers, :map
     end
   end

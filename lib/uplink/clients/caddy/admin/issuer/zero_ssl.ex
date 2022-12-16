@@ -2,6 +2,8 @@ defmodule Uplink.Clients.Caddy.Admin.Issuer.ZeroSSL do
   use Ecto.Schema
   import Ecto.Changeset
 
+  @derive Jason.Encoder
+
   @valid_attrs ~w(
     api_key
   )a

@@ -2,12 +2,18 @@ defmodule Uplink.Clients.Caddy.Apps.Handler.ReverseProxy do
   use Ecto.Schema
   import Ecto.Changeset
 
+  @derive Jason.Encoder
+
   @primary_key false
   embedded_schema do
     field :handler, :string
 
     embeds_one :health_checks, HealthChecks, primary_key: false do
+      @derive Jason.Encoder
+
       embeds_one :active, Active, primary_key: false do
+        @derive Jason.Encoder
+
         field :path, :string
         field :uri, :string
         field :port, :integer, default: 0
@@ -22,6 +28,8 @@ defmodule Uplink.Clients.Caddy.Apps.Handler.ReverseProxy do
     end
 
     embeds_many :upstreams, Upstream, primary_key: false do
+      @derive Jason.Encoder
+
       field :dial, :string, default: ""
       field :max_requests, :integer, default: 10
     end

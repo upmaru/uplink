@@ -2,6 +2,8 @@ defmodule Uplink.Clients.Caddy.Admin do
   use Ecto.Schema
   import Ecto.Changeset
 
+  @derive Jason.Encoder
+
   @mappings %{
     "zerossl" => __MODULE__.Issuer.ZeroSSL
   }
@@ -9,6 +11,8 @@ defmodule Uplink.Clients.Caddy.Admin do
   @primary_key false
   embedded_schema do
     embeds_one :identity, Identity, primary_key: false do
+      @derive Jason.Encoder
+
       field :identifiers, {:array, :string}
 
       field :issuers, {:array, :map}, default: []

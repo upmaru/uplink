@@ -2,6 +2,7 @@ defmodule Uplink.Clients.CaddyTest do
   use ExUnit.Case
 
   alias Uplink.Clients.Caddy
+  alias Caddy.Apps
 
   setup do
     bypass = Bypass.open()
@@ -12,17 +13,17 @@ defmodule Uplink.Clients.CaddyTest do
       endpoint: "http://localhost:#{bypass.port}"
     )
 
-    config_params = File.read!("test/fixtures/caddy/config/get.json")
+    response = File.read!("test/fixtures/caddy/config/get.json")
 
-    {:ok, bypass: bypass, config_params: config_params}
+    {:ok, bypass: bypass, response: response}
   end
 
   describe "get config" do
-    test "get and parse config", %{bypass: bypass, config_params: config_params} do
+    test "get and parse config", %{bypass: bypass, response: response} do
       Bypass.expect(bypass, "GET", "/config/", fn conn ->
         conn
         |> Plug.Conn.put_resp_header("content-type", "application/json")
-        |> Plug.Conn.resp(200, config_params)
+        |> Plug.Conn.resp(200, response)
       end)
 
       assert {:ok, config} = Caddy.get_config()
@@ -34,15 +35,19 @@ defmodule Uplink.Clients.CaddyTest do
   describe "load config" do
     test "successfully load config into caddy", %{
       bypass: bypass,
-      config_params: config_params
+      response: response
     } do
+      response = Jason.decode!(response)
+
+      params = %{apps: Apps.parse(response["apps"])}
+
       Bypass.expect(bypass, "POST", "/load", fn conn ->
         conn
         |> Plug.Conn.put_resp_header("content-type", "application/json")
         |> Plug.Conn.resp(200, "")
       end)
 
-      assert {:ok, ""} = Caddy.load_config(config_params)
+      assert {:ok, ""} = Caddy.load_config(params)
     end
   end
 end
