@@ -16,10 +16,13 @@ defmodule Uplink.Application do
     port = Keyword.get(router_config, :port)
     internal_port = Keyword.get(internal_router_config, :port)
 
+    topologies = Application.get_env(:libcluster, :topologies, [])
+
     children =
       [
         {Uplink.Cache, []},
         {Uplink.Repo, []},
+        {Cluster.Supervisor, [topologies, [name: Uplink.ClusterSupervisor]]},
         {Oban, oban_config},
         {Plug.Cowboy,
          plug: Uplink.Internal, scheme: :http, port: internal_port},
