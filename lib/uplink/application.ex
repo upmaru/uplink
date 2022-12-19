@@ -41,11 +41,13 @@ defmodule Uplink.Application do
   defp append_live_only_services(children, env) when env in [:test, :dev],
     do: children
 
-  defp append_live_only_services(children, _),
-    do:
-      children ++
-        [
-          {Uplink.Boot, []},
-          {Uplink.Clients.Caddy.Watcher, []}
-        ]
+  defp append_live_only_services(children, _) do
+    caddy_storage_path = Uplink.Clients.Caddy.config(:storage_path)
+
+    children ++
+      [
+        {Uplink.Boot, []},
+        {Uplink.Clients.Caddy.Watcher, [dirs: [caddy_storage_path]]}
+      ]
+  end
 end
