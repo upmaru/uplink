@@ -27,4 +27,16 @@ defmodule Uplink.Clients.LXD.Profile.Manager do
           error
       end
   end
+
+  def get(name) do
+    LXD.client()
+    |> Lexdee.get_profile(name)
+    |> case do
+      {:ok, %{body: body}} ->
+        {:ok, Profile.parse(body)}
+
+      error ->
+        error
+    end
+  end
 end

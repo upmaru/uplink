@@ -9,6 +9,10 @@ defmodule Uplink.Clients.LXD do
     to: __MODULE__.Profile.Manager,
     as: :list
 
+  defdelegate get_profile(name),
+    to: __MODULE__.Profile.Manager,
+    as: :get
+
   defdelegate list_instances(),
     to: __MODULE__.Instance.Manager,
     as: :list

@@ -42,5 +42,10 @@ defmodule Uplink.Application do
     do: children
 
   defp append_live_only_services(children, _),
-    do: children ++ [{Uplink.Boot, []}]
+    do:
+      children ++
+        [
+          {Uplink.Boot, []},
+          {Uplink.Clients.Caddy.Watcher, []}
+        ]
 end

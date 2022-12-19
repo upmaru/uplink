@@ -49,8 +49,12 @@ defmodule Uplink.MixProject do
       # Worker
       {:oban, "~> 2.10"},
 
-      # Rest
+      # Rest Client
       {:req, "~> 0.2.1"},
+
+      # File System
+      {:file_system, "~> 0.2.10"},
+      {:libcluster, "~> 3.0"},
 
       # Downstream
       {:downstream, "~> 1.1.0"},
