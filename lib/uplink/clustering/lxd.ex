@@ -1,7 +1,6 @@
 defmodule Uplink.Clustering.LXD do
   use GenServer
   use Cluster.Strategy
-  import Cluster.Logger
 
   alias Cluster.Strategy.State
   alias Uplink.Clients
@@ -11,11 +10,11 @@ defmodule Uplink.Clustering.LXD do
   def start_link(args), do: GenServer.start_link(__MODULE__, args)
 
   @impl true
-  def init([%State{} = state]) do
-    state =
-      state
-      |> Map.put(:meta, MapSet.new())
+  def init([%State{meta: nil} = state]) do
+    init([%State{state | :meta => MapSet.new()}])
+  end
 
+  def init([%State{} = state]) do
     {:ok, load(state)}
   end
 
@@ -72,7 +71,7 @@ defmodule Uplink.Clustering.LXD do
           )
         )
 
-        %{state | :meta => new_nodes}
+        %State{state | :meta => new_nodes}
 
       _ ->
         Process.send_after(
