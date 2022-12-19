@@ -7,7 +7,7 @@ defmodule Uplink.Clients.Caddy.Watcher do
 
   def init(args) do
     {:ok, watcher_pid} = FileSystem.start_link(args)
-    Filesystem.subscribe(watcher_pid)
+    FileSystem.subscribe(watcher_pid)
 
     {:ok, %{watcher_pid: watcher_pid}}
   end
