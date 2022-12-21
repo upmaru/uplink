@@ -45,12 +45,9 @@ defmodule Uplink.Application do
     do: children
 
   defp append_live_only_services(children, _) do
-    caddy_storage_path = Uplink.Clients.Caddy.config(:storage_path)
-
     children ++
       [
-        {Uplink.Boot, []},
-        {Uplink.Clients.Caddy.Watcher, [dirs: [caddy_storage_path]]}
+        {Uplink.Boot, []}
       ]
   end
 end
