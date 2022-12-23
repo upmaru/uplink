@@ -57,6 +57,9 @@ defmodule Uplink.Packages do
   defdelegate profile_name(metadata),
     to: Metadata.Manager
 
+  defdelegate public_key_name(metadata),
+    to: Metadata.Manager
+
   defdelegate parse_metadata(params),
     to: Metadata.Manager,
     as: :parse

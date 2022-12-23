@@ -37,8 +37,8 @@ defmodule Uplink.Packages.Instance.Cleanup do
       |> Repo.get(install_id)
       |> Repo.preload([:deployment])
 
-    with {:ok, _} <- Formation.Lxd.stop(client, name),
-         {:ok, _} <- Formation.Lxd.delete(client, name) do
+    with {:ok, _} <- Formation.lxd_stop(client, name),
+         {:ok, _} <- Formation.lxd_delete(client, name) do
       finalize(name, install, Map.get(args, "mode", "cleanup"), args)
     end
   end

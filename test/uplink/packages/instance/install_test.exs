@@ -242,11 +242,16 @@ defmodule Uplink.Packages.Instance.InstallTest do
       assert {:ok, %{"id" => _id}} =
                perform_job(Install, %{
                  formation_instance: %{
-                   "credential" => %{"public_key" => "public_key"},
+                   "repositories" => [
+                     %{
+                       "url" =>
+                         "http://:4080/distribution/develop/upmaru/something-1640927800",
+                       "public_key_name" => "something",
+                       "public_key" => "public_key"
+                     }
+                   ],
                    "package" => %{"slug" => "something-1640927800"},
-                   "slug" => instance_slug,
-                   "url" =>
-                     "http://:4080/distribution/develop/upmaru/something-1640927800"
+                   "slug" => instance_slug
                  },
                  install_id: install.id
                })

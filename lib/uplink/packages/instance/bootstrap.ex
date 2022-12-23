@@ -95,31 +95,24 @@ defmodule Uplink.Packages.Instance.Bootstrap do
 
       formation_instance_params = %{
         "slug" => name,
-        "url" => package_distribution_url,
-        "credential" => %{
-          "public_key" => package.credential.public_key
-        },
+        "repositories" => [
+          %{
+            "url" => package_distribution_url,
+            "public_key_name" => Packages.public_key_name(metadata),
+            "public_key" => package.credential.public_key
+          }
+        ],
         "package" => %{
           "slug" => package.slug
         }
       }
 
-      formation_instance =
-        Formation.Lxd.Instance.new(%{
-          slug: name,
-          url: package_distribution_url,
-          credential: %{
-            "public_key" => package.credential.public_key
-          },
-          package: %{
-            slug: package.slug
-          }
-        })
+      formation_instance = Formation.new_lxd_instance(formation_instance_params)
 
       LXD.client()
-      |> Formation.Lxd.create(node_name, instance_params)
-      |> Formation.Lxd.start(name)
-      |> Formation.Lxd.Instance.setup(formation_instance)
+      |> Formation.lxd_create(node_name, instance_params)
+      |> Formation.lxd_start(name)
+      |> Formation.setup_lxd_instance(formation_instance)
       |> case do
         {:ok, _message} ->
           %{

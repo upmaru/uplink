@@ -55,13 +55,12 @@ defmodule Uplink.Packages.Instance.Upgrade do
            Instellar.transition_instance(name, install, "upgrade",
              comment: "[Uplink.Packages.Instance.Upgrade]"
            ) do
-      Formation.Lxd.Instance.new(%{
+      Formation.new_lxd_instance(%{
         slug: name,
+        repositories: [],
         package: %{
           slug: channel.package.slug
-        },
-        url: nil,
-        credential: %{"public_key" => nil}
+        }
       })
       |> validate_stack(install)
       |> handle_upgrade(job)
@@ -100,7 +99,7 @@ defmodule Uplink.Packages.Instance.Upgrade do
 
   defp handle_upgrade({:upgrade, formation_instance, install}, %Job{} = job) do
     LXD.client()
-    |> Formation.Lxd.Alpine.upgrade_package(formation_instance)
+    |> Formation.lxd_upgrade_alpine_package(formation_instance)
     |> case do
       {:ok, upgrade_package_output} ->
         Instellar.transition_instance(

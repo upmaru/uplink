@@ -33,18 +33,10 @@ defmodule Uplink.Packages.Instance.Install do
       |> preload([:deployment])
       |> Repo.get(install_id)
 
-    formation_instance =
-      Formation.Lxd.Instance.new(%{
-        slug: formation_instance_params["slug"],
-        url: formation_instance_params["url"],
-        credential: formation_instance_params["credential"],
-        package: %{
-          slug: formation_instance_params["package"]["slug"]
-        }
-      })
+    formation_instance = Formation.new_lxd_instance(formation_instance_params)
 
     LXD.client()
-    |> Formation.Lxd.Instance.add_package_and_restart(formation_instance)
+    |> Formation.add_package_and_restart_lxd_instance(formation_instance)
     |> case do
       {:ok, add_package_output} ->
         Instellar.transition_instance(

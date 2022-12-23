@@ -8,10 +8,19 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
 
   setup [:setup_endpoints, :setup_base]
 
-  setup do
+  setup %{metadata: metadata} do
     cluster_members = File.read!("test/fixtures/lxd/cluster/members/list.json")
 
-    {:ok, cluster_members: cluster_members}
+    public_key_name =
+      Enum.join(
+        [
+          metadata.channel.package.organization.slug,
+          metadata.channel.package.slug
+        ],
+        "-"
+      )
+
+    {:ok, cluster_members: cluster_members, public_key_name: public_key_name}
   end
 
   describe "bootstrap instance" do
@@ -65,6 +74,7 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
       bypass: bypass,
       install: install,
       actor: actor,
+      public_key_name: public_key_name,
       create_instance: create_instance,
       start_instance: start_instance,
       exec_instance: exec_instance,
@@ -142,7 +152,7 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
                    [
                      "/bin/sh",
                      "-c",
-                     "echo 'public_key' > /etc/apk/keys/pakman.rsa.pub\n"
+                     "echo 'public_key' > /etc/apk/keys/#{public_key_name}.rsa.pub\n"
                    ],
                    ["/bin/sh", "-c", "cat /etc/apk/repositories\n"],
                    [
@@ -267,6 +277,7 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
       bypass: bypass,
       install: install,
       actor: actor,
+      public_key_name: public_key_name,
       create_instance: create_instance,
       start_instance: start_instance,
       exec_instance: exec_instance,
@@ -344,7 +355,7 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
                    [
                      "/bin/sh",
                      "-c",
-                     "echo 'public_key' > /etc/apk/keys/pakman.rsa.pub\n"
+                     "echo 'public_key' > /etc/apk/keys/#{public_key_name}.rsa.pub\n"
                    ],
                    ["/bin/sh", "-c", "cat /etc/apk/repositories\n"],
                    [
