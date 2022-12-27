@@ -2,7 +2,7 @@ dependencies:
   build:
     - elixir
   runtime:
-    - caddy
+    - uplink-caddy
     - bash
     - curl
     - jq
