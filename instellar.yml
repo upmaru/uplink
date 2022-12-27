@@ -36,7 +36,6 @@ run:
 
 hook:
   post-install: |
-    rc-update add uplink-caddy
     rc-update add uplink
 
   pre-upgrade: |
