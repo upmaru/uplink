@@ -12,7 +12,10 @@ config :uplink, Uplink.Router, port: 4040
 
 config :uplink, Uplink.Clients.Caddy,
   endpoint: System.get_env("CADDY_ADMIN_ENDPOINT", "http://localhost:2019"),
-  zero_ssl_api_key: System.get_env("ZERO_SSL_API_KEY", "")
+  zero_ssl_api_key: System.get_env("ZERO_SSL_API_KEY", ""),
+  storage: %{
+    prefix: "uplink"
+  }
 
 config :uplink, Oban,
   repo: Uplink.Repo,
