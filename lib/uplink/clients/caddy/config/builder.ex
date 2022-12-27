@@ -19,7 +19,7 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
         metadata.hosts == []
       end)
 
-    %{admin: admin(), apps: apps(install_states)}
+    %{admin: admin(), apps: apps(install_states), storage: storage()}
   end
 
   def admin do
@@ -51,6 +51,12 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
         listen: [":443"],
         routes: Enum.map(installs, &build_route/1)
       }
+    }
+  end
+
+  def storage(state) do
+    %{
+      module: "s3"
     }
   end
 
