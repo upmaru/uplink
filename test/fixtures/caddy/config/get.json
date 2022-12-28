@@ -20,5 +20,13 @@
         }
       }
     }
+  },
+  "storage": {
+    "module": "s3",
+    "access_id": "something",
+    "secret_key": "secret",
+    "host": "some.host",
+    "bucket": "somebucket",
+    "prefix": "prefix"
   }
 }

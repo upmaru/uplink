@@ -3,23 +3,22 @@ defmodule Uplink.Clients.Caddy.Config do
 
   alias Caddy.{
     Apps,
-    Admin
+    Admin,
+    Storage
   }
 
   @mappings %{
     "admin" => {:admin, Admin},
-    "apps" => {:apps, Apps}
+    "apps" => {:apps, Apps},
+    "storage" => {:storage, Storage}
   }
 
   def parse(body) do
     body
     |> Enum.map(fn {key, result} ->
-      if mapping = Map.get(@mappings, key) do
-        {atom_key, module} = mapping
-        {atom_key, module.parse(result)}
-      else
-        nil
-      end
+      mapping = Map.fetch!(@mappings, key)
+      {atom_key, module} = mapping
+      {atom_key, module.parse(result)}
     end)
     |> Enum.into(%{})
   end
