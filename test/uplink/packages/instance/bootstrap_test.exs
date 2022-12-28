@@ -158,7 +158,7 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
                    [
                      "/bin/sh",
                      "-c",
-                     "echo http://#{hostname}:#{distribution_port}/distribution/develop/upmaru/something-1640927800 >> /etc/apk/repositories\n"
+                     "echo -e 'http://#{hostname}:#{distribution_port}/distribution/develop/upmaru/something-1640927800' >> /etc/apk/repositories\n"
                    ]
                  ]
 
@@ -361,7 +361,7 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
                    [
                      "/bin/sh",
                      "-c",
-                     "echo http://#{hostname}:#{distribution_port}/distribution/develop/upmaru/something-1640927800 >> /etc/apk/repositories\n"
+                     "echo -e 'http://#{hostname}:#{distribution_port}/distribution/develop/upmaru/something-1640927800' >> /etc/apk/repositories\n"
                    ]
                  ]
 

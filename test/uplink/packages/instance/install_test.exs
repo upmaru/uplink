@@ -250,7 +250,7 @@ defmodule Uplink.Packages.Instance.InstallTest do
                        "public_key" => "public_key"
                      }
                    ],
-                   "package" => %{"slug" => "something-1640927800"},
+                   "packages" => [%{"slug" => "something-1640927800"}],
                    "slug" => instance_slug
                  },
                  install_id: install.id

@@ -102,9 +102,11 @@ defmodule Uplink.Packages.Instance.Bootstrap do
             "public_key" => package.credential.public_key
           }
         ],
-        "package" => %{
-          "slug" => package.slug
-        }
+        "packages" => [
+          %{
+            "slug" => package.slug
+          }
+        ]
       }
 
       formation_instance = Formation.new_lxd_instance(formation_instance_params)
