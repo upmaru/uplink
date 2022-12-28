@@ -1,8 +1,11 @@
 defmodule Uplink.BootTest do
   use ExUnit.Case
+  use Oban.Testing, repo: Uplink.Repo
 
   describe "boot" do
     setup do
+      :ok = Ecto.Adapters.SQL.Sandbox.checkout(Uplink.Repo)
+
       bypass = Bypass.open()
 
       Application.put_env(
@@ -22,6 +25,7 @@ defmodule Uplink.BootTest do
       end)
 
       assert {:ok, _attributes} = Uplink.Boot.run([])
+      assert_enqueued(worker: Uplink.Clients.Caddy.Hydrate, args: %{})
     end
   end
 end

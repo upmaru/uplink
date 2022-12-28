@@ -1,7 +1,10 @@
 defmodule Uplink.Boot do
   use Task
 
-  alias Uplink.Clients.Instellar
+  alias Uplink.Clients.{
+    Instellar,
+    Caddy
+  }
 
   require Logger
 
@@ -13,5 +16,8 @@ defmodule Uplink.Boot do
     Logger.info("[Boot] Establishing uplink...")
 
     Instellar.Register.perform()
+
+    Caddy.Hydrate.new(%{})
+    |> Oban.insert()
   end
 end
