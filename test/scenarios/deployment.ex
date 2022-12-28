@@ -56,6 +56,18 @@ defmodule Uplink.Scenarios.Deployment do
     Cache.put(:self, %{
       "credential" => %{
         "endpoint" => "http://localhost:#{bypass.port}"
+      },
+      "organization" => %{
+        "storage" => %{
+          "type" => "s3",
+          "host" => "some.host",
+          "bucket" => "some-bucket",
+          "region" => "sgp1",
+          "credential" => %{
+            "access_key_id" => "access-key",
+            "secret_access_key" => "secret"
+          }
+        }
       }
     })
 

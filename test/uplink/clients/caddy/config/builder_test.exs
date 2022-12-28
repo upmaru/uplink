@@ -6,8 +6,7 @@ defmodule Uplink.Clients.Caddy.Config.BuilderTest do
   setup [:setup_endpoints, :setup_base]
 
   test "generate caddy config" do
-    assert %{admin: admin, apps: apps} =
-             Uplink.Clients.Caddy.Config.Builder.new()
+    assert %{admin: admin, apps: apps} = Uplink.Clients.Caddy.build_new_config()
 
     assert %{http: %{servers: %{"uplink" => server}}} = apps
     assert %{routes: [route]} = server

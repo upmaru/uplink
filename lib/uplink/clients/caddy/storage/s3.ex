@@ -4,9 +4,9 @@ defmodule Uplink.Clients.Caddy.Storage.S3 do
 
   @derive Jason.Encoder
 
-  @attrs ~w(host bucket access_id secret_key prefix)
+  @attrs ~w(host bucket access_id secret_key prefix)a
 
-  @required ~w(host bucket access_id secret_key)
+  @required ~w(host bucket access_id secret_key)a
 
   @primary_key false
   embedded_schema do

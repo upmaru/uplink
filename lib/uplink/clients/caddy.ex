@@ -18,6 +18,8 @@ defmodule Uplink.Clients.Caddy do
 
   defdelegate load_config(params), to: __MODULE__.Config, as: :load
 
+  defdelegate build_new_config(), to: __MODULE__.Config.Builder, as: :new
+
   def config(key) do
     Application.get_env(:uplink, __MODULE__)
     |> Keyword.get(key)
