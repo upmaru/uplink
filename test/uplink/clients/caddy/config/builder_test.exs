@@ -7,8 +7,6 @@ defmodule Uplink.Clients.Caddy.Config.BuilderTest do
 
   setup do
     Application.put_env(:uplink, Uplink.Clients.Caddy,
-      endpoint: System.get_env("CADDY_ADMIN_ENDPOINT", "http://localhost:2019"),
-      zero_ssl_api_key: System.get_env("ZERO_SSL_API_KEY", ""),
       storage: %{
         prefix: "uplink"
       }
