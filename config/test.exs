@@ -14,7 +14,10 @@ config :uplink, Uplink.Repo,
   pool: Ecto.Adapters.SQL.Sandbox
 
 config :uplink, Uplink.Clients.Caddy,
-  zero_ssl_api_key: System.get_env("ZERO_SSL_API_KEY", "")
+  zero_ssl_api_key: System.get_env("ZERO_SSL_API_KEY", ""),
+  storage: %{
+    prefix: "uplink"
+  }
 
 config :uplink, :environment, :test
 config :lexdee, :environment, :test

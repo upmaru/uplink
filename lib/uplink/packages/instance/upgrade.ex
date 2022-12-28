@@ -58,9 +58,11 @@ defmodule Uplink.Packages.Instance.Upgrade do
       Formation.new_lxd_instance(%{
         slug: name,
         repositories: [],
-        package: %{
-          slug: channel.package.slug
-        }
+        packages: [
+          %{
+            slug: channel.package.slug
+          }
+        ]
       })
       |> validate_stack(install)
       |> handle_upgrade(job)

@@ -8,6 +8,7 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
   alias Clients.Caddy
   alias Caddy.Admin
   alias Caddy.Apps
+  alias Caddy.Storage
 
   def new do
     install_states =
@@ -19,7 +20,14 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
         metadata.hosts == []
       end)
 
-    %{admin: admin(), apps: apps(install_states)}
+    %{"organization" => %{"storage" => storage_params}} =
+      Uplink.Clients.Instellar.get_self()
+
+    %{
+      admin: admin(),
+      apps: apps(install_states),
+      storage: Storage.parse(storage_params)
+    }
   end
 
   def admin do
