@@ -23,7 +23,8 @@ config :uplink, Oban,
     prepare_deployment: 1,
     execute_install: 1,
     validate_install: 1,
-    process_instance: 1
+    process_instance: 1,
+    caddy: 1
   ]
 
 config :logger,
