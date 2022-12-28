@@ -3,6 +3,11 @@ defmodule Uplink.Clients.Caddy.Storage do
     "s3" => __MODULE__.S3
   }
 
+  def parse(%{"module" => module_name} = params) do
+    module = Map.fetch!(@storage_modules, module_name)
+    module.parse(params)
+  end
+
   def parse(%{"type" => module_name, "credential" => credential} = params) do
     module = Map.fetch!(@storage_modules, module_name)
     storage_config = Uplink.Clients.Caddy.config(:storage)
