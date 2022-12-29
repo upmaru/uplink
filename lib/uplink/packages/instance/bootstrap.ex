@@ -1,7 +1,7 @@
 defmodule Uplink.Packages.Instance.Bootstrap do
   use Oban.Worker,
     queue: :process_instance,
-    max_attempts: 2
+    max_attempts: 1
 
   alias Uplink.{
     Members,
@@ -34,19 +34,21 @@ defmodule Uplink.Packages.Instance.Bootstrap do
 
   import Ecto.Query, only: [where: 3, preload: 2]
 
-  def perform(%Oban.Job{
-        args:
-          %{
-            "instance" => %{
-              "slug" => name,
-              "node" => %{
-                "slug" => node_name
-              }
-            },
-            "install_id" => install_id,
-            "actor_id" => actor_id
-          } = job_args
-      }) do
+  def perform(
+        %Oban.Job{
+          args:
+            %{
+              "instance" => %{
+                "slug" => name,
+                "node" => %{
+                  "slug" => node_name
+                }
+              },
+              "install_id" => install_id,
+              "actor_id" => actor_id
+            } = job_args
+        } = job
+      ) do
     %Actor{} = actor = Repo.get(Actor, actor_id)
 
     %Install{} =

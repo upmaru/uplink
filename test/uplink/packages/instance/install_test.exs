@@ -15,6 +15,8 @@ defmodule Uplink.Packages.Instance.InstallTest do
     Metadata
   }
 
+  alias Uplink.Packages.Instance.Install
+
   @deployment_params %{
     "hash" => "some-hash",
     "archive_url" => "http://localhost/archives/packages.zip",
@@ -115,8 +117,6 @@ defmodule Uplink.Packages.Instance.InstallTest do
   end
 
   describe "perform" do
-    alias Uplink.Packages.Instance.Install
-
     test "successfully perform install", %{
       bypass: bypass,
       start_instance: start_instance,
@@ -240,6 +240,59 @@ defmodule Uplink.Packages.Instance.InstallTest do
       )
 
       assert {:ok, %{"id" => _id}} =
+               perform_job(Install, %{
+                 formation_instance: %{
+                   "repositories" => [
+                     %{
+                       "url" =>
+                         "http://:4080/distribution/develop/upmaru/something-1640927800",
+                       "public_key_name" => "something",
+                       "public_key" => "public_key"
+                     }
+                   ],
+                   "packages" => [%{"slug" => "something-1640927800"}],
+                   "slug" => instance_slug
+                 },
+                 install_id: install.id
+               })
+    end
+  end
+
+  describe "on error" do
+    setup %{
+      bypass: bypass
+    } do
+      instance_slug = "test-02"
+
+      Bypass.expect_once(
+        bypass,
+        "POST",
+        "/1.0/instances/#{instance_slug}/exec",
+        fn conn ->
+          assert {:ok, body, conn} = Plug.Conn.read_body(conn)
+          assert {:ok, %{"command" => command}} = Jason.decode(body)
+
+          assert command ==
+                   [
+                     "/bin/sh",
+                     "-c",
+                     "apk update && apk add something-1640927800\n"
+                   ]
+
+          conn
+          |> Plug.Conn.put_resp_header("content-type", "application/json")
+          |> Plug.Conn.resp(
+            400,
+            Jason.encode!(%{"error" => "Instance is not running"})
+          )
+        end
+      )
+
+      {:ok, instance_slug: instance_slug}
+    end
+
+    test "should snooze", %{instance_slug: instance_slug, install: install} do
+      assert {:snooze, 5} =
                perform_job(Install, %{
                  formation_instance: %{
                    "repositories" => [

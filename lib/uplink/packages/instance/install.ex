@@ -46,6 +46,9 @@ defmodule Uplink.Packages.Instance.Install do
           comment: add_package_output
         )
 
+      {:error, %{"error" => "Instance is not running"}} ->
+        {:snooze, 5}
+
       {:error, error} ->
         if job.attempt == job.max_attempts do
           Instellar.transition_instance(

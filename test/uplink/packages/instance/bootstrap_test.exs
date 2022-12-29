@@ -6,6 +6,8 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
 
   alias Uplink.Cache
 
+  alias Uplink.Packages.Instance.Bootstrap
+
   setup [:setup_endpoints, :setup_base]
 
   setup %{metadata: metadata} do
@@ -23,39 +25,37 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
     {:ok, cluster_members: cluster_members, public_key_name: public_key_name}
   end
 
+  setup %{bypass: bypass, cluster_members: cluster_members} do
+    Bypass.expect_once(bypass, "GET", "/1.0/cluster/members", fn conn ->
+      conn
+      |> Plug.Conn.put_resp_header("content-type", "application/json")
+      |> Plug.Conn.resp(200, cluster_members)
+    end)
+
+    Cache.delete(:cluster_members)
+
+    create_instance = File.read!("test/fixtures/lxd/instances/create.json")
+
+    wait_for_operation = File.read!("test/fixtures/lxd/operations/wait.json")
+
+    wait_with_log =
+      File.read!("test/fixtures/lxd/operations/wait_with_log.json")
+
+    start_instance = File.read!("test/fixtures/lxd/instances/start.json")
+    stop_instance = File.read!("test/fixtures/lxd/instances/stop.json")
+
+    exec_instance = File.read!("test/fixtures/lxd/instances/exec.json")
+
+    {:ok,
+     create_instance: create_instance,
+     wait_for_operation: wait_for_operation,
+     wait_with_log: wait_with_log,
+     start_instance: start_instance,
+     stop_instance: stop_instance,
+     exec_instance: exec_instance}
+  end
+
   describe "bootstrap instance" do
-    alias Uplink.Packages.Instance.Bootstrap
-
-    setup %{bypass: bypass, cluster_members: cluster_members} do
-      Bypass.expect_once(bypass, "GET", "/1.0/cluster/members", fn conn ->
-        conn
-        |> Plug.Conn.put_resp_header("content-type", "application/json")
-        |> Plug.Conn.resp(200, cluster_members)
-      end)
-
-      Cache.delete(:cluster_members)
-
-      create_instance = File.read!("test/fixtures/lxd/instances/create.json")
-
-      wait_for_operation = File.read!("test/fixtures/lxd/operations/wait.json")
-
-      wait_with_log =
-        File.read!("test/fixtures/lxd/operations/wait_with_log.json")
-
-      start_instance = File.read!("test/fixtures/lxd/instances/start.json")
-      stop_instance = File.read!("test/fixtures/lxd/instances/stop.json")
-
-      exec_instance = File.read!("test/fixtures/lxd/instances/exec.json")
-
-      {:ok,
-       create_instance: create_instance,
-       wait_for_operation: wait_for_operation,
-       wait_with_log: wait_with_log,
-       start_instance: start_instance,
-       stop_instance: stop_instance,
-       exec_instance: exec_instance}
-    end
-
     test "no matching cluster member", %{
       install: install,
       actor: actor
@@ -272,11 +272,12 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
 
       assert_enqueued(worker: Uplink.Packages.Instance.Install, args: job.args)
     end
+  end
 
-    test "enqueue cleanup when instance setup fails", %{
+  describe "setup fails" do
+    setup %{
       bypass: bypass,
       install: install,
-      actor: actor,
       public_key_name: public_key_name,
       create_instance: create_instance,
       start_instance: start_instance,
@@ -372,6 +373,7 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
       )
 
       setup_public_key_params = Jason.decode!(exec_instance)
+
       setup_public_key_operation_id = setup_public_key_params["metadata"]["id"]
 
       Bypass.expect(
@@ -427,6 +429,7 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
       )
 
       start_instance_key_params = Jason.decode!(start_instance)
+
       start_instance_operation_id = start_instance_key_params["metadata"]["id"]
 
       Bypass.expect(
@@ -463,6 +466,14 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
         end
       )
 
+      {:ok, instance_slug: instance_slug}
+    end
+
+    test "enqueue cleanup when instance setup fails", %{
+      install: install,
+      instance_slug: instance_slug,
+      actor: actor
+    } do
       args = %{
         instance: %{
           slug: instance_slug,
