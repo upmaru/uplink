@@ -24,8 +24,6 @@ defmodule Uplink.Packages.Instance.Upgrade do
 
   import Ecto.Query, only: [limit: 2, where: 3, preload: 2, order_by: 2]
 
-  @install_state ~s(executing)
-
   def perform(
         %Oban.Job{
           args: %{
@@ -42,10 +40,6 @@ defmodule Uplink.Packages.Instance.Upgrade do
     %Install{} =
       install =
       Install
-      |> where(
-        [i],
-        i.current_state == ^@install_state
-      )
       |> preload([:deployment])
       |> Repo.get(install_id)
 
@@ -77,11 +71,7 @@ defmodule Uplink.Packages.Instance.Upgrade do
          } = install
        ) do
     Install
-    |> where(
-      [i],
-      i.id != ^install_id and
-        i.current_state == "completed"
-    )
+    |> where([i], i.id != ^install_id)
     |> order_by(desc: :inserted_at)
     |> preload([:deployment])
     |> limit(1)
