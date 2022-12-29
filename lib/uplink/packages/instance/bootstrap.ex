@@ -30,21 +30,21 @@ defmodule Uplink.Packages.Instance.Bootstrap do
     "type" => "container"
   }
 
-  def perform(
-        %Oban.Job{
-          args:
-            %{
-              "instance" => %{
-                "slug" => name,
-                "node" => %{
-                  "slug" => node_name
-                }
-              },
-              "install_id" => install_id,
-              "actor_id" => actor_id
-            } = job_args
-        } = job
-      ) do
+  import Ecto.Query, only: [preload: 2]
+
+  def perform(%Oban.Job{
+        args:
+          %{
+            "instance" => %{
+              "slug" => name,
+              "node" => %{
+                "slug" => node_name
+              }
+            },
+            "install_id" => install_id,
+            "actor_id" => actor_id
+          } = job_args
+      }) do
     %Actor{} = actor = Repo.get(Actor, actor_id)
 
     %Install{} =

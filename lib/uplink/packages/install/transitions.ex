@@ -30,6 +30,18 @@ defmodule Uplink.Packages.Install.Transitions do
 
   Install
   |> transition(
+    [from: "failed", to: "completed", via: "complete"],
+    fn changes -> transit(changes) end
+  )
+
+  Install
+  |> transition(
+    [from: "degraded", to: "completed", via: "complete"],
+    fn changes -> transit(changes) end
+  )
+
+  Install
+  |> transition(
     [from: "executing", to: "degraded", via: "degrade"],
     fn changes -> transit(changes) end
   )
