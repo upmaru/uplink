@@ -30,10 +30,6 @@ defmodule Uplink.Packages.Instance.Bootstrap do
     "type" => "container"
   }
 
-  @install_state ~s(executing)
-
-  import Ecto.Query, only: [where: 3, preload: 2]
-
   def perform(
         %Oban.Job{
           args:
@@ -54,10 +50,6 @@ defmodule Uplink.Packages.Instance.Bootstrap do
     %Install{} =
       install =
       Install
-      |> where(
-        [i],
-        i.current_state == ^@install_state
-      )
       |> preload([:deployment])
       |> Repo.get(install_id)
 
