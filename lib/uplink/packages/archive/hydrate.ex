@@ -23,17 +23,10 @@ defmodule Uplink.Packages.Archive.Hydrate do
   def perform(%Job{args: %{"archive_id" => archive_id, "actor_id" => actor_id}}) do
     actor = Repo.get(Members.Actor, actor_id)
 
-    %Archive{node: node} =
-      archive =
-      Archive
-      |> Repo.get(archive_id)
-      |> Repo.preload(deployment: [:app])
-
-    if node == to_string(Node.self()) do
-      maybe_handle_hydration(archive, actor)
-    else
-      {:ok, :archive_on_different_node}
-    end
+    Archive
+    |> Repo.get(archive_id)
+    |> Repo.preload(deployment: [:app])
+    |> maybe_handle_hydration(actor)
   end
 
   defp maybe_handle_hydration(%Archive{deployment: deployment} = archive, actor) do
@@ -56,7 +49,7 @@ defmodule Uplink.Packages.Archive.Hydrate do
     end
   end
 
-  defp handle_hydration(%Archive{deployment: deployment}, actor) do
+  defp handle_hydration(%Archive{deployment: deployment} = archive, actor) do
     with {:ok, %{"archive_url" => archive_url}} <-
            Install
            |> where([i], i.deployment_id == ^deployment.id)

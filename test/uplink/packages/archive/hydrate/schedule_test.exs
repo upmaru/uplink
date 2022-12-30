@@ -1,4 +1,4 @@
-defmodule Uplink.Packages.Archive.HydrateTest do
+defmodule Uplink.Packages.Archive.Hydrate.ScheduleTest do
   use ExUnit.Case, async: true
   use Oban.Testing, repo: Uplink.Repo
 
@@ -92,76 +92,14 @@ defmodule Uplink.Packages.Archive.HydrateTest do
      bypass: bypass}
   end
 
-  test "does not hydrate since files already exist", %{
-    archive: archive,
-    actor: actor
-  } do
-    assert {:ok, :archive_already_exists} =
-             perform_job(Archive.Hydrate, %{
-               archive_id: archive.id,
-               actor_id: actor.id
-             })
-  end
+  test "correctly schedule archive", %{archive: archive} do
+    bot = Members.get_bot!()
 
-  describe "files don't exist" do
-    setup %{archive: archive} do
-      bypass = Bypass.open()
+    assert :ok == perform_job(Archive.Hydrate.Schedule, %{})
 
-      Application.put_env(
-        :uplink,
-        Uplink.Clients.Instellar,
-        endpoint: "http://localhost:#{bypass.port}/uplink"
-      )
-
-      # we want to spoof the check to pretend like the files don't exist
-      # we change the locations of the archive
-      locations =
-        Enum.map(archive.locations, fn location ->
-          Path.join(["archive", location])
-        end)
-
-      {:ok, archive} = Packages.update_archive(archive, %{locations: locations})
-
-      {:ok, archive: archive, bypass: bypass}
-    end
-
-    test "run fun hydration since files do not exist", %{
-      archive: archive,
-      bypass: bypass,
-      actor: actor
-    } do
-      Bypass.expect_once(bypass, "GET", "/archives/packages.zip", fn conn ->
-        Plug.Conn.send_file(conn, 200, "test/fixtures/archive/packages.zip")
-      end)
-
-      Bypass.expect(
-        bypass,
-        "GET",
-        "/uplink/installations/1/deployment",
-        fn conn ->
-          conn
-          |> Plug.Conn.put_resp_header("content-type", "application/json")
-          |> Plug.Conn.resp(
-            200,
-            Jason.encode!(%{
-              "data" => %{
-                "attributes" => %{
-                  "archive_url" =>
-                    "http://localhost:#{bypass.port}/archives/packages.zip"
-                }
-              }
-            })
-          )
-        end
-      )
-
-      assert {:ok, result} =
-               perform_job(Archive.Hydrate, %{
-                 archive_id: archive.id,
-                 actor_id: actor.id
-               })
-
-      assert result.resource.current_state == "live"
-    end
+    assert_enqueued(
+      worker: Archive.Hydrate,
+      args: %{archive_id: archive.id, actor_id: bot.id}
+    )
   end
 end

@@ -8,9 +8,25 @@ defmodule Uplink.Members.Actor.Manager do
 
   def get(%{"identifier" => identifier}), do: get(identifier)
 
+  def bot! do
+    params = %{identifier: "uplink-bot", provider: "internal"}
+
+    Actor
+    |> Repo.get_by(params)
+    |> case do
+      %Actor{} = actor ->
+        actor
+
+      nil ->
+        %Actor{}
+        |> Actor.changeset(params)
+        |> Repo.insert!()
+    end
+  end
+
   def get(identifier) do
     Actor
-    |> Repo.get_by(identifier: identifier)
+    |> Repo.get_by(identifier: identifier, provider: "instellar")
     |> case do
       %Actor{} = actor ->
         actor
