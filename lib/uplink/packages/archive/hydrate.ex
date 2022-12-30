@@ -32,8 +32,12 @@ defmodule Uplink.Packages.Archive.Hydrate do
     |> maybe_handle_hydration(actor)
   end
 
-  defp maybe_handle_hydration(%Archive{deployment: deployment} = archive, actor) do
-    with {:ok, %{resource: hydrating_deployment}} <-
+  defp maybe_handle_hydration(
+         %Archive{node: node, deployment: deployment} = archive,
+         actor
+       ) do
+    with :pong <- Node.ping(:"#{node}"),
+         {:ok, %{resource: hydrating_deployment}} <-
            Packages.transition_deployment_with(deployment, actor, "hydrate") do
       if already_exists?(archive) do
         Packages.transition_deployment_with(
@@ -49,6 +53,8 @@ defmodule Uplink.Packages.Archive.Hydrate do
           actor
         )
       end
+    else
+      :pang -> {:snooze, 10}
     end
   end
 
