@@ -49,7 +49,7 @@ defmodule Uplink.Packages.Archive.Hydrate do
     end
   end
 
-  defp handle_hydration(%Archive{deployment: deployment} = archive, actor) do
+  defp handle_hydration(%Archive{deployment: deployment}, actor) do
     with {:ok, %{"archive_url" => archive_url}} <-
            Install
            |> where([i], i.deployment_id == ^deployment.id)
@@ -63,16 +63,21 @@ defmodule Uplink.Packages.Archive.Hydrate do
         args: %{"deployment_id" => deployment.id, "actor_id" => actor.id}
       })
     else
-      {:error, error} ->
+      {:error, _error} ->
         Packages.transition_deployment_with(deployment, actor, "fail",
           comment: "#{__MODULE__} handle_hydration/2"
         )
     end
   end
 
-  defp already_exists?(%Archive{locations: locations}) do
-    locations
-    |> Enum.map(fn path -> File.exists?(path) end)
-    |> Enum.all?()
+  defp already_exists?(%Archive{node: node, locations: locations}) do
+    task =
+      Task.Supervisor.async({Uplink.TaskSupervisor, :"#{node}"}, fn ->
+        locations
+        |> Enum.map(fn path -> File.exists?(path) end)
+        |> Enum.all?()
+      end)
+
+    Task.await(task)
   end
 end
