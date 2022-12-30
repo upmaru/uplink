@@ -1,6 +1,10 @@
 defmodule Uplink.Boot do
   use Task
 
+  alias Uplink.{
+    Packages
+  }
+
   alias Uplink.Clients.{
     Instellar,
     Caddy
@@ -18,6 +22,9 @@ defmodule Uplink.Boot do
     Instellar.Register.perform()
 
     Caddy.Hydrate.new(%{})
+    |> Oban.insert()
+
+    Packages.Archive.Hydrate.Schedule.new(%{})
     |> Oban.insert()
   end
 end
