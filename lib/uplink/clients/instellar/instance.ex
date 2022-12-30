@@ -1,17 +1,15 @@
 defmodule Uplink.Clients.Instellar.Instance do
   alias Uplink.{
-    Clients,
-    Cluster
+    Clients
   }
 
-  import Uplink.Secret.Signature,
-    only: [compute_signature: 1]
+  alias Clients.Instellar
 
   def transition(instance, install, event_name, options \\ []) do
     installation_id = install.instellar_installation_id
 
     [
-      Clients.Instellar.endpoint(),
+      Instellar.endpoint(),
       "installations",
       "#{installation_id}",
       "instances",
@@ -27,7 +25,7 @@ defmodule Uplink.Clients.Instellar.Instance do
            "comment" => Keyword.get(options, :comment)
          }
        }},
-      headers: headers(install.deployment.hash)
+      headers: Instellar.headers(install.deployment.hash)
     )
     |> case do
       %{status: 201, body: %{"data" => %{"attributes" => attributes}}} ->
@@ -36,13 +34,5 @@ defmodule Uplink.Clients.Instellar.Instance do
       %{status: _, body: body} ->
         {:error, body}
     end
-  end
-
-  defp headers(hash) do
-    [
-      {"x-uplink-deployment-hash", hash},
-      {"x-uplink-signature-256", "sha256=#{compute_signature(hash)}"},
-      {"x-uplink-installation-id", Cluster.get(:installation_id)}
-    ]
   end
 end

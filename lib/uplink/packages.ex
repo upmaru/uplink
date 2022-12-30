@@ -11,6 +11,10 @@ defmodule Uplink.Packages do
     to: Archive.Manager,
     as: :create
 
+  defdelegate update_archive(archive, params),
+    to: Archive.Manager,
+    as: :update
+
   alias __MODULE__.Install
 
   defdelegate build_install_state(install, actor \\ nil),
@@ -42,6 +46,10 @@ defmodule Uplink.Packages do
   defdelegate get_or_create_deployment(app, params),
     to: Deployment.Manager,
     as: :get_or_create
+
+  defdelegate update_deployment(deployment, params),
+    to: Deployment.Manager,
+    as: :update
 
   defdelegate transition_deployment_with(
                 deployment,

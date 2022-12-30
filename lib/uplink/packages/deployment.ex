@@ -51,6 +51,12 @@ defmodule Uplink.Packages.Deployment do
     |> validate_required(@required_attrs)
   end
 
+  def update_changeset(deployment, params) do
+    deployment
+    |> cast(params, [:archive_url])
+    |> validate_required([:archive_url])
+  end
+
   def identifier(%__MODULE__{hash: hash, app: app}) do
     Path.join([~s(deployments), app.slug, hash])
   end

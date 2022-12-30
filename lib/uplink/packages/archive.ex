@@ -17,5 +17,6 @@ defmodule Uplink.Packages.Archive do
     archive
     |> cast(params, [:node, :locations])
     |> validate_required([:node, :locations])
+    |> unique_constraint(:deployment_id)
   end
 end

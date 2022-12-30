@@ -148,6 +148,14 @@ defmodule Uplink.Packages.Deployment.Prepare do
         {:ok, _archive} ->
           Packages.transition_deployment_with(deployment, actor, "complete")
 
+        {:error,
+         %{
+           errors: [
+             deployment_id: {_, [constraint: :unique, constraint_name: _]}
+           ]
+         }} ->
+          Packages.transition_deployment_with(deployment, actor, "complete")
+
         {:error, _error} ->
           Packages.transition_deployment_with(deployment, actor, "fail",
             comment: "archive not created"

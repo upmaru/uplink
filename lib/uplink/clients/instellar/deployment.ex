@@ -1,23 +1,21 @@
-defmodule Uplink.Clients.Instellar.Installation do
+defmodule Uplink.Clients.Instellar.Deployment do
   alias Uplink.{
     Clients,
     Packages
   }
 
-  alias Packages.{
-    Install
-  }
-
+  alias Packages.Install
   alias Clients.Instellar
 
-  def metadata(%Install{
+  def show(%Install{
         instellar_installation_id: instellar_installation_id,
         deployment: deployment
       }) do
     [
       Instellar.endpoint(),
       "installations",
-      "#{instellar_installation_id}"
+      "#{instellar_installation_id}",
+      "deployment"
     ]
     |> Path.join()
     |> Req.get!(headers: Instellar.headers(deployment.hash))
