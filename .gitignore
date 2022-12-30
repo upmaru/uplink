@@ -28,6 +28,8 @@ uplink-*.tar
 
 /tmp
 
+/archive
+
 mnesia
 
 .mnesia

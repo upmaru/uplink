@@ -148,6 +148,14 @@ defmodule Uplink.Packages.Deployment.Prepare do
         {:ok, _archive} ->
           Packages.transition_deployment_with(deployment, actor, "complete")
 
+        {:error,
+         %{
+           errors: [
+             deployment_id: {_, [constraint: :unique, constraint_name: _]}
+           ]
+         }} ->
+          update_archive_and_transition(deployment, actor)
+
         {:error, _error} ->
           Packages.transition_deployment_with(deployment, actor, "fail",
             comment: "archive not created"
@@ -160,6 +168,21 @@ defmodule Uplink.Packages.Deployment.Prepare do
       Packages.transition_deployment_with(deployment, actor, "fail",
         comment: comment
       )
+    end
+  end
+
+  defp update_archive_and_transition(deployment, actor) do
+    Packages.Archive
+    |> Repo.get_by(deployment_id: deployment.id)
+    |> Packages.update_archive(%{node: to_string(Node.self())})
+    |> case do
+      {:ok, _archive} ->
+        Packages.transition_deployment_with(deployment, actor, "complete")
+
+      {:error, _error} ->
+        Packages.transition_deployment_with(deployment, actor, "fail",
+          comment: "archive node could not be updated"
+        )
     end
   end
 end

@@ -18,7 +18,25 @@ defmodule Uplink.Packages.Deployment.Transitions do
 
   Deployment
   |> transition(
-    [from: "preparing", to: "failed", via: "failed"],
+    [from: "live", to: "hydrating", via: "hydrate"],
+    fn changes -> transit(changes) end
+  )
+
+  Deployment
+  |> transition(
+    [from: "hydrating", to: "live", via: "complete"],
+    fn changes -> transit(changes) end
+  )
+
+  Deployment
+  |> transition(
+    [from: "hydrating", to: "failed", via: "fail"],
+    fn changes -> transit(changes) end
+  )
+
+  Deployment
+  |> transition(
+    [from: "preparing", to: "failed", via: "fail"],
     fn changes -> transit(changes) end
   )
 end
