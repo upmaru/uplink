@@ -57,7 +57,7 @@ defmodule Uplink.Packages.Archive.Hydrate do
       end
     else
       :pang -> {:snooze, 10}
-      _ -> {:error, :transition_failed}
+      _ -> {:error, :deployment_transition_failed}
     end
   end
 
