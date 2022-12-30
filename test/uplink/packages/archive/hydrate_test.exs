@@ -103,8 +103,9 @@ defmodule Uplink.Packages.Archive.HydrateTest do
              })
   end
 
+
   describe "files don't exist" do
-    setup %{archive: archive, deployment: deployment, app: app} do
+    setup %{archive: archive} do
       bypass = Bypass.open()
 
       Application.put_env(
@@ -113,16 +114,8 @@ defmodule Uplink.Packages.Archive.HydrateTest do
         endpoint: "http://localhost:#{bypass.port}/uplink"
       )
 
-      {:ok, _app} =
-        app
-        |> Ecto.Changeset.cast(%{slug: "upmaru-stage/some-app"}, [:slug])
-        |> Repo.update()
-
-      {:ok, _deployment} =
-        deployment
-        |> Ecto.Changeset.cast(%{hash: "another-123-hash"}, [:hash])
-        |> Repo.update()
-
+      # we want to spoof the check to pretend like the files don't exist
+      # we change the locations of the archive
       locations =
         Enum.map(archive.locations, fn location ->
           Path.join(["archive", location])
