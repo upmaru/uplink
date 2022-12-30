@@ -24,6 +24,12 @@ defmodule Uplink.Packages.Deployment.Transitions do
 
   Deployment
   |> transition(
+    [from: "hydrating", to: "hydrating", via: "hydrate"],
+    fn changes -> transit(changes) end
+  )
+
+  Deployment
+  |> transition(
     [from: "hydrating", to: "live", via: "complete"],
     fn changes -> transit(changes) end
   )
