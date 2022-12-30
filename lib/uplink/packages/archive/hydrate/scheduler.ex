@@ -19,7 +19,7 @@ defmodule Uplink.Packages.Archive.Hydrate.Schedule do
     |> Repo.all()
     |> Enum.each(fn archive ->
       %{archive_id: archive.id, actor_id: bot.id}
-      |> Archive.Hydrate.new()
+      |> Archive.Hydrate.new(schedule_in: 10)
       |> Oban.insert()
     end)
   end
