@@ -21,8 +21,8 @@ defmodule Uplink.Boot do
 
     Instellar.Register.perform()
 
-    Caddy.Hydrate.new(%{})
-    |> Oban.insert()
+    Caddy.build_new_config()
+    |> Caddy.load_config()
 
     Packages.Archive.Hydrate.Schedule.new(%{})
     |> Oban.insert()
