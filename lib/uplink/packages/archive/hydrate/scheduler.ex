@@ -15,12 +15,16 @@ defmodule Uplink.Packages.Archive.Hydrate.Schedule do
   def perform(_job) do
     bot = Members.get_bot!()
 
-    Archive.latest_by_app_id(1)
-    |> Repo.all()
-    |> Enum.each(fn archive ->
-      %{archive_id: archive.id, actor_id: bot.id}
-      |> Archive.Hydrate.new()
-      |> Oban.insert()
-    end)
+    if Enum.count(Node.list()) > 0 do
+      Archive.latest_by_app_id(1)
+      |> Repo.all()
+      |> Enum.each(fn archive ->
+        %{archive_id: archive.id, actor_id: bot.id}
+        |> Archive.Hydrate.new()
+        |> Oban.insert()
+      end)
+    else
+      {:snooze, 10}
+    end
   end
 end
