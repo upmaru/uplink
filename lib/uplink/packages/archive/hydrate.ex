@@ -36,7 +36,9 @@ defmodule Uplink.Packages.Archive.Hydrate do
          %Archive{node: node, deployment: deployment} = archive,
          actor
        ) do
-    with :pong <- Node.ping(:"#{node}"),
+    node_module = node_module()
+
+    with :pong <- node_module.ping(:"#{node}"),
          {:ok, %{resource: hydrating_deployment}} <-
            Packages.transition_deployment_with(deployment, actor, "hydrate") do
       if already_exists?(archive) do
@@ -89,4 +91,6 @@ defmodule Uplink.Packages.Archive.Hydrate do
 
     Task.await(task)
   end
+
+  defp node_module, do: Application.get_env(:uplink, :node, Node)
 end

@@ -17,10 +17,16 @@ defmodule Uplink.Packages.Archive.HydrateTest do
 
   @app_slug "upmaru/something-1640927800"
 
+  defmodule NodeMock do
+    def ping(_node), do: :pong
+  end
+
   setup do
     :ok = Ecto.Adapters.SQL.Sandbox.checkout(Uplink.Repo)
 
     bypass = Bypass.open()
+
+    Application.put_env(:uplink, :node, NodeMock)
 
     deployment_params = %{
       "hash" => "some-hash",
