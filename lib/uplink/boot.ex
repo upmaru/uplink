@@ -21,8 +21,12 @@ defmodule Uplink.Boot do
 
     Instellar.Register.perform()
 
+    Logger.info("[Boot] Hydrating caddy...")
+
     Caddy.build_new_config()
     |> Caddy.load_config()
+
+    Logger.info("[Boot] Caddy hydrated...")
 
     Packages.Archive.Hydrate.Schedule.new(%{})
     |> Oban.insert()
