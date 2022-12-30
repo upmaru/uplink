@@ -1,5 +1,8 @@
 defmodule Uplink.Packages.Archive.Hydrate do
-  use Oban.Worker, queue: :prepare_deployment, max_attempts: 1
+  use Oban.Worker,
+    queue: :prepare_deployment,
+    max_attempts: 3,
+    unique: [fields: [:worker]]
 
   alias Uplink.{
     Clients,
