@@ -23,12 +23,19 @@ defmodule Uplink.Packages.Instance.Router do
 
   plug :dispatch
 
-  post "/bootstrap" do
+  @action_mappings %{
+    "bootstrap" => Instance.Bootstrap,
+    "cleanup" => Instance.Cleanup
+  }
+
+  post "/:action" do
     %{
       "actor" => actor_params,
       "installation_id" => instellar_installation_id,
       "instance" => instance_params
     } = conn.body_params
+
+    module = Map.fetch!(@action_mappings, action)
 
     with %Members.Actor{id: actor_id} <- Members.get_actor(actor_params),
          %Packages.Install{id: install_id} <-
@@ -39,7 +46,7 @@ defmodule Uplink.Packages.Instance.Router do
           install_id: install_id,
           actor_id: actor_id
         }
-        |> Instance.Bootstrap.new()
+        |> module.new()
         |> Oban.insert()
 
       json(conn, :created, %{id: job_id})
