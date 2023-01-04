@@ -107,7 +107,7 @@ defmodule Uplink.Packages.Instance.RouterTest do
 
       assert %{"data" => %{"id" => _job_id}} = Jason.decode!(conn.resp_body)
     end
-    
+
     test "returns 201 for instance cleanup" do
       signature =
         :crypto.mac(:hmac, :sha256, Uplink.Secret.get(), @valid_body)
