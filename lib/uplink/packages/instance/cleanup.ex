@@ -17,6 +17,11 @@ defmodule Uplink.Packages.Instance.Cleanup do
     Instance
   }
 
+  @cleanup_mappings %{
+    "failing" => "fail",
+    "deactivating" => "off"
+  }
+
   def perform(%Oban.Job{
         args:
           %{
@@ -43,8 +48,12 @@ defmodule Uplink.Packages.Instance.Cleanup do
     end
   end
 
-  defp finalize(name, install, "cleanup", _args) do
-    Instellar.transition_instance(name, install, "fail",
+  defp finalize(name, install, "cleanup", %{
+         "instance" => %{"current_state" => current_state}
+       }) do
+    event_name = Map.get(@cleanup_mappings, current_state, "off")
+
+    Instellar.transition_instance(name, install, event_name,
       comment: "[Uplink.Packages.Instance.Cleanup]"
     )
   end

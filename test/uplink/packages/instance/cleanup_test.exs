@@ -174,6 +174,8 @@ defmodule Uplink.Packages.Instance.CleanupTest do
 
           %{"event" => %{"name" => event_name}} = body
 
+          assert event_name == "off"
+
           conn
           |> Plug.Conn.put_resp_header("content-type", "application/json")
           |> Plug.Conn.resp(
@@ -188,6 +190,7 @@ defmodule Uplink.Packages.Instance.CleanupTest do
       assert perform_job(Cleanup, %{
                instance: %{
                  slug: instance_slug,
+                 current_state: "deactivating",
                  node: %{slug: "ubuntu-s-1vcpu-1gb-sgp1-01"}
                },
                install_id: install.id,
