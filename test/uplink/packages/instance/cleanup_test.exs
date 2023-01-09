@@ -72,6 +72,11 @@ defmodule Uplink.Packages.Instance.CleanupTest do
     delete_instance = File.read!("test/fixtures/lxd/instances/delete.json")
     wait_for_operation = File.read!("test/fixtures/lxd/operations/wait.json")
 
+    show_instance = File.read!("test/fixtures/lxd/instances/show.json")
+
+    instance_not_found =
+      File.read!("test/fixtures/lxd/instances/not_found.json")
+
     metadata = Map.get(@deployment_params, "metadata")
 
     {:ok, metadata} = Packages.parse_metadata(metadata)
@@ -92,6 +97,8 @@ defmodule Uplink.Packages.Instance.CleanupTest do
      install: install,
      stop_instance: stop_instance,
      wait_for_operation: wait_for_operation,
+     show_instance: show_instance,
+     instance_not_found: instance_not_found,
      delete_instance: delete_instance}
   end
 
@@ -104,9 +111,21 @@ defmodule Uplink.Packages.Instance.CleanupTest do
       actor: actor,
       stop_instance: stop_instance,
       delete_instance: delete_instance,
+      show_instance: show_instance,
       wait_for_operation: wait_for_operation
     } do
       instance_slug = "test-02"
+
+      Bypass.expect_once(
+        bypass,
+        "GET",
+        "/1.0/instances/#{instance_slug}",
+        fn conn ->
+          conn
+          |> Plug.Conn.put_resp_header("content-type", "application/json")
+          |> Plug.Conn.resp(200, show_instance)
+        end
+      )
 
       Bypass.expect_once(
         bypass,
@@ -161,6 +180,59 @@ defmodule Uplink.Packages.Instance.CleanupTest do
           conn
           |> Plug.Conn.put_resp_header("content-type", "application/json")
           |> Plug.Conn.resp(200, wait_for_operation)
+        end
+      )
+
+      Bypass.expect(
+        bypass,
+        "POST",
+        "/uplink/installations/#{install.instellar_installation_id}/instances/#{instance_slug}/events",
+        fn conn ->
+          assert {:ok, body, conn} = Plug.Conn.read_body(conn)
+          assert {:ok, body} = Jason.decode(body)
+
+          %{"event" => %{"name" => event_name}} = body
+
+          assert event_name == "off"
+
+          conn
+          |> Plug.Conn.put_resp_header("content-type", "application/json")
+          |> Plug.Conn.resp(
+            201,
+            Jason.encode!(%{
+              "data" => %{"attributes" => %{"id" => 1, "name" => event_name}}
+            })
+          )
+        end
+      )
+
+      assert perform_job(Cleanup, %{
+               instance: %{
+                 slug: instance_slug,
+                 current_state: "deactivating",
+                 node: %{slug: "ubuntu-s-1vcpu-1gb-sgp1-01"}
+               },
+               install_id: install.id,
+               actor_id: actor.id
+             })
+    end
+
+    test "clean up when instances does not exist", %{
+      bypass: bypass,
+      install: install,
+      actor: actor,
+      instance_not_found: instance_not_found
+    } do
+      instance_slug = "test-02"
+
+      Bypass.expect_once(
+        bypass,
+        "GET",
+        "/1.0/instances/#{instance_slug}",
+        fn conn ->
+          conn
+          |> Plug.Conn.put_resp_header("content-type", "application/json")
+          |> Plug.Conn.resp(404, instance_not_found)
         end
       )
 

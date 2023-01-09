@@ -1,5 +1,5 @@
 defmodule Uplink.Packages.Instance.Cleanup do
-  use Oban.Worker, queue: :process_instance, max_attempts: 1
+  use Oban.Worker, queue: :process_instance, max_attempts: 3
 
   alias Uplink.{
     Clients,
@@ -42,9 +42,18 @@ defmodule Uplink.Packages.Instance.Cleanup do
       |> Repo.get(install_id)
       |> Repo.preload([:deployment])
 
-    with {:ok, _} <- Formation.lxd_stop(client, name),
+    lxd = Formation.Lxd.impl()
+
+    with {:ok, _} <- lxd.get_instance(client, name),
+         {:ok, _} <- Formation.lxd_stop(client, name),
          {:ok, _} <- Formation.lxd_delete(client, name) do
       finalize(name, install, Map.get(args, "mode", "cleanup"), args)
+    else
+      {:error, %{"error_code" => 404}} ->
+        finalize(name, install, "cleanup", args)
+
+      error ->
+        error
     end
   end
 
