@@ -22,6 +22,9 @@ defmodule Uplink.Packages.Install do
     install
     |> cast(params, [:instellar_installation_id])
     |> validate_required([:instellar_installation_id])
+    |> unique_constraint(:deployment_id,
+      name: :installs_deployment_id_instellar_installation_id_index
+    )
   end
 
   def latest_by_installation_id(count \\ 1) do

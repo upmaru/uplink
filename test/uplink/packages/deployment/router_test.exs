@@ -98,6 +98,38 @@ defmodule Uplink.Packages.Deployment.RouterTest do
     end
   end
 
+  describe "repeated deployment push" do
+    setup do
+      signature =
+        :crypto.mac(:hmac, :sha256, Uplink.Secret.get(), @valid_body)
+        |> Base.encode16()
+        |> String.downcase()
+
+      conn(:post, "/", @valid_body)
+      |> put_req_header("x-uplink-signature-256", "sha256=#{signature}")
+      |> put_req_header("content-type", "application/json")
+      |> Router.call(@opts)
+
+      {:ok, signature: signature}
+    end
+
+    test "return 422 for repeated push", %{signature: signature} do
+      conn =
+        conn(:post, "/", @valid_body)
+        |> put_req_header("x-uplink-signature-256", "sha256=#{signature}")
+        |> put_req_header("content-type", "application/json")
+        |> Router.call(@opts)
+
+      assert conn.status == 422
+
+      assert %{
+               "data" => %{
+                 "errors" => %{"deployment_id" => ["has already been taken"]}
+               }
+             } = Jason.decode!(conn.resp_body)
+    end
+  end
+
   describe "invalid body" do
     test "returns 422 for deployment creation" do
       signature =
