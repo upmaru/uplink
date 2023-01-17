@@ -125,6 +125,23 @@ defmodule Uplink.Packages.Instance.RouterTest do
       assert %{"data" => %{"id" => _job_id}} = Jason.decode!(conn.resp_body)
     end
 
+    test "returns 201 for instance upgrade" do
+      signature =
+        :crypto.mac(:hmac, :sha256, Uplink.Secret.get(), @valid_body)
+        |> Base.encode16()
+        |> String.downcase()
+
+      conn =
+        conn(:post, "/upgrade", @valid_body)
+        |> put_req_header("x-uplink-signature-256", "sha256=#{signature}")
+        |> put_req_header("content-type", "application/json")
+        |> Router.call(@opts)
+
+      assert conn.status == 201
+
+      assert %{"data" => %{"id" => _job_id}} = Jason.decode!(conn.resp_body)
+    end
+
     test "return unauthorized when request sent without signature" do
       conn =
         conn(:post, "/bootstrap", @valid_body)

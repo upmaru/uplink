@@ -25,7 +25,8 @@ defmodule Uplink.Packages.Instance.Router do
 
   @action_mappings %{
     "bootstrap" => Instance.Bootstrap,
-    "cleanup" => Instance.Cleanup
+    "cleanup" => Instance.Cleanup,
+    "upgrade" => Instance.Upgrade
   }
 
   post "/:action" do
@@ -35,9 +36,8 @@ defmodule Uplink.Packages.Instance.Router do
       "instance" => instance_params
     } = conn.body_params
 
-    module = Map.fetch!(@action_mappings, action)
-
-    with %Members.Actor{id: actor_id} <- Members.get_actor(actor_params),
+    with module when is_atom(module) <- get_module(action),
+         %Members.Actor{id: actor_id} <- Members.get_actor(actor_params),
          %Packages.Install{id: install_id} <-
            Packages.latest_install(instellar_installation_id) do
       {:ok, %{id: job_id}} =
@@ -51,6 +51,11 @@ defmodule Uplink.Packages.Instance.Router do
 
       json(conn, :created, %{id: job_id})
     else
+      {:action, :not_found} ->
+        json(conn, :not_found, %{
+          error: %{message: "action not found"}
+        })
+
       {:actor, :not_found} ->
         json(conn, :not_found, %{
           error: %{message: "actor not found"}
@@ -61,5 +66,9 @@ defmodule Uplink.Packages.Instance.Router do
           error: %{message: "install not available, create a deployment first"}
         })
     end
+  end
+
+  defp get_module(action) do
+    Map.get(@action_mappings, action) || {:action, :not_found}
   end
 end
