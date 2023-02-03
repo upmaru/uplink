@@ -119,11 +119,11 @@ defmodule Uplink.Packages.Instance.Bootstrap do
           |> Oban.insert()
 
         {:error, error} ->
-          job_args
-          |> Packages.Instance.Cleanup.new()
-          |> Oban.insert()
-
-          Instellar.transition_instance(name, install, "fail", comment: error)
+          # will put instance in failing
+          Instellar.transition_instance(name, install, "fail",
+            comment: "[Uplink.Packages.Instance.Bootstrap] #{error}"
+          )
+          |> handle_event(job_args)
       end
     else
       {:error, error} ->
@@ -134,5 +134,21 @@ defmodule Uplink.Packages.Instance.Bootstrap do
           comment: "cluster member not found"
         )
     end
+  end
+
+  defp handle_event({:ok, %{"name" => "fail"}}, %{
+         "instance" => instance_params,
+         "install_id" => install_id,
+         "actor_id" => actor_id
+       }) do
+    job_args = %{
+      "instance" => Map.merge(instance_params, %{"current_state" => "failing"}),
+      "install_id" => install_id,
+      "actor_id" => actor_id
+    }
+
+    job_args
+    |> Packages.Instance.Cleanup.new()
+    |> Oban.insert()
   end
 end

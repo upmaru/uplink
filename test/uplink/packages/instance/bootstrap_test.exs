@@ -477,13 +477,20 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
       args = %{
         instance: %{
           slug: instance_slug,
+          current_state: "booting",
           node: %{slug: "ubuntu-s-1vcpu-1gb-sgp1-01"}
         },
         install_id: install.id,
         actor_id: actor.id
       }
 
-      assert {:ok, %{"id" => _id}} = perform_job(Bootstrap, args)
+      assert {:ok, %Oban.Job{}} = perform_job(Bootstrap, args)
+
+      args = %{
+        instance: Map.merge(args.instance, %{current_state: "failing"}),
+        install_id: install.id,
+        actor_id: actor.id
+      }
 
       assert_enqueued(worker: Uplink.Packages.Instance.Cleanup, args: args)
     end
