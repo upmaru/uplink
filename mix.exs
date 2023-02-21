@@ -70,7 +70,6 @@ defmodule Uplink.MixProject do
       {:lexdee, "~> 1.0.1"},
       {:plug_cowboy, "~> 2.0"},
       {:reverse_proxy_plug, "~> 2.1"},
-      
       {:mint_web_socket, "~> 1.0.2"},
 
       # Test
