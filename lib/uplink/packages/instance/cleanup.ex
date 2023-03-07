@@ -13,8 +13,7 @@ defmodule Uplink.Packages.Instance.Cleanup do
   }
 
   alias Packages.{
-    Install,
-    Instance
+    Install
   }
 
   @cleanup_mappings %{
@@ -74,9 +73,7 @@ defmodule Uplink.Packages.Instance.Cleanup do
            Instellar.transition_instance(name, install, "deactivate",
              comment: comment
            ) do
-      args
-      |> Instance.Bootstrap.new()
-      |> Oban.insert()
+      Instellar.transition_instance(name, install, "boot", comment: comment)
     end
   end
 end
