@@ -12,7 +12,6 @@ defmodule Uplink.Packages.Install.Execute do
 
   alias Packages.{
     Install,
-    Instance,
     Metadata
   }
 
@@ -71,30 +70,12 @@ defmodule Uplink.Packages.Install.Execute do
     managed_by == "uplink"
   end
 
-  alias Instance.{
-    Bootstrap
-  }
-
   defp choose_execution_path(instance, existing_instances, state) do
-    job_params = %{
-      instance: %{
-        slug: instance.slug,
-        node: %{
-          slug: instance.node.slug
-        }
-      },
-      install_id: state.install.id,
-      actor_id: state.actor.id
-    }
+    event_name =
+      if instance.slug in existing_instances, do: "upgrade", else: "boot"
 
-    if instance.slug in existing_instances do
-      Instellar.transition_instance(instance.slug, state.install, "upgrade",
-        comment: "[Uplink.Packages.Install.Execute]"
-      )
-    else
-      job_params
-      |> Bootstrap.new()
-      |> Oban.insert()
-    end
+    Instellar.transition_instance(instance.slug, state.install, event_name,
+      comment: "[Uplink.Packages.Install.Execute]"
+    )
   end
 end

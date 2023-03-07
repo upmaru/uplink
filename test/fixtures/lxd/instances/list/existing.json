@@ -1,0 +1,80 @@
+{
+  "type": "sync",
+  "status": "Success",
+  "status_code": 200,
+  "operation": "",
+  "error_code": 0,
+  "error": "",
+  "metadata": [
+    {
+      "architecture": "x86_64",
+      "config": {
+        "image.architecture": "amd64",
+        "image.description": "Alpine 3.11 amd64 (20210111_13:00)",
+        "image.os": "Alpine",
+        "image.release": "3.11",
+        "image.serial": "20210111_13:00",
+        "image.type": "squashfs",
+        "image.variant": "default",
+        "volatile.base_image": "6f3d6a5c9227920a17521b612f00512c26a52cffd3fce9926f39c0f0194eadc4",
+        "volatile.eth0.host_name": "veth25a1696e",
+        "volatile.eth0.hwaddr": "00:16:3e:ec:13:2f",
+        "volatile.idmap.base": "0",
+        "volatile.idmap.current": "[{\"Isuid\":true,\"Isgid\":false,\"Hostid\":1000000,\"Nsid\":0,\"Maprange\":1000000000},{\"Isuid\":false,\"Isgid\":true,\"Hostid\":1000000,\"Nsid\":0,\"Maprange\":1000000000}]",
+        "volatile.idmap.next": "[{\"Isuid\":true,\"Isgid\":false,\"Hostid\":1000000,\"Nsid\":0,\"Maprange\":1000000000},{\"Isuid\":false,\"Isgid\":true,\"Hostid\":1000000,\"Nsid\":0,\"Maprange\":1000000000}]",
+        "volatile.last_state.idmap": "[{\"Isuid\":true,\"Isgid\":false,\"Hostid\":1000000,\"Nsid\":0,\"Maprange\":1000000000},{\"Isuid\":false,\"Isgid\":true,\"Hostid\":1000000,\"Nsid\":0,\"Maprange\":1000000000}]",
+        "volatile.last_state.power": "RUNNING"
+      },
+      "devices": {},
+      "ephemeral": false,
+      "profiles": [
+        "artellectual-master-web",
+        "default"
+      ],
+      "stateful": false,
+      "description": "",
+      "created_at": "2021-01-12T11:59:35.741772276Z",
+      "expanded_config": {
+        "user.managed_by": "uplink",
+        "image.architecture": "amd64",
+        "image.description": "Alpine 3.11 amd64 (20210111_13:00)",
+        "image.os": "Alpine",
+        "image.release": "3.11",
+        "image.serial": "20210111_13:00",
+        "image.type": "squashfs",
+        "image.variant": "default",
+        "volatile.base_image": "6f3d6a5c9227920a17521b612f00512c26a52cffd3fce9926f39c0f0194eadc4",
+        "volatile.eth0.host_name": "veth25a1696e",
+        "volatile.eth0.hwaddr": "00:16:3e:ec:13:2f",
+        "volatile.idmap.base": "0",
+        "volatile.idmap.current": "[{\"Isuid\":true,\"Isgid\":false,\"Hostid\":1000000,\"Nsid\":0,\"Maprange\":1000000000},{\"Isuid\":false,\"Isgid\":true,\"Hostid\":1000000,\"Nsid\":0,\"Maprange\":1000000000}]",
+        "volatile.idmap.next": "[{\"Isuid\":true,\"Isgid\":false,\"Hostid\":1000000,\"Nsid\":0,\"Maprange\":1000000000},{\"Isuid\":false,\"Isgid\":true,\"Hostid\":1000000,\"Nsid\":0,\"Maprange\":1000000000}]",
+        "volatile.last_state.idmap": "[{\"Isuid\":true,\"Isgid\":false,\"Hostid\":1000000,\"Nsid\":0,\"Maprange\":1000000000},{\"Isuid\":false,\"Isgid\":true,\"Hostid\":1000000,\"Nsid\":0,\"Maprange\":1000000000}]",
+        "volatile.last_state.power": "RUNNING"
+      },
+      "expanded_devices": {
+        "eth0": {
+          "name": "eth0",
+          "network": "lxdfan0",
+          "type": "nic"
+        },
+        "root": {
+          "path": "/",
+          "pool": "local",
+          "type": "disk"
+        },
+        "web": {
+          "connect": "tcp:127.0.0.1:80",
+          "listen": "tcp:0.0.0.0:49152",
+          "type": "proxy"
+        }
+      },
+      "name": "something-1",
+      "status": "Running",
+      "status_code": 103,
+      "last_used_at": "2021-01-28T17:13:00.17711458Z",
+      "location": "ubuntu-s-1vcpu-1gb-sgp1-01",
+      "type": "container"
+    }
+  ]
+}
