@@ -16,7 +16,10 @@ defmodule Uplink.Packages.Install.Execute do
     Metadata
   }
 
-  alias Clients.LXD
+  alias Clients.{
+    LXD,
+    Instellar
+  }
 
   import Ecto.Query,
     only: [where: 3, preload: 2]
@@ -69,7 +72,6 @@ defmodule Uplink.Packages.Install.Execute do
   end
 
   alias Instance.{
-    Upgrade,
     Bootstrap
   }
 
@@ -86,9 +88,9 @@ defmodule Uplink.Packages.Install.Execute do
     }
 
     if instance.slug in existing_instances do
-      job_params
-      |> Upgrade.new()
-      |> Oban.insert()
+      Instellar.transition_instance(instance.slug, state.install, "upgrade",
+        comment: "[Uplink.Packages.Install.Execute]"
+      )
     else
       job_params
       |> Bootstrap.new()
