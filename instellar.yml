@@ -10,7 +10,7 @@ dependencies:
     - s6
     - uplink-openrc
     
-stack: alpine/3.14
+stack: alpine/3.17
 
 build:
   destination: '_build/prod/rel/uplink'
