@@ -25,6 +25,12 @@ defmodule Uplink.Packages.Install.Manager do
   import Ecto.Query,
     only: [where: 3, order_by: 2, limit: 2]
 
+  def cache_key(%Install{deployment: deployment} = install) do
+    signature = compute_signature(deployment.hash)
+
+    {:deployment, signature, install.instellar_installation_id}
+  end
+
   @spec create(%Deployment{}, integer | binary) ::
           {:ok, %Install{}} | {:error, Ecto.Changeset.t()}
   def create(%Deployment{id: deployment_id}, instellar_installation_id) do
@@ -51,10 +57,9 @@ defmodule Uplink.Packages.Install.Manager do
           metadata: %Metadata{},
           actor: %Members.Actor{}
         }
-  def build_state(%Install{deployment: deployment} = install, actor \\ nil) do
-    signature = compute_signature(deployment.hash)
-
-    {:deployment, signature, install.instellar_installation_id}
+  def build_state(%Install{} = install, actor \\ nil) do
+    install
+    |> cache_key()
     |> Cache.get()
     |> case do
       %Metadata{} = metadata ->
@@ -78,17 +83,14 @@ defmodule Uplink.Packages.Install.Manager do
     })
   end
 
-  defp fetch_deployment_metadata(%Install{deployment: deployment} = install) do
+  defp fetch_deployment_metadata(%Install{} = install) do
     with {:ok, metadata_params} <-
            Instellar.deployment_metadata(install),
          {:ok, %Metadata{} = metadata} <-
            Packages.parse_metadata(metadata_params) do
-      signature = compute_signature(deployment.hash)
-
-      Cache.put(
-        {:deployment, signature, install.instellar_installation_id},
-        metadata
-      )
+      install
+      |> cache_key()
+      |> Cache.put(metadata)
 
       %{metadata: metadata}
     end

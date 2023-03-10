@@ -17,6 +17,10 @@ defmodule Uplink.Packages do
 
   alias __MODULE__.Install
 
+  defdelegate install_cache_key(install),
+    to: Install.Manager,
+    as: :cache_key
+
   defdelegate build_install_state(install, actor \\ nil),
     to: Install.Manager,
     as: :build_state
