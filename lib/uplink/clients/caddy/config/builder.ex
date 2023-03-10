@@ -71,7 +71,9 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
         %{
           handler: "reverse_proxy",
           load_balancing: %{
-            selection_policy: "ip_hash"
+            selection_policy: %{
+              policy: "ip_hash"
+            }
           },
           health_checks: %{
             passive: %{
