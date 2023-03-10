@@ -26,7 +26,7 @@ defmodule Uplink.Clients.Caddy.Config.Reload do
 
     [Node.self() | Node.list()]
     |> Enum.each(fn node ->
-      Logger.info("[Caddy.Config.Reload] running on #{node}")
+      Logger.info("[Caddy.Config.Reload] running on #{node}...")
 
       Task.Supervisor.async_nolink({Uplink.TaskSupervisor, node}, fn ->
         Caddy.build_new_config()
