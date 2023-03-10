@@ -61,6 +61,7 @@ defmodule Uplink.Scenarios.Deployment do
         "endpoint" => "http://localhost:#{bypass.port}"
       },
       "organization" => %{
+        "slug" => "someorg",
         "storage" => %{
           "type" => "s3",
           "host" => "some.host",

@@ -13,6 +13,7 @@ defmodule Uplink.BootTest do
           "endpoint" => "http://localhost:#{bypass.port}"
         },
         "organization" => %{
+          "slug" => "someorg",
           "storage" => %{
             "type" => "s3",
             "host" => "some.host",
@@ -44,7 +45,7 @@ defmodule Uplink.BootTest do
       {:ok, bypass: bypass}
     end
 
-    test "calls /uplink/self/registeration", %{bypass: bypass} do
+    test "calls /uplink/self/registration", %{bypass: bypass} do
       Bypass.expect_once(bypass, "POST", "/uplink/self/registration", fn conn ->
         conn
         |> Plug.Conn.put_resp_header("content-type", "application/json")
