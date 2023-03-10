@@ -11,7 +11,10 @@ defmodule Uplink.Clients.Caddy.Apps.Handler.ReverseProxy do
     embeds_one :load_balancing, LoadBalancing, primary_key: false do
       @derive Jason.Encoder
 
-      field :selection_policy, :string
+      embeds_one :selection_policy, SelectionPolicy, primary_key: false do
+        field :policy, :string
+      end
+
       field :retries, :integer, default: 0
       field :try_duration, :integer, default: 0
       field :try_interval, :integer, default: 0
@@ -64,7 +67,24 @@ defmodule Uplink.Clients.Caddy.Apps.Handler.ReverseProxy do
 
   defp load_balancing_changeset(load_balancing, params) do
     load_balancing
-    |> cast(params, [:selection_policy, :retries, :try_duration, :try_interval])
+    |> cast(params, [:retries, :try_duration, :try_interval])
+    |> cast_embed(:selection_policy, with: &selection_policy_changeset/2)
+  end
+
+  defp selection_policy_changeset(selection_policy, params) do
+    selection_policy
+    |> cast(params, [:policy])
+    |> validate_inclusion(:policy, [
+      "cookie",
+      "first",
+      "header",
+      "ip_hash",
+      "least_conn",
+      "random_choose",
+      "random",
+      "round_robin",
+      "uri_hash"
+    ])
   end
 
   defp health_checks_changeset(health_checks, params) do
