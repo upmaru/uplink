@@ -17,7 +17,7 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
       |> Repo.preload(deployment: [:app])
       |> Enum.map(&Packages.build_install_state/1)
       |> Enum.reject(fn %{metadata: metadata} ->
-        metadata.hosts == []
+        metadata.hosts == [] || is_nil(metadata.main_port)
       end)
 
     %{"organization" => %{"storage" => storage_params}} =
@@ -73,7 +73,7 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
           upstreams:
             Enum.map(metadata.instances, fn instance ->
               %{
-                dial: "#{instance.slug}:#{metadata.service_port}",
+                dial: "#{instance.slug}:#{metadata.main_port.target}",
                 max_requests: 10
               }
             end)

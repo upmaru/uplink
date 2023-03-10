@@ -139,17 +139,16 @@ defmodule Uplink.Packages.Install.Validate do
     }
   end
 
-  defp build_proxy(%Metadata{service_port: nil, exposed_port: nil}), do: %{}
+  defp build_proxy(%Metadata{main_port: nil}), do: %{}
 
   defp build_proxy(%Metadata{
-         service_port: service_port,
-         exposed_port: exposed_port
+         main_port: %{target: target, source: source, slug: slug}
        }) do
     %{
-      "web" => %{
+      "#{slug}" => %{
         "type" => "proxy",
-        "connect" => "tcp:127.0.0.1:#{service_port}",
-        "listen" => "tcp:0.0.0.0:#{exposed_port}"
+        "connect" => "tcp:127.0.0.1:#{target}",
+        "listen" => "tcp:0.0.0.0:#{source}"
       }
     }
   end
