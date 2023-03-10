@@ -3,6 +3,8 @@ defmodule Uplink.Clients.Caddy do
     Config
   }
 
+  alias Uplink.Packages.Install
+
   def get_config do
     case Config.get() do
       {:ok, nil} ->
@@ -14,6 +16,12 @@ defmodule Uplink.Clients.Caddy do
       error ->
         error
     end
+  end
+
+  def schedule_config_reload(%Install{id: install_id}) do
+    %{install_id: install_id}
+    |> Config.Reload.new(schedule_in: 5)
+    |> Oban.insert()
   end
 
   defdelegate load_config(params), to: __MODULE__.Config, as: :load

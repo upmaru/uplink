@@ -9,6 +9,7 @@ defmodule Uplink.Packages.Instance.Install do
 
   alias Clients.{
     LXD,
+    Caddy,
     Instellar
   }
 
@@ -36,6 +37,8 @@ defmodule Uplink.Packages.Instance.Install do
     |> Formation.add_package_and_restart_lxd_instance(formation_instance)
     |> case do
       {:ok, add_package_output} ->
+        Caddy.schedule_config_reload(install)
+
         Instellar.transition_instance(
           formation_instance.slug,
           install,
