@@ -79,7 +79,7 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
               max_fails: 3,
               unhealthy_request_count: 80,
               unhealthy_status: [500, 501, 502, 503, 504],
-              unhealthy_latench: "35s"
+              unhealthy_latency: "30s"
             }
           },
           upstreams:
