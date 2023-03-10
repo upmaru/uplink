@@ -11,6 +11,8 @@ defmodule Uplink.Clients.Caddy.Config.Reload do
 
   import Ecto.Query, only: [preload: 2]
 
+  require Logger
+
   def perform(%Oban.Job{args: %{"install_id" => install_id}}) do
     %Install{} =
       install =
@@ -22,8 +24,10 @@ defmodule Uplink.Clients.Caddy.Config.Reload do
     |> Packages.install_cache_key()
     |> Cache.delete()
 
-    (Node.list() ++ [Node.self()])
+    [Node.self() | Node.list()]
     |> Enum.each(fn node ->
+      Logger.info("[Caddy.Config.Reload] running on #{node}")
+
       Task.Supervisor.async_nolink({Uplink.TaskSupervisor, node}, fn ->
         Caddy.build_new_config()
         |> Caddy.load_config()
