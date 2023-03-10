@@ -8,6 +8,15 @@ defmodule Uplink.Clients.Caddy.Apps.Handler.ReverseProxy do
   embedded_schema do
     field :handler, :string
 
+    embeds_one :load_balancing, LoadBalancing, primary_key: false do
+      @derive Jason.Encoder
+
+      field :selection_policy, :string
+      field :retries, :integer, default: 0
+      field :try_duration, :integer, default: 0
+      field :try_interval, :integer, default: 0
+    end
+
     embeds_one :health_checks, HealthChecks, primary_key: false do
       @derive Jason.Encoder
 
@@ -40,6 +49,12 @@ defmodule Uplink.Clients.Caddy.Apps.Handler.ReverseProxy do
     |> cast(params, [:handler])
     |> cast_embed(:health_checks, with: &health_checks_changeset/2)
     |> cast_embed(:upstreams, with: &upstream_changeset/2)
+    |> cast_embed(:load_balancing, with: &load_balancing_changeset/2)
+  end
+
+  defp load_balancing_changeset(load_balancing, params) do
+    load_balancing
+    |> cast(params, [:selection_policy, :retries, :try_duration, :try_interval])
   end
 
   defp health_checks_changeset(health_checks, params) do

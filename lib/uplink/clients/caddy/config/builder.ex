@@ -70,6 +70,9 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
       handle: [
         %{
           handler: "reverse_proxy",
+          load_balancing: %{
+            selection_policy: "ip_hash"
+          },
           upstreams:
             Enum.map(metadata.instances, fn instance ->
               %{
