@@ -9,6 +9,7 @@ defmodule Uplink.Packages.Instance.Cleanup do
 
   alias Clients.{
     LXD,
+    Caddy,
     Instellar
   }
 
@@ -60,6 +61,10 @@ defmodule Uplink.Packages.Instance.Cleanup do
          "instance" => %{"current_state" => current_state}
        }) do
     event_name = Map.get(@cleanup_mappings, current_state, "off")
+
+    %{install_id: install.id}
+    |> Caddy.Config.Reload.new(schedule_in: 5)
+    |> Oban.insert()
 
     Instellar.transition_instance(name, install, event_name,
       comment: "[Uplink.Packages.Instance.Cleanup]"
