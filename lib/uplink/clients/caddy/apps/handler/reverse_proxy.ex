@@ -34,6 +34,16 @@ defmodule Uplink.Clients.Caddy.Apps.Handler.ReverseProxy do
         field :expect_status, :integer, default: 0
         field :expect_body, :string, default: ""
       end
+
+      embeds_one :passive, Passive, primary_key: false do
+        @derive Jason.Encoder
+
+        field :fail_duration, :string
+        field :max_fails, :integer, default: 1
+        field :unhealthy_request_count, :integer, default: 0
+        field :unhealthy_status, {:array, :integer}
+        field :unhealthy_latency, :string
+      end
     end
 
     embeds_many :upstreams, Upstream, primary_key: false do
@@ -61,6 +71,7 @@ defmodule Uplink.Clients.Caddy.Apps.Handler.ReverseProxy do
     health_checks
     |> cast(params, [])
     |> cast_embed(:active, with: &active_health_check_changeset/2)
+    |> cast_embed(:passive, with: &passive_health_check_changeset/2)
   end
 
   defp upstream_changeset(upstream, params) do
@@ -80,6 +91,17 @@ defmodule Uplink.Clients.Caddy.Apps.Handler.ReverseProxy do
       :max_size,
       :expect_status,
       :expect_body
+    ])
+  end
+
+  defp passive_health_check_changeset(passive_health_check, params) do
+    passive_health_check
+    |> cast(params, [
+      :fail_duration,
+      :max_fails,
+      :unhealthy_request_count,
+      :unhealthy_status,
+      :unhealthy_latency
     ])
   end
 end
