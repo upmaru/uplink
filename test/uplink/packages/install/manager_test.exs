@@ -102,8 +102,11 @@ defmodule Uplink.Packages.Install.ManagerTest do
       "attributes" => %{
         "id" => 1,
         "slug" => "uplink-web",
-        "service_port" => 4000,
-        "exposed_port" => 49152,
+        "main_port" => %{
+          "slug" => "web",
+          "source" => 49142,
+          "target" => 4000
+        },
         "variables" => [
           %{"key" => "SOMETHING", "value" => "somevalue"}
         ],

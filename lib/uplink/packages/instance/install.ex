@@ -37,9 +37,7 @@ defmodule Uplink.Packages.Instance.Install do
     |> Formation.add_package_and_restart_lxd_instance(formation_instance)
     |> case do
       {:ok, add_package_output} ->
-        %{install_id: install.id}
-        |> Caddy.Config.Reload.new(schedule_in: 5)
-        |> Oban.insert()
+        Caddy.schedule_config_reload(install)
 
         Instellar.transition_instance(
           formation_instance.slug,

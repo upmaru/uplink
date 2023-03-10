@@ -215,6 +215,11 @@ defmodule Uplink.Packages.Instance.CleanupTest do
                install_id: install.id,
                actor_id: actor.id
              })
+
+      assert_enqueued(
+        worker: Uplink.Clients.Caddy.Config.Reload,
+        args: %{install_id: install.id}
+      )
     end
 
     test "clean up when instances does not exist", %{

@@ -62,9 +62,7 @@ defmodule Uplink.Packages.Instance.Cleanup do
        }) do
     event_name = Map.get(@cleanup_mappings, current_state, "off")
 
-    %{install_id: install.id}
-    |> Caddy.Config.Reload.new(schedule_in: 5)
-    |> Oban.insert()
+    Caddy.schedule_config_reload(install)
 
     Instellar.transition_instance(name, install, event_name,
       comment: "[Uplink.Packages.Instance.Cleanup]"

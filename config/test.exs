@@ -19,6 +19,8 @@ config :uplink, Uplink.Clients.Caddy,
     prefix: "uplink"
   }
 
+config :uplink, :task_supervisor, Uplink.TaskSupervisorMock
+
 config :uplink, :environment, :test
 config :lexdee, :environment, :test
 
