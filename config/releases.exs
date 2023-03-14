@@ -6,7 +6,9 @@ config :uplink, Uplink.Clients.Instellar,
   endpoint:
     System.get_env("INSTELLAR_ENDPOINT", "https://web.instellar.app/uplink")
 
-installation_id = System.get_env("INSTELLAR_INSTALLATION_ID") || System.get_env("UPLINK_INSTALLATION_ID")
+installation_id =
+  System.get_env("INSTELLAR_INSTALLATION_ID") ||
+    System.get_env("UPLINK_INSTALLATION_ID")
 
 config :uplink, Uplink.Clients.Caddy,
   endpoint: System.get_env("CADDY_ADMIN_ENDPOINT", "http://localhost:2019"),
@@ -19,8 +21,7 @@ config :uplink, Uplink.Clients.Caddy,
       )
   }
 
-config :uplink, Uplink.Cluster,
-  installation_id: installation_id
+config :uplink, Uplink.Cluster, installation_id: installation_id
 
 config :libcluster,
   topologies: [
