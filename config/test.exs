@@ -24,7 +24,7 @@ config :uplink, :task_supervisor, Uplink.TaskSupervisorMock
 config :uplink, :environment, :test
 config :lexdee, :environment, :test
 
-config :uplink, Oban, plugins: false, queues: false
+config :uplink, Oban, testing: :manual
 
 config :uplink, Uplink.Secret, "secretsomethingsixteen"
 

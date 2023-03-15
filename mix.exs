@@ -47,7 +47,7 @@ defmodule Uplink.MixProject do
       {:telemetry, "~> 1.0"},
 
       # Worker
-      {:oban, "~> 2.10"},
+      {:oban, "~> 2.14"},
 
       # Rest Client
       {:req, "~> 0.2.1"},
