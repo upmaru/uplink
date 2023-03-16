@@ -21,6 +21,7 @@ config :uplink, Oban,
   repo: Uplink.Repo,
   peer: Oban.Peers.Global,
   notifier: Oban.Notifiers.PG,
+  log: false,
   queues: [
     prepare_deployment: 1,
     execute_install: 1,
