@@ -12,7 +12,9 @@ config :uplink, Uplink.Repo,
     cacertfile: cacertfile_path,
     server_name_indication: to_charlist(db_host),
     customize_hostname_check: [
-      # Our hosting provider uses a wildcard certificate. By default, Erlang does not support wildcard certificates. This function supports validating wildcard hosts
+      # Our hosting provider uses a wildcard certificate.
+      # By default, Erlang does not support wildcard certificates.
+      # This function supports validating wildcard hosts
       match_fun: :public_key.pkix_verify_hostname_match_fun(:https)
     ]
   ]
