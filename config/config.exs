@@ -17,8 +17,7 @@ config :uplink, Uplink.Clients.Caddy,
     prefix: "uplink"
   }
 
-config :uplink, Uplink.Repo,
-  prepare: :unnamed
+config :uplink, Uplink.Repo, prepare: :unnamed
 
 config :uplink, Oban,
   repo: Uplink.Repo,
