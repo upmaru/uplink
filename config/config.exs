@@ -19,6 +19,7 @@ config :uplink, Uplink.Clients.Caddy,
 
 config :uplink, Oban,
   repo: Uplink.Repo,
+  peer: Oban.Peers.Global,
   notifier: Oban.Notifiers.PG,
   queues: [
     prepare_deployment: 1,
