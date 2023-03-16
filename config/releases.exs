@@ -2,7 +2,7 @@ import Config
 
 database_url = System.get_env("DATABASE_URL")
 %URI{host: db_host} = URI.parse(database_url)
-cacertfile_path = System.get_env("DB_CERT_PATH") || "/etc/ssl/cert.pem"
+cacertfile_path = System.get_env("DATABASE_CERT_PATH") || "/etc/ssl/cert.pem"
 
 config :uplink, Uplink.Repo,
   url: database_url,
