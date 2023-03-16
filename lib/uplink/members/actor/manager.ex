@@ -6,17 +6,26 @@ defmodule Uplink.Members.Actor.Manager do
 
   alias Members.Actor
 
-  def get(%{"identifier" => identifier}), do: get(identifier)
+  def get_or_create(params) do
+    with {:ok, %{id: id, provider: provider, identifier: identifier}} <-
+           Actor.Params.build(params) do
+      Actor
+      |> Repo.get_by(reference: id, provider: provider)
+      |> case do
+        %Actor{} = actor ->
+          {:ok, actor}
 
-  def get(identifier) do
-    Actor
-    |> Repo.get_by(identifier: identifier, provider: "instellar")
-    |> case do
-      %Actor{} = actor ->
-        actor
-
-      nil ->
-        {:actor, :not_found}
+        nil ->
+          %Actor{}
+          |> Actor.changeset(%{
+            identifier: identifier,
+            provider: provider,
+            reference: id
+          })
+          |> Repo.insert()
+      end
+    else
+      error -> error
     end
   end
 
@@ -34,11 +43,5 @@ defmodule Uplink.Members.Actor.Manager do
         |> Actor.changeset(params)
         |> Repo.insert!()
     end
-  end
-
-  def create(params) do
-    %Actor{}
-    |> Actor.changeset(params)
-    |> Repo.insert()
   end
 end

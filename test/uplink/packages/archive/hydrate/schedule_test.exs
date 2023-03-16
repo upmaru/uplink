@@ -57,8 +57,10 @@ defmodule Uplink.Packages.Archive.Hydrate.ScheduleTest do
     }
 
     {:ok, actor} =
-      Members.create_actor(%{
-        identifier: "zacksiri"
+      Members.get_or_create_actor(%{
+        "identifier" => "zacksiri",
+        "provider" => "instellar",
+        "id" => "1"
       })
 
     app = Packages.get_or_create_app(@app_slug)

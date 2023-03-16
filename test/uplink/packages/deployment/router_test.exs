@@ -1,5 +1,5 @@
 defmodule Uplink.Packages.Deployment.RouterTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case
   use Plug.Test
 
   alias Uplink.{
@@ -15,7 +15,9 @@ defmodule Uplink.Packages.Deployment.RouterTest do
 
   @valid_body Jason.encode!(%{
                 "actor" => %{
-                  "identifier" => "zacksiri"
+                  "provider" => "instellar",
+                  "identifier" => "zacksiri",
+                  "id" => "1"
                 },
                 "installation_id" => 1,
                 "deployment" => %{
@@ -70,12 +72,7 @@ defmodule Uplink.Packages.Deployment.RouterTest do
   setup do
     :ok = Ecto.Adapters.SQL.Sandbox.checkout(Uplink.Repo)
 
-    {:ok, actor} =
-      Members.create_actor(%{
-        identifier: "zacksiri"
-      })
-
-    {:ok, actor: actor}
+    :ok
   end
 
   describe "valid body" do
@@ -150,8 +147,12 @@ defmodule Uplink.Packages.Deployment.RouterTest do
   end
 
   describe "create install event" do
-    setup %{actor: actor} do
-      deployment = Map.get(Jason.decode!(@valid_body), "deployment")
+    setup do
+      params = Jason.decode!(@valid_body)
+
+      {:ok, actor} = Members.get_or_create_actor(Map.get(params, "actor"))
+
+      deployment = Map.get(params, "deployment")
 
       {:ok, metadata} = Packages.parse_metadata(deployment["metadata"])
 
@@ -167,7 +168,9 @@ defmodule Uplink.Packages.Deployment.RouterTest do
       body =
         Jason.encode!(%{
           "actor" => %{
-            "identifier" => "zacksiri"
+            "identifier" => "zacksiri",
+            "provider" => "instellar",
+            "id" => "1"
           },
           "event" => %{
             "name" => "complete",
@@ -182,6 +185,7 @@ defmodule Uplink.Packages.Deployment.RouterTest do
 
       {:ok,
        body: body,
+       actor: actor,
        install: validating_install,
        signature: signature,
        deployment: deployment,

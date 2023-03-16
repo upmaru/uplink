@@ -64,7 +64,12 @@ defmodule Uplink.Packages.Install.ExecuteTest do
       endpoint: "http://localhost:#{bypass.port}/uplink"
     )
 
-    {:ok, actor} = Members.create_actor(%{identifier: "zacksiri"})
+    {:ok, actor} =
+      Members.get_or_create_actor(%{
+        "identifier" => "zacksiri",
+        "provider" => "instellar",
+        "id" => "1"
+      })
 
     metadata = Map.get(@deployment_params, "metadata")
 

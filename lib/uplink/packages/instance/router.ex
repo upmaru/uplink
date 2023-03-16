@@ -37,7 +37,8 @@ defmodule Uplink.Packages.Instance.Router do
     } = conn.body_params
 
     with module when is_atom(module) <- get_module(action),
-         %Members.Actor{id: actor_id} <- Members.get_actor(actor_params),
+         {:ok, %Members.Actor{id: actor_id}} <-
+           Members.get_or_create_actor(actor_params),
          %Packages.Install{id: install_id} <-
            Packages.latest_install(instellar_installation_id) do
       {:ok, %{id: job_id}} =

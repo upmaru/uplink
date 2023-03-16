@@ -78,7 +78,12 @@ defmodule Uplink.Packages.Install.ManagerTest do
     setup %{deployment: deployment} do
       {:ok, %Install{} = install} = Manager.create(deployment, 1)
 
-      {:ok, actor} = Members.create_actor(%{"identifier" => "zacksiri"})
+      {:ok, actor} =
+        Members.get_or_create_actor(%{
+          "identifier" => "zacksiri",
+          "provider" => "instellar",
+          "id" => "1"
+        })
 
       {:ok, install: install, actor: actor}
     end
@@ -141,7 +146,12 @@ defmodule Uplink.Packages.Install.ManagerTest do
     setup %{deployment: deployment} do
       {:ok, %Install{} = install} = Manager.create(deployment, 1)
 
-      {:ok, actor} = Members.create_actor(%{"identifier" => "zacksiri"})
+      {:ok, actor} =
+        Members.get_or_create_actor(%{
+          "identifier" => "zacksiri",
+          "provider" => "instellar",
+          "id" => "1"
+        })
 
       install = Repo.preload(install, [:deployment])
 

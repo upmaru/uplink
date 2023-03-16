@@ -15,7 +15,9 @@ defmodule Uplink.Packages.Instance.RouterTest do
 
   @valid_body Jason.encode!(%{
                 "actor" => %{
-                  "identifier" => "zacksiri"
+                  "provider" => "instellar",
+                  "identifier" => "zacksiri",
+                  "id" => "1"
                 },
                 "installation_id" => 1,
                 "instance" => %{
@@ -70,8 +72,10 @@ defmodule Uplink.Packages.Instance.RouterTest do
     :ok = Ecto.Adapters.SQL.Sandbox.checkout(Uplink.Repo)
 
     {:ok, actor} =
-      Members.create_actor(%{
-        identifier: "zacksiri"
+      Members.get_or_create_actor(%{
+        "identifier" => "zacksiri",
+        "provider" => "instellar",
+        "id" => "1"
       })
 
     app = Packages.get_or_create_app(@app_slug)

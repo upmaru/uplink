@@ -1,5 +1,5 @@
 defmodule Uplink.Packages.Deployment.PrepareTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case
   use Oban.Testing, repo: Uplink.Repo
 
   alias Uplink.{
@@ -54,8 +54,10 @@ defmodule Uplink.Packages.Deployment.PrepareTest do
     }
 
     {:ok, actor} =
-      Members.create_actor(%{
-        identifier: "zacksiri"
+      Members.get_or_create_actor(%{
+        "identifier" => "zacksiri",
+        "provider" => "instellar",
+        "id" => "1"
       })
 
     app = Packages.get_or_create_app(@app_slug)

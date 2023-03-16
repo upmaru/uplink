@@ -130,8 +130,10 @@ defmodule Uplink.Clients.Caddy.Config.ReloadTest do
     )
 
     {:ok, _actor} =
-      Members.create_actor(%{
-        identifier: "zacksiri"
+      Members.get_or_create_actor(%{
+        "identifier" => "zacksiri",
+        "provider" => "instellar",
+        "id" => "1"
       })
 
     metadata = Map.get(@deployment_params, "metadata")

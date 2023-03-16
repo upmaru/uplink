@@ -52,7 +52,8 @@ defmodule Uplink.Packages.Deployment.Router do
            |> Packages.get_or_create_app(),
          {:ok, %Deployment{} = deployment} <-
            Packages.get_or_create_deployment(app, deployment_params),
-         %Members.Actor{} = actor <- Members.get_actor(actor_params),
+         {:ok, %Members.Actor{} = actor} <-
+           Members.get_or_create_actor(actor_params),
          {:ok, %Install{} = _install} <-
            Packages.create_install(deployment, instellar_installation_id),
          :ok <-
@@ -91,7 +92,8 @@ defmodule Uplink.Packages.Deployment.Router do
       )
 
     with %Install{} = install <- Repo.one(query),
-         %Members.Actor{} = actor <- Members.get_actor(actor_params),
+         {:ok, %Members.Actor{} = actor} <-
+           Members.get_or_create_actor(actor_params),
          {:ok, %{event: event}} <-
            Packages.transition_install_with(
              install,

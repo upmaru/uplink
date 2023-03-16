@@ -64,8 +64,10 @@ defmodule Uplink.Packages.Instance.CleanupTest do
     )
 
     {:ok, actor} =
-      Members.create_actor(%{
-        identifier: "zacksiri"
+      Members.get_or_create_actor(%{
+        "identifier" => "zacksiri",
+        "provider" => "instellar",
+        "id" => "1"
       })
 
     stop_instance = File.read!("test/fixtures/lxd/instances/stop.json")

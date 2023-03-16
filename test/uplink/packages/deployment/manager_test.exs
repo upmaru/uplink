@@ -1,5 +1,5 @@
 defmodule Uplink.Packages.Deployment.ManagerTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case
 
   import Uplink.Scenarios.Deployment
 
