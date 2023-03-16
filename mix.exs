@@ -36,7 +36,7 @@ defmodule Uplink.MixProject do
       {:jason, "~> 1.0"},
 
       # Data
-      {:ecto_sql, "~> 3.7.1"},
+      {:ecto_sql, "~> 3.9"},
       {:postgrex, ">= 0.0.0"},
       {:eventful, "~> 0.2.3"},
 
