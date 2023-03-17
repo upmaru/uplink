@@ -23,7 +23,6 @@ config :uplink, Oban,
   repo: Uplink.Repo,
   peer: Oban.Peers.Global,
   notifier: Oban.Notifiers.PG,
-  stage_interval: :infinity,
   log: false,
   queues: [
     prepare_deployment: 1,
