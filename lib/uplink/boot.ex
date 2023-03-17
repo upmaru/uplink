@@ -2,6 +2,7 @@ defmodule Uplink.Boot do
   use Task
 
   alias Uplink.{
+    Repo,
     Packages
   }
 
@@ -9,6 +10,8 @@ defmodule Uplink.Boot do
     Instellar,
     Caddy
   }
+
+  import Ecto.Query, only: [from: 2]
 
   require Logger
 
@@ -19,16 +22,29 @@ defmodule Uplink.Boot do
   def run(_args) do
     Logger.info("[Boot] Establishing uplink...")
 
-    Instellar.Register.perform()
+    Instellar.register()
 
-    Logger.info("[Boot] Hydrating caddy...")
+    from(
+      i in Packages.Install,
+      limit: 10
+    )
+    |> Repo.all()
+    |> case do
+      [] ->
+        Instellar.restore()
 
-    Caddy.build_new_config()
-    |> Caddy.load_config()
+      _ ->
+        Logger.info("[Boot] Hydrating caddy...")
 
-    Logger.info("[Boot] Caddy hydrated...")
+        Caddy.build_new_config()
+        |> Caddy.load_config()
 
-    Packages.Archive.Hydrate.Schedule.new(%{})
-    |> Oban.insert()
+        Logger.info("[Boot] Caddy hydrated...")
+
+        Logger.info("[Boot] Hydrating archive...")
+
+        Packages.Archive.Hydrate.Schedule.new(%{})
+        |> Oban.insert()
+    end
   end
 end

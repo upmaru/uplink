@@ -7,6 +7,7 @@ defmodule Uplink.Clients.Instellar do
     Installation,
     Deployment,
     Instance,
+    Register,
     Self
   }
 
@@ -18,6 +19,14 @@ defmodule Uplink.Clients.Instellar do
   defdelegate get_self(),
     to: Self,
     as: :show
+
+  defdelegate register, 
+    to: Register,
+    as: :perform 
+
+  defdelegate restore,
+    to: Self,
+    as: :restore
 
   defdelegate deployment_metadata(install),
     to: Installation,
