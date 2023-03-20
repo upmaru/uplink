@@ -6,7 +6,6 @@ defmodule Uplink.Application do
   alias Uplink.Web
 
   def start(_type, _args) do
-    oban_config = Application.fetch_env!(:uplink, Oban)
     %{key: key, cert: cert} = Web.Certificate.generate()
     router_config = Application.get_env(:uplink, Uplink.Router, port: 4040)
 
@@ -18,37 +17,23 @@ defmodule Uplink.Application do
 
     topologies = Application.get_env(:libcluster, :topologies, [])
 
-    children =
-      [
-        {Uplink.Cache, []},
-        {Uplink.Repo, []},
-        {Cluster.Supervisor, [topologies, [name: Uplink.ClusterSupervisor]]},
-        {Task.Supervisor, name: Uplink.TaskSupervisor},
-        {Oban, oban_config},
-        {Plug.Cowboy,
-         plug: Uplink.Internal, scheme: :http, port: internal_port},
-        {
-          Plug.Cowboy,
-          plug: Uplink.Router,
-          scheme: :https,
-          port: port,
-          key: {:RSAPrivateKey, key},
-          cert: cert
-        }
-      ]
-      |> append_live_only_services(Application.get_env(:uplink, :environment))
+    children = [
+      {Uplink.Cache, []},
+      {Cluster.Supervisor, [topologies, [name: Uplink.ClusterSupervisor]]},
+      {Task.Supervisor, name: Uplink.TaskSupervisor},
+      {Plug.Cowboy, plug: Uplink.Internal, scheme: :http, port: internal_port},
+      {
+        Plug.Cowboy,
+        plug: Uplink.Router,
+        scheme: :https,
+        port: port,
+        key: {:RSAPrivateKey, key},
+        cert: cert
+      },
+      {Uplink.Data.Provisioner, []}
+    ]
 
     opts = [strategy: :one_for_one, name: Uplink.Supervisor]
     Supervisor.start_link(children, opts)
-  end
-
-  defp append_live_only_services(children, env) when env in [:test, :dev],
-    do: children
-
-  defp append_live_only_services(children, _) do
-    children ++
-      [
-        {Uplink.Boot, []}
-      ]
   end
 end
