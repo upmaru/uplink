@@ -20,9 +20,9 @@ defmodule Uplink.Clients.Instellar do
     to: Self,
     as: :show
 
-  defdelegate register, 
+  defdelegate register,
     to: Register,
-    as: :perform 
+    as: :perform
 
   defdelegate restore,
     to: Self,
