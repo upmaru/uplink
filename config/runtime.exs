@@ -5,18 +5,30 @@ if config_env() == :prod do
 
   %URI{host: db_host} = URI.parse(database_url)
 
-  cacertfile_path = System.get_env("DATABASE_CERT_PATH") || "/etc/ssl/cert.pem"
+  cacert_pem = System.get_env("DATABASE_CERT_PEM")
+
+  cacert_options =
+    if cacert_pem do
+      [
+        cacert: 
+          cacert_pem
+          |> X509.Certificate.from_pem!() 
+          |> X509.Certificate.to_der()
+      ]
+    else
+      [cacertfile: System.get_env("DATABASE_CERT_PATH") || "/etc/ssl/cert.pem"]
+    end
 
   config :uplink, Uplink.Repo,
     url: database_url,
     queue_target: 10_000,
     ssl_opts: [
       verify: :verify_peer,
-      cacertfile: cacertfile_path,
       server_name_indication: to_charlist(db_host),
       customize_hostname_check: [
         match_fun: :public_key.pkix_verify_hostname_match_fun(:https)
       ]
+      |> Keyword.merge(cacert_options)
     ]
 
   config :uplink, Uplink.Clients.Instellar,
