@@ -1,6 +1,6 @@
 import Config
 
-uplink_mode = System.get_env("UPLINK_MODE") || "lite"
+uplink_mode = System.get_env("UPLINK_MODE") || "pro"
 
 if config_env() == :prod do
   config :uplink, Uplink.Clients.Instellar,
