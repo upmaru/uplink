@@ -49,6 +49,7 @@ defmodule Uplink.Data.Provisioner do
     case Postgrex.query(conn, "SELECT 1", []) do
       {:ok, _} ->
         Application.put_env(:uplink, Uplink.Repo, url: db_url)
+        GenServer.stop(conn)
 
         Uplink.Data.start_link([])
 
