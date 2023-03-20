@@ -10,9 +10,9 @@ if config_env() == :prod do
   cacert_options =
     if cacert_pem do
       [
-        cacert: 
+        cacert:
           cacert_pem
-          |> X509.Certificate.from_pem!() 
+          |> X509.Certificate.from_pem!()
           |> X509.Certificate.to_der()
       ]
     else
@@ -25,10 +25,11 @@ if config_env() == :prod do
     ssl_opts: [
       verify: :verify_peer,
       server_name_indication: to_charlist(db_host),
-      customize_hostname_check: [
-        match_fun: :public_key.pkix_verify_hostname_match_fun(:https)
-      ]
-      |> Keyword.merge(cacert_options)
+      customize_hostname_check:
+        [
+          match_fun: :public_key.pkix_verify_hostname_match_fun(:https)
+        ]
+        |> Keyword.merge(cacert_options)
     ]
 
   config :uplink, Uplink.Clients.Instellar,
