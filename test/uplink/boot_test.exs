@@ -169,7 +169,10 @@ defmodule Uplink.BootTest do
       Bypass.expect_once(bypass, "GET", "/uplink/installations/1", fn conn ->
         conn
         |> Plug.Conn.put_resp_header("content-type", "application/json")
-        |> Plug.Conn.resp(200, Jason.encode!(@uplink_installation_state_response))
+        |> Plug.Conn.resp(
+          200,
+          Jason.encode!(@uplink_installation_state_response)
+        )
       end)
 
       Bypass.expect(bypass, "POST", "/load", fn conn ->
