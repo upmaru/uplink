@@ -2,6 +2,8 @@ import Config
 
 config :uplink, Uplink.Secret, "secretsomethingsixteen"
 
+config :uplink, Uplink.Data, mode: "lite"
+
 config :uplink, Uplink.Clients.Instellar, endpoint: "http://localhost/uplink"
 
 config :uplink, :environment, :dev
