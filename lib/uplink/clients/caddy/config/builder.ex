@@ -88,7 +88,7 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
             Enum.map(metadata.instances, fn instance ->
               %{
                 dial: "#{instance.slug}:#{metadata.main_port.target}",
-                max_requests: 10
+                max_requests: 80
               }
             end)
         }

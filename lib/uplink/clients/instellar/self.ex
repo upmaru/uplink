@@ -19,6 +19,20 @@ defmodule Uplink.Clients.Instellar.Self do
     end
   end
 
+  def restore do
+    [Clients.Instellar.endpoint(), "self", "restore"]
+    |> Path.join()
+    |> Req.post!({:json, %{}}, headers: headers())
+    |> case do
+      %{status: status, body: %{"data" => %{"attributes" => attributes}}}
+      when status in [201, 200] ->
+        {:ok, attributes}
+
+      %{status: _, body: body} ->
+        {:error, body}
+    end
+  end
+
   def headers do
     secret = Uplink.Secret.get()
     otp = :pot.totp(String.slice(secret, 0..15))

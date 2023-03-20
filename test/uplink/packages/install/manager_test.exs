@@ -20,8 +20,11 @@ defmodule Uplink.Packages.Install.ManagerTest do
     "metadata" => %{
       "id" => 1,
       "slug" => "uplink-web",
-      "service_port" => 4000,
-      "exposed_port" => 49152,
+      "main_port" => %{
+        "slug" => "web",
+        "source" => 49153,
+        "target" => 4000
+      },
       "channel" => %{
         "slug" => "develop",
         "package" => %{
