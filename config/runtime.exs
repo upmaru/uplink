@@ -10,10 +10,11 @@ if config_env() == :prod do
   cacert_options =
     if cacert_pem do
       [
-        cacert:
+        cacerts: [
           cacert_pem
           |> X509.Certificate.from_pem!()
           |> X509.Certificate.to_der()
+        ]
       ]
     else
       [cacertfile: System.get_env("DATABASE_CERT_PATH") || "/etc/ssl/cert.pem"]
