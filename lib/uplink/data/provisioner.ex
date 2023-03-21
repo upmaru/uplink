@@ -16,6 +16,7 @@ defmodule Uplink.Data.Provisioner do
     GenServer.start_link(__MODULE__, [], name: __MODULE__)
   end
 
+  @impl true
   def init(_args) do
     config = Application.get_env(:uplink, Uplink.Data) || []
     mode = Keyword.get(config, :mode, "pro")
@@ -25,6 +26,7 @@ defmodule Uplink.Data.Provisioner do
     {:ok, %__MODULE__{mode: mode}}
   end
 
+  @impl true
   def handle_info({:bootstrap, "pro"}, state) do
     Uplink.Data.start_link([])
 
@@ -67,5 +69,9 @@ defmodule Uplink.Data.Provisioner do
 
         {:noreply, put_in(state.status, :provisioning)}
     end
+  end
+
+  def handle_info(_message, state) do
+    {:noreply, state}
   end
 end
