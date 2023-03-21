@@ -6,7 +6,7 @@ defmodule Uplink.Release.Tasks do
     mode = Keyword.get(config, :mode, "pro")
     force_run = Keyword.get(options, :force)
 
-    if force_run ||  mode == "pro" do
+    if force_run || mode == "pro" do
       Application.ensure_all_started(:ssl)
 
       for repo <- repos() do
