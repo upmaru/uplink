@@ -20,11 +20,15 @@ defmodule Uplink.Release.Tasks do
   def rollback(repo, version) do
     config = Application.get_env(:uplink, Uplink.Data) || []
     mode = Keyword.get(config, :mode, "pro")
+
     if mode == "pro" do
       Application.ensure_all_started(:ssl)
 
       {:ok, _, _} =
-        Ecto.Migrator.with_repo(repo, &Ecto.Migrator.run(&1, :down, to: version))
+        Ecto.Migrator.with_repo(
+          repo,
+          &Ecto.Migrator.run(&1, :down, to: version)
+        )
     else
       :ok
     end

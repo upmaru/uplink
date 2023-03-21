@@ -52,7 +52,7 @@ defmodule Uplink.Data.Provisioner do
       {:ok, _} ->
         Application.put_env(:uplink, Uplink.Repo, url: db_url)
         GenServer.stop(conn)
-        
+
         Uplink.Release.Tasks.migrate()
         Uplink.Data.start_link([])
 
