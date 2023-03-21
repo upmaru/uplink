@@ -16,7 +16,9 @@ defmodule Uplink.Release.Tasks do
           Ecto.Migrator.with_repo(repo, &Ecto.Migrator.run(&1, :up, all: true))
       end
     else
-      Logger.info("Migration skipped in lite mode if you wish to run it use force: true")
+      Logger.info(
+        "Migration skipped in lite mode if you wish to run it use force: true"
+      )
     end
   end
 
@@ -34,7 +36,9 @@ defmodule Uplink.Release.Tasks do
           &Ecto.Migrator.run(&1, :down, to: version)
         )
     else
-      Logger.info("Rollback skipped in lite mode if you wish to run it use force: true")
+      Logger.info(
+        "Rollback skipped in lite mode if you wish to run it use force: true"
+      )
     end
   end
 
