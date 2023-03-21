@@ -1,6 +1,8 @@
 defmodule Uplink.Release.Tasks do
   @app :uplink
 
+  require Logger
+
   def migrate(options \\ []) do
     config = Application.get_env(:uplink, Uplink.Data) || []
     mode = Keyword.get(config, :mode, "pro")
@@ -14,7 +16,7 @@ defmodule Uplink.Release.Tasks do
           Ecto.Migrator.with_repo(repo, &Ecto.Migrator.run(&1, :up, all: true))
       end
     else
-      :ok
+      Logger.info("Migration skipped in lite mode if you wish to run it use force: true")
     end
   end
 
@@ -32,7 +34,7 @@ defmodule Uplink.Release.Tasks do
           &Ecto.Migrator.run(&1, :down, to: version)
         )
     else
-      :ok
+      Logger.info("Rollback skipped in lite mode if you wish to run it use force: true")
     end
   end
 
