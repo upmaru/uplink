@@ -29,6 +29,7 @@ defmodule Uplink.Data.Provisioner do
   @impl true
   def handle_info({:bootstrap, "pro"}, state) do
     Uplink.Data.start_link([])
+    Uplink.Release.Tasks.migrate()
 
     {:noreply, put_in(state.status, :ok)}
   end
@@ -54,6 +55,7 @@ defmodule Uplink.Data.Provisioner do
         GenServer.stop(conn)
 
         Uplink.Data.start_link([])
+        Uplink.Release.Tasks.migrate()
 
         {:noreply, put_in(state.status, :ok)}
 
