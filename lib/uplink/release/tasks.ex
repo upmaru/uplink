@@ -1,11 +1,12 @@
 defmodule Uplink.Release.Tasks do
   @app :uplink
 
-  def migrate do
+  def migrate(options \\ []) do
     config = Application.get_env(:uplink, Uplink.Data) || []
     mode = Keyword.get(config, :mode, "pro")
+    force_run = Keyword.get(options, :force)
 
-    if mode == "pro" do
+    if force_run ||  mode == "pro" do
       Application.ensure_all_started(:ssl)
 
       for repo <- repos() do
@@ -17,11 +18,12 @@ defmodule Uplink.Release.Tasks do
     end
   end
 
-  def rollback(repo, version) do
+  def rollback(repo, version, options \\ []) do
     config = Application.get_env(:uplink, Uplink.Data) || []
     mode = Keyword.get(config, :mode, "pro")
+    force_run = Keyword.get(options, :force)
 
-    if mode == "pro" do
+    if force_run || mode == "pro" do
       Application.ensure_all_started(:ssl)
 
       {:ok, _, _} =

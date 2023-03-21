@@ -53,7 +53,7 @@ defmodule Uplink.Data.Provisioner do
         Application.put_env(:uplink, Uplink.Repo, url: db_url)
         GenServer.stop(conn)
 
-        Uplink.Release.Tasks.migrate()
+        Uplink.Release.Tasks.migrate(force: true)
         Uplink.Data.start_link([])
 
         {:noreply, put_in(state.status, :ok)}
