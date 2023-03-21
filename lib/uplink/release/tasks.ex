@@ -2,19 +2,32 @@ defmodule Uplink.Release.Tasks do
   @app :uplink
 
   def migrate do
-    Application.ensure_all_started(:ssl)
+    config = Application.get_env(:uplink, Uplink.Data) || []
+    mode = Keyword.get(config, :mode, "pro")
 
-    for repo <- repos() do
-      {:ok, _, _} =
-        Ecto.Migrator.with_repo(repo, &Ecto.Migrator.run(&1, :up, all: true))
+    if mode == "pro" do
+      Application.ensure_all_started(:ssl)
+
+      for repo <- repos() do
+        {:ok, _, _} =
+          Ecto.Migrator.with_repo(repo, &Ecto.Migrator.run(&1, :up, all: true))
+      end
+    else
+      :ok
     end
   end
 
   def rollback(repo, version) do
-    Application.ensure_all_started(:ssl)
+    config = Application.get_env(:uplink, Uplink.Data) || []
+    mode = Keyword.get(config, :mode, "pro")
+    if mode == "pro" do
+      Application.ensure_all_started(:ssl)
 
-    {:ok, _, _} =
-      Ecto.Migrator.with_repo(repo, &Ecto.Migrator.run(&1, :down, to: version))
+      {:ok, _, _} =
+        Ecto.Migrator.with_repo(repo, &Ecto.Migrator.run(&1, :down, to: version))
+    else
+      :ok
+    end
   end
 
   defp repos do
