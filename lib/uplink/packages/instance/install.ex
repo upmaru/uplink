@@ -1,5 +1,5 @@
 defmodule Uplink.Packages.Instance.Install do
-  use Oban.Worker, queue: :process_instance, max_attempts: 5
+  use Oban.Worker, queue: :instance, max_attempts: 5
 
   alias Uplink.{
     Clients,

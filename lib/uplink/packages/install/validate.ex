@@ -1,5 +1,5 @@
 defmodule Uplink.Packages.Install.Validate do
-  use Oban.Worker, queue: :validate_install, max_attempts: 1
+  use Oban.Worker, queue: :install, max_attempts: 1
 
   alias Uplink.{
     Clients,

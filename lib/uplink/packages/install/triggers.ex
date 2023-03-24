@@ -27,4 +27,11 @@ defmodule Uplink.Packages.Install.Triggers do
     |> Execute.new()
     |> Oban.insert()
   end)
+
+  Install
+  |> trigger([currently: "refreshing"], fn event, install -> 
+    %{install_id: install.id, actor_id: event.actor_id}\
+    |> Refresh.new()
+    |> Oban.insert()
+  end)
 end

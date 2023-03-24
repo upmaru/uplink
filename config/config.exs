@@ -25,10 +25,9 @@ config :uplink, Oban,
   notifier: Oban.Notifiers.PG,
   log: false,
   queues: [
-    prepare_deployment: 1,
-    execute_install: 1,
-    validate_install: 1,
-    process_instance: 1,
+    install: 1,
+    deployment: 1,
+    instance: 1,
     caddy: 1
   ]
 

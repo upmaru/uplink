@@ -1,6 +1,6 @@
 defmodule Uplink.Packages.Instance.Bootstrap do
   use Oban.Worker,
-    queue: :process_instance,
+    queue: :instance,
     max_attempts: 1
 
   alias Uplink.{
