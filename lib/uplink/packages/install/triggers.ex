@@ -2,7 +2,8 @@ defmodule Uplink.Packages.Install.Triggers do
   use Eventful.Trigger
 
   alias Uplink.{
-    Packages
+    Packages,
+    Clients
   }
 
   alias Packages.{
@@ -29,9 +30,7 @@ defmodule Uplink.Packages.Install.Triggers do
   end)
 
   Install
-  |> trigger([currently: "refreshing"], fn event, install -> 
-    %{install_id: install.id, actor_id: event.actor_id}\
-    |> Refresh.new()
-    |> Oban.insert()
+  |> trigger([currently: "refreshing"], fn event, install ->
+    Clients.Caddy.schedule_config_reload(install, actor_id: event.actor_id)
   end)
 end
