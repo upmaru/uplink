@@ -1,6 +1,6 @@
 defmodule Uplink.Packages.Archive.Hydrate do
   use Oban.Worker,
-    queue: :prepare_deployment,
+    queue: :deployment,
     max_attempts: 3,
     unique: [fields: [:args], keys: [:archive_id]]
 

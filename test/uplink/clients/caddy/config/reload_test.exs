@@ -3,6 +3,7 @@ defmodule Uplink.Clients.Caddy.Config.ReloadTest do
   use Oban.Testing, repo: Uplink.Repo
 
   alias Uplink.{
+    Repo,
     Cache,
     Members,
     Packages
@@ -179,6 +180,38 @@ defmodule Uplink.Clients.Caddy.Config.ReloadTest do
 
       assert :ok ==
                perform_job(Config.Reload, %{install_id: install.id})
+    end
+
+    test "mark install completed when refreshing", %{
+      bypass: bypass,
+      install: install
+    } do
+      {:ok, install} =
+        install
+        |> Ecto.Changeset.cast(%{current_state: "refreshing"}, [:current_state])
+        |> Repo.update()
+
+      Bypass.expect(bypass, "POST", "/load", fn conn ->
+        conn
+        |> Plug.Conn.put_resp_header("content-type", "application/json")
+        |> Plug.Conn.resp(200, "")
+      end)
+
+      Bypass.expect_once(bypass, "GET", "/uplink/installations/1", fn conn ->
+        conn
+        |> Plug.Conn.put_resp_header("content-type", "application/json")
+        |> Plug.Conn.resp(
+          200,
+          Jason.encode!(@uplink_installation_state_response)
+        )
+      end)
+
+      assert :ok ==
+               perform_job(Config.Reload, %{install_id: install.id})
+
+      install = Repo.reload(install)
+
+      assert install.current_state == "completed"
     end
   end
 end

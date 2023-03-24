@@ -1,5 +1,5 @@
 defmodule Uplink.Packages.Deployment.Prepare do
-  use Oban.Worker, queue: :prepare_deployment, max_attempts: 1
+  use Oban.Worker, queue: :deployment, max_attempts: 1
 
   require Logger
 

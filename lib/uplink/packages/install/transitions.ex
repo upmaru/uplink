@@ -18,6 +18,18 @@ defmodule Uplink.Packages.Install.Transitions do
 
   Install
   |> transition(
+    [from: "completed", to: "refreshing", via: "refresh"],
+    fn changes -> transit(changes, Install.Triggers) end
+  )
+
+  Install
+  |> transition(
+    [from: "refreshing", to: "completed", via: "complete"],
+    fn changes -> transit(changes) end
+  )
+
+  Install
+  |> transition(
     [from: "validating", to: "paused", via: "pause"],
     fn changes -> transit(changes) end
   )

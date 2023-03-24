@@ -1,5 +1,6 @@
 defmodule Uplink.Packages.Install.ManagerTest do
   use ExUnit.Case
+  use Oban.Testing, repo: Uplink.Repo
 
   alias Uplink.{
     Members,
@@ -102,6 +103,25 @@ defmodule Uplink.Packages.Install.ManagerTest do
 
       assert {:ok, _transition} =
                Manager.transition_with(validating_install, actor, "execute")
+    end
+
+    test "can transition to refreshing", %{install: install, actor: actor} do
+      {:ok, %{resource: validating_install}} =
+        Manager.transition_with(install, actor, "validate")
+
+      {:ok, %{resource: executing_install}} =
+        Manager.transition_with(validating_install, actor, "execute")
+
+      {:ok, %{resource: completed_install}} =
+        Manager.transition_with(executing_install, actor, "complete")
+
+      assert {:ok, %{resource: refreshing_install}} =
+               Manager.transition_with(completed_install, actor, "refresh")
+
+      assert_enqueued(
+        worker: Uplink.Clients.Caddy.Config.Reload,
+        args: %{install_id: refreshing_install.id, actor_id: actor.id}
+      )
     end
   end
 

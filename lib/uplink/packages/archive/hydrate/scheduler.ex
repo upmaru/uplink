@@ -1,6 +1,6 @@
 defmodule Uplink.Packages.Archive.Hydrate.Schedule do
   use Oban.Worker,
-    queue: :prepare_deployment,
+    queue: :deployment,
     max_attempts: 1,
     unique: [period: 120, fields: [:worker]]
 

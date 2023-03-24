@@ -8,6 +8,8 @@ defmodule Uplink.Clients.Caddy.Config.Reload do
   alias Uplink.Repo
   alias Uplink.Cache
 
+  alias Uplink.Members
+
   alias Uplink.Packages
   alias Uplink.Packages.Install
 
@@ -20,7 +22,7 @@ defmodule Uplink.Clients.Caddy.Config.Reload do
   @task_supervisor Application.compile_env(:uplink, :task_supervisor) ||
                      Task.Supervisor
 
-  def perform(%Oban.Job{args: %{"install_id" => install_id}}) do
+  def perform(%Oban.Job{args: %{"install_id" => install_id} = params}) do
     %Install{} =
       install =
       Install
@@ -40,5 +42,27 @@ defmodule Uplink.Clients.Caddy.Config.Reload do
         |> Caddy.load_config()
       end)
     end)
+
+    maybe_mark_install_complete(install, params)
+
+    :ok
   end
+
+  defp maybe_mark_install_complete(
+         %Install{current_state: "refreshing"} = install,
+         params
+       ) do
+    actor_id = Map.get(params, "actor_id")
+
+    actor =
+      if actor_id do
+        Repo.get(Members.Actor, actor_id)
+      else
+        Members.get_bot!()
+      end
+
+    Packages.transition_install_with(install, actor, "complete")
+  end
+
+  defp maybe_mark_install_complete(_install, _params), do: :ok
 end

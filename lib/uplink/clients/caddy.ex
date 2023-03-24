@@ -18,8 +18,17 @@ defmodule Uplink.Clients.Caddy do
     end
   end
 
-  def schedule_config_reload(%Install{id: install_id}) do
-    %{install_id: install_id}
+  def schedule_config_reload(%Install{id: install_id}, options \\ []) do
+    actor_id = Keyword.get(options, :actor_id)
+
+    params =
+      if actor_id do
+        %{install_id: install_id, actor_id: actor_id}
+      else
+        %{install_id: install_id}
+      end
+
+    params
     |> Config.Reload.new(schedule_in: 5)
     |> Oban.insert()
   end

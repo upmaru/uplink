@@ -76,6 +76,7 @@ defmodule Uplink.Packages.Install.Manager do
     comment = Keyword.get(opts, :comment)
 
     install
+    |> Repo.reload()
     |> Event.handle(actor, %{
       domain: "transitions",
       name: event_name,
