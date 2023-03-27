@@ -34,7 +34,7 @@ if config_env() == :prod do
         lxd_profile_name:
           System.get_env(
             "LXD_PROFILE_NAME",
-            "uplink-#{System.get_env("UPLINK_INSTALLATION_ID")}"
+            "uplink-#{installation_id}"
           )
       ]
     ]
