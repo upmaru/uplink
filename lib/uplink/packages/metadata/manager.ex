@@ -23,7 +23,7 @@ defmodule Uplink.Packages.Metadata.Manager do
       {:ok, %{body: %{"name" => name}}} ->
         name
 
-      {:error, %{body: %{"error_code" => 404}}} ->
+      {:error, %{"error_code" => 404}} ->
         create_project(client, metadata)
     end
   end
