@@ -125,11 +125,28 @@ defmodule Uplink.Packages.Instance.UpgradeTest do
     } do
       instance_slug = "some-instance-01"
 
+      project_found = File.read!("test/fixtures/lxd/projects/show.json")
+
+      Bypass.expect_once(
+        bypass,
+        "GET",
+        "/1.0/projects/#{metadata.channel.package.slug}",
+        fn conn ->
+          conn
+          |> Plug.Conn.put_resp_header("content-type", "application/json")
+          |> Plug.Conn.resp(200, project_found)
+        end
+      )
+
       Bypass.expect_once(
         bypass,
         "POST",
         "/1.0/instances/#{instance_slug}/exec",
         fn conn ->
+          assert %{"project" => project} = conn.query_params
+
+          assert project == metadata.channel.package.slug
+
           assert {:ok, body, conn} = Plug.Conn.read_body(conn)
           assert {:ok, %{"command" => command}} = Jason.decode(body)
 
@@ -166,6 +183,10 @@ defmodule Uplink.Packages.Instance.UpgradeTest do
         "GET",
         "/1.0/instances/#{instance_slug}/logs/stdout.log",
         fn conn ->
+          assert %{"project" => project} = conn.query_params
+
+          assert project == metadata.channel.package.slug
+
           conn
           |> Plug.Conn.resp(
             200,
@@ -179,6 +200,10 @@ defmodule Uplink.Packages.Instance.UpgradeTest do
         "GET",
         "/1.0/instances/#{instance_slug}/logs/stderr.log",
         fn conn ->
+          assert %{"project" => project} = conn.query_params
+
+          assert project == metadata.channel.package.slug
+
           conn
           |> Plug.Conn.resp(200, "")
         end
@@ -227,11 +252,28 @@ defmodule Uplink.Packages.Instance.UpgradeTest do
     } do
       instance_slug = "some-instance-01"
 
+      project_found = File.read!("test/fixtures/lxd/projects/show.json")
+
+      Bypass.expect_once(
+        bypass,
+        "GET",
+        "/1.0/projects/#{metadata.channel.package.slug}",
+        fn conn ->
+          conn
+          |> Plug.Conn.put_resp_header("content-type", "application/json")
+          |> Plug.Conn.resp(200, project_found)
+        end
+      )
+
       Bypass.expect_once(
         bypass,
         "POST",
         "/1.0/instances/#{instance_slug}/exec",
         fn conn ->
+          assert %{"project" => project} = conn.query_params
+
+          assert project == metadata.channel.package.slug
+
           assert {:ok, body, conn} = Plug.Conn.read_body(conn)
           assert {:ok, %{"command" => command}} = Jason.decode(body)
 
@@ -268,6 +310,10 @@ defmodule Uplink.Packages.Instance.UpgradeTest do
         "GET",
         "/1.0/instances/#{instance_slug}/logs/stdout.log",
         fn conn ->
+          assert %{"project" => project} = conn.query_params
+
+          assert project == metadata.channel.package.slug
+
           conn
           |> Plug.Conn.resp(
             200,
@@ -281,6 +327,10 @@ defmodule Uplink.Packages.Instance.UpgradeTest do
         "GET",
         "/1.0/instances/#{instance_slug}/logs/stderr.log",
         fn conn ->
+          assert %{"project" => project} = conn.query_params
+
+          assert project == metadata.channel.package.slug
+
           conn
           |> Plug.Conn.resp(200, "timeout")
         end

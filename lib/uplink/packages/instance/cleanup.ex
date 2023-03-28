@@ -4,8 +4,11 @@ defmodule Uplink.Packages.Instance.Cleanup do
   alias Uplink.{
     Clients,
     Packages,
+    Members,
     Repo
   }
+
+  alias Members.Actor
 
   alias Clients.{
     LXD,
@@ -31,9 +34,12 @@ defmodule Uplink.Packages.Instance.Cleanup do
                 "slug" => _node_name
               }
             },
-            "install_id" => install_id
+            "install_id" => install_id,
+            "actor_id" => actor_id
           } = args
       }) do
+    %Actor{} = actor = Repo.get(Actor, actor_id)
+
     client = LXD.client()
 
     %Install{} =
@@ -42,11 +48,16 @@ defmodule Uplink.Packages.Instance.Cleanup do
       |> Repo.get(install_id)
       |> Repo.preload([:deployment])
 
+    %{metadata: metadata} = Packages.build_install_state(install, actor)
+
+    project_name = Packages.get_project_name(client, metadata)
+
     lxd = Formation.Lxd.impl()
 
-    with {:ok, _} <- lxd.get_instance(client, name),
-         {:ok, _} <- Formation.lxd_stop(client, name),
-         {:ok, _} <- Formation.lxd_delete(client, name) do
+    with {:ok, _} <-
+           lxd.get_instance(client, name, query: [project: project_name]),
+         {:ok, _} <- Formation.lxd_stop(client, name, project: project_name),
+         {:ok, _} <- Formation.lxd_delete(client, name, project: project_name) do
       finalize(name, install, Map.get(args, "mode", "cleanup"), args)
     else
       {:error, %{"error_code" => 404}} ->

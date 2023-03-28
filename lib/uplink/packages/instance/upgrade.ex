@@ -43,13 +43,18 @@ defmodule Uplink.Packages.Instance.Upgrade do
       |> preload([:deployment])
       |> Repo.get(install_id)
 
-    with %{metadata: %{channel: channel}} <-
+    with %{metadata: %{channel: channel} = metadata} <-
            Packages.build_install_state(install, actor),
          {:ok, _transition} <-
            Instellar.transition_instance(name, install, "upgrade",
              comment: "[Uplink.Packages.Instance.Upgrade]"
            ) do
+      client = LXD.client()
+
+      project_name = Packages.get_project_name(client, metadata)
+
       Formation.new_lxd_instance(%{
+        project: project_name,
         slug: name,
         repositories: [],
         packages: [
