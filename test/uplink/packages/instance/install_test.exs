@@ -114,23 +114,41 @@ defmodule Uplink.Packages.Instance.InstallTest do
 
     {:ok,
      bypass: bypass,
+     actor: actor,
      start_instance: start_instance,
      exec_instance: exec_instance,
      wait_for_operation: wait_for_operation,
      wait_with_log: wait_with_log,
-     install: executing_install}
+     install: executing_install,
+     metadata: metadata}
   end
 
   describe "perform" do
     test "successfully perform install", %{
       bypass: bypass,
+      actor: actor,
       start_instance: start_instance,
       exec_instance: exec_instance,
       wait_for_operation: wait_for_operation,
       wait_with_log: wait_with_log,
-      install: install
+      install: install,
+      metadata: metadata
     } do
       instance_slug = "test-02"
+
+      project_found = File.read!("test/fixtures/lxd/projects/show.json")
+
+      Bypass.expect_once(
+        bypass,
+        "GET",
+        "/1.0/projects/#{metadata.channel.package.slug}",
+        fn conn ->
+          conn
+          |> Plug.Conn.put_resp_header("content-type", "application/json")
+          |> Plug.Conn.resp(200, project_found)
+        end
+      )
+
       start_instance_params = Jason.decode!(start_instance)
       start_instance_operation_id = start_instance_params["metadata"]["id"]
 
@@ -139,6 +157,10 @@ defmodule Uplink.Packages.Instance.InstallTest do
         "PUT",
         "/1.0/instances/#{instance_slug}/state",
         fn conn ->
+          assert %{"project" => project} = conn.query_params
+
+          assert project == metadata.channel.package.slug
+
           assert {:ok, body, conn} = Plug.Conn.read_body(conn)
           assert {:ok, body} = Jason.decode(body)
 
@@ -168,6 +190,10 @@ defmodule Uplink.Packages.Instance.InstallTest do
         "POST",
         "/1.0/instances/#{instance_slug}/exec",
         fn conn ->
+          assert %{"project" => project} = conn.query_params
+
+          assert project == metadata.channel.package.slug
+
           assert {:ok, body, conn} = Plug.Conn.read_body(conn)
           assert {:ok, %{"command" => command}} = Jason.decode(body)
 
@@ -205,6 +231,10 @@ defmodule Uplink.Packages.Instance.InstallTest do
         "GET",
         "/1.0/instances/#{instance_slug}/logs/stdout.log",
         fn conn ->
+          assert %{"project" => project} = conn.query_params
+
+          assert project == metadata.channel.package.slug
+
           conn
           |> Plug.Conn.resp(
             200,
@@ -218,6 +248,10 @@ defmodule Uplink.Packages.Instance.InstallTest do
         "GET",
         "/1.0/instances/#{instance_slug}/logs/stderr.log",
         fn conn ->
+          assert %{"project" => project} = conn.query_params
+
+          assert project == metadata.channel.package.slug
+
           conn
           |> Plug.Conn.resp(200, "")
         end
@@ -246,19 +280,14 @@ defmodule Uplink.Packages.Instance.InstallTest do
 
       assert {:ok, %{"id" => _id}} =
                perform_job(Install, %{
-                 formation_instance: %{
-                   "repositories" => [
-                     %{
-                       "url" =>
-                         "http://:4080/distribution/develop/upmaru/something-1640927800",
-                       "public_key_name" => "something",
-                       "public_key" => "public_key"
-                     }
-                   ],
-                   "packages" => [%{"slug" => "something-1640927800"}],
-                   "slug" => instance_slug
+                 instance: %{
+                   slug: instance_slug,
+                   node: %{
+                     slug: "ubuntu-s-1vcpu-1gb-sgp1-01"
+                   }
                  },
-                 install_id: install.id
+                 install_id: install.id,
+                 actor_id: actor.id
                })
 
       assert_enqueued(
@@ -270,7 +299,8 @@ defmodule Uplink.Packages.Instance.InstallTest do
 
   describe "on error" do
     setup %{
-      bypass: bypass
+      bypass: bypass,
+      metadata: metadata
     } do
       instance_slug = "test-02"
 
@@ -279,6 +309,10 @@ defmodule Uplink.Packages.Instance.InstallTest do
         "POST",
         "/1.0/instances/#{instance_slug}/exec",
         fn conn ->
+          assert %{"project" => project} = conn.query_params
+
+          assert project == metadata.channel.package.slug
+
           assert {:ok, body, conn} = Plug.Conn.read_body(conn)
           assert {:ok, %{"command" => command}} = Jason.decode(body)
 
@@ -301,22 +335,36 @@ defmodule Uplink.Packages.Instance.InstallTest do
       {:ok, instance_slug: instance_slug}
     end
 
-    test "should snooze", %{instance_slug: instance_slug, install: install} do
+    test "should snooze", %{
+      instance_slug: instance_slug,
+      bypass: bypass,
+      metadata: metadata,
+      install: install,
+      actor: actor
+    } do
+      project_found = File.read!("test/fixtures/lxd/projects/show.json")
+
+      Bypass.expect_once(
+        bypass,
+        "GET",
+        "/1.0/projects/#{metadata.channel.package.slug}",
+        fn conn ->
+          conn
+          |> Plug.Conn.put_resp_header("content-type", "application/json")
+          |> Plug.Conn.resp(200, project_found)
+        end
+      )
+
       assert {:snooze, 5} =
                perform_job(Install, %{
-                 formation_instance: %{
-                   "repositories" => [
-                     %{
-                       "url" =>
-                         "http://:4080/distribution/develop/upmaru/something-1640927800",
-                       "public_key_name" => "something",
-                       "public_key" => "public_key"
-                     }
-                   ],
-                   "packages" => [%{"slug" => "something-1640927800"}],
-                   "slug" => instance_slug
+                 instance: %{
+                   slug: instance_slug,
+                   node: %{
+                     slug: "ubuntu-s-1vcpu-1gb-sgp1-01"
+                   }
                  },
-                 install_id: install.id
+                 install_id: install.id,
+                 actor_id: actor.id
                })
     end
   end

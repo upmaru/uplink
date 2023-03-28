@@ -66,6 +66,12 @@ defmodule Uplink.Packages do
 
   alias __MODULE__.Metadata
 
+  defdelegate get_project_name(client, metadata),
+    to: Metadata.Manager
+
+  defdelegate get_or_create_project_name(client, metadata),
+    to: Metadata.Manager
+
   defdelegate profile_name(metadata),
     to: Metadata.Manager
 

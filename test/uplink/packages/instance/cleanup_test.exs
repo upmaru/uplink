@@ -97,6 +97,7 @@ defmodule Uplink.Packages.Instance.CleanupTest do
      bypass: bypass,
      actor: actor,
      install: install,
+     metadata: metadata,
      stop_instance: stop_instance,
      wait_for_operation: wait_for_operation,
      show_instance: show_instance,
@@ -111,6 +112,7 @@ defmodule Uplink.Packages.Instance.CleanupTest do
       bypass: bypass,
       install: install,
       actor: actor,
+      metadata: metadata,
       stop_instance: stop_instance,
       delete_instance: delete_instance,
       show_instance: show_instance,
@@ -118,11 +120,28 @@ defmodule Uplink.Packages.Instance.CleanupTest do
     } do
       instance_slug = "test-02"
 
+      project_found = File.read!("test/fixtures/lxd/projects/show.json")
+
+      Bypass.expect_once(
+        bypass,
+        "GET",
+        "/1.0/projects/#{metadata.channel.package.slug}",
+        fn conn ->
+          conn
+          |> Plug.Conn.put_resp_header("content-type", "application/json")
+          |> Plug.Conn.resp(200, project_found)
+        end
+      )
+
       Bypass.expect_once(
         bypass,
         "GET",
         "/1.0/instances/#{instance_slug}",
         fn conn ->
+          assert %{"project" => project} = conn.query_params
+
+          assert project == metadata.channel.package.slug
+
           conn
           |> Plug.Conn.put_resp_header("content-type", "application/json")
           |> Plug.Conn.resp(200, show_instance)
@@ -134,6 +153,10 @@ defmodule Uplink.Packages.Instance.CleanupTest do
         "PUT",
         "/1.0/instances/#{instance_slug}/state",
         fn conn ->
+          assert %{"project" => project} = conn.query_params
+
+          assert project == metadata.channel.package.slug
+
           conn
           |> Plug.Conn.put_resp_header("content-type", "application/json")
           |> Plug.Conn.resp(200, stop_instance)
@@ -161,6 +184,10 @@ defmodule Uplink.Packages.Instance.CleanupTest do
         "DELETE",
         "/1.0/instances/#{instance_slug}",
         fn conn ->
+          assert %{"project" => project} = conn.query_params
+
+          assert project == metadata.channel.package.slug
+
           conn
           |> Plug.Conn.put_resp_header("content-type", "application/json")
           |> Plug.Conn.resp(200, delete_instance)
@@ -228,15 +255,33 @@ defmodule Uplink.Packages.Instance.CleanupTest do
       bypass: bypass,
       install: install,
       actor: actor,
+      metadata: metadata,
       instance_not_found: instance_not_found
     } do
       instance_slug = "test-02"
+
+      project_found = File.read!("test/fixtures/lxd/projects/show.json")
+
+      Bypass.expect_once(
+        bypass,
+        "GET",
+        "/1.0/projects/#{metadata.channel.package.slug}",
+        fn conn ->
+          conn
+          |> Plug.Conn.put_resp_header("content-type", "application/json")
+          |> Plug.Conn.resp(200, project_found)
+        end
+      )
 
       Bypass.expect_once(
         bypass,
         "GET",
         "/1.0/instances/#{instance_slug}",
         fn conn ->
+          assert %{"project" => project} = conn.query_params
+
+          assert project == metadata.channel.package.slug
+
           conn
           |> Plug.Conn.put_resp_header("content-type", "application/json")
           |> Plug.Conn.resp(404, instance_not_found)

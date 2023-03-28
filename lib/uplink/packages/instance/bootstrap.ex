@@ -87,7 +87,12 @@ defmodule Uplink.Packages.Instance.Bootstrap do
 
       package_distribution_url = Packages.distribution_url(metadata)
 
+      client = LXD.client()
+
+      project_name = Packages.get_or_create_project_name(client, metadata)
+
       formation_instance_params = %{
+        "project" => project_name,
         "slug" => name,
         "repositories" => [
           %{
@@ -105,15 +110,21 @@ defmodule Uplink.Packages.Instance.Bootstrap do
 
       formation_instance = Formation.new_lxd_instance(formation_instance_params)
 
-      LXD.client()
-      |> Formation.lxd_create(node_name, instance_params)
-      |> Formation.lxd_start(name)
+      client
+      |> Formation.lxd_create(node_name, instance_params, project: package.slug)
+      |> Formation.lxd_start(name, project: package.slug)
       |> Formation.setup_lxd_instance(formation_instance)
       |> case do
         {:ok, _message} ->
           %{
-            formation_instance: formation_instance_params,
-            install_id: install.id
+            instance: %{
+              slug: name,
+              node: %{
+                slug: node_name
+              }
+            },
+            install_id: install.id,
+            actor_id: actor_id
           }
           |> Instance.Install.new()
           |> Oban.insert()
