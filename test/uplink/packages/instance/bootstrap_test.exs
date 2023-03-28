@@ -79,12 +79,29 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
       start_instance: start_instance,
       exec_instance: exec_instance,
       wait_for_operation: wait_for_operation,
-      wait_with_log: wait_with_log
+      wait_with_log: wait_with_log,
+      metadata: metadata
     } do
       instance_slug = "test-02"
 
+      project_found = File.read!("test/fixtures/lxd/projects/show.json")
+
+      Bypass.expect_once(
+        bypass,
+        "GET",
+        "/1.0/projects/#{metadata.channel.package.slug}",
+        fn conn ->
+          conn
+          |> Plug.Conn.put_resp_header("content-type", "application/json")
+          |> Plug.Conn.resp(200, project_found)
+        end
+      )
+
       Bypass.expect_once(bypass, "POST", "/1.0/instances", fn conn ->
-        assert %{"target" => "ubuntu-s-1vcpu-1gb-sgp1-01"} = conn.query_params
+        assert %{"target" => "ubuntu-s-1vcpu-1gb-sgp1-01", "project" => project} =
+                 conn.query_params
+
+        assert project == metadata.channel.package.slug
 
         conn
         |> Plug.Conn.put_resp_header("content-type", "application/json")
@@ -112,6 +129,10 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
         "PUT",
         "/1.0/instances/#{instance_slug}/state",
         fn conn ->
+          assert %{"project" => project} = conn.query_params
+
+          assert project == metadata.channel.package.slug
+
           conn
           |> Plug.Conn.put_resp_header("content-type", "application/json")
           |> Plug.Conn.resp(200, start_instance)
@@ -145,6 +166,10 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
         "POST",
         "/1.0/instances/#{instance_slug}/exec",
         fn conn ->
+          assert %{"project" => project} = conn.query_params
+
+          assert project == metadata.channel.package.slug
+
           assert {:ok, body, conn} = Plug.Conn.read_body(conn)
           assert {:ok, %{"command" => command}} = Jason.decode(body)
 
@@ -189,6 +214,10 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
         "GET",
         "/1.0/instances/#{instance_slug}/logs/stdout.log",
         fn conn ->
+          assert %{"project" => project} = conn.query_params
+
+          assert project == metadata.channel.package.slug
+
           conn
           |> Plug.Conn.resp(
             200,
@@ -202,6 +231,10 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
         "GET",
         "/1.0/instances/#{instance_slug}/logs/stderr.log",
         fn conn ->
+          assert %{"project" => project} = conn.query_params
+
+          assert project == metadata.channel.package.slug
+
           conn
           |> Plug.Conn.resp(200, "")
         end
@@ -212,6 +245,10 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
         "PUT",
         "/1.0/instances/#{instance_slug}/state",
         fn conn ->
+          assert %{"project" => project} = conn.query_params
+
+          assert project == metadata.channel.package.slug
+
           assert {:ok, body, conn} = Plug.Conn.read_body(conn)
           assert {:ok, body} = Jason.decode(body)
 
@@ -283,12 +320,16 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
       start_instance: start_instance,
       exec_instance: exec_instance,
       wait_for_operation: wait_for_operation,
-      wait_with_log: wait_with_log
+      wait_with_log: wait_with_log,
+      metadata: metadata
     } do
       instance_slug = "test-02"
 
       Bypass.expect_once(bypass, "POST", "/1.0/instances", fn conn ->
-        assert %{"target" => "ubuntu-s-1vcpu-1gb-sgp1-01"} = conn.query_params
+        assert %{"target" => "ubuntu-s-1vcpu-1gb-sgp1-01", "project" => project} =
+                 conn.query_params
+
+        assert project == metadata.channel.package.slug
 
         conn
         |> Plug.Conn.put_resp_header("content-type", "application/json")
@@ -316,6 +357,10 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
         "PUT",
         "/1.0/instances/#{instance_slug}/state",
         fn conn ->
+          assert %{"project" => project} = conn.query_params
+
+          assert project == metadata.channel.package.slug
+
           conn
           |> Plug.Conn.put_resp_header("content-type", "application/json")
           |> Plug.Conn.resp(200, start_instance)
@@ -349,6 +394,10 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
         "POST",
         "/1.0/instances/#{instance_slug}/exec",
         fn conn ->
+          assert %{"project" => project} = conn.query_params
+
+          assert project == metadata.channel.package.slug
+
           assert {:ok, body, conn} = Plug.Conn.read_body(conn)
           assert {:ok, %{"command" => command}} = Jason.decode(body)
 
@@ -394,6 +443,10 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
         "GET",
         "/1.0/instances/#{instance_slug}/logs/stdout.log",
         fn conn ->
+          assert %{"project" => project} = conn.query_params
+
+          assert project == metadata.channel.package.slug
+
           conn
           |> Plug.Conn.resp(
             200,
@@ -407,6 +460,10 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
         "GET",
         "/1.0/instances/#{instance_slug}/logs/stderr.log",
         fn conn ->
+          assert %{"project" => project} = conn.query_params
+
+          assert project == metadata.channel.package.slug
+
           conn
           |> Plug.Conn.resp(200, "something went wrong")
         end
@@ -417,6 +474,10 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
         "PUT",
         "/1.0/instances/#{instance_slug}/state",
         fn conn ->
+          assert %{"project" => project} = conn.query_params
+
+          assert project == metadata.channel.package.slug
+
           assert {:ok, body, conn} = Plug.Conn.read_body(conn)
           assert {:ok, body} = Jason.decode(body)
 
@@ -472,7 +533,9 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
     test "enqueue cleanup when instance setup fails", %{
       install: install,
       instance_slug: instance_slug,
-      actor: actor
+      actor: actor,
+      bypass: bypass,
+      metadata: metadata
     } do
       args = %{
         instance: %{
@@ -483,6 +546,19 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
         install_id: install.id,
         actor_id: actor.id
       }
+
+      project_found = File.read!("test/fixtures/lxd/projects/show.json")
+
+      Bypass.expect_once(
+        bypass,
+        "GET",
+        "/1.0/projects/#{metadata.channel.package.slug}",
+        fn conn ->
+          conn
+          |> Plug.Conn.put_resp_header("content-type", "application/json")
+          |> Plug.Conn.resp(200, project_found)
+        end
+      )
 
       assert {:ok, %Oban.Job{}} = perform_job(Bootstrap, args)
 

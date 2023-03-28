@@ -1,0 +1,9 @@
+{
+  "type": "error",
+  "status": "",
+  "status_code": 0,
+  "operation": "",
+  "error_code": 404,
+  "error": "Project not found",
+  "metadata": null
+}
