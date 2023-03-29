@@ -94,13 +94,14 @@ defmodule Uplink.Packages.Install.ExecuteTest do
       metadata
     )
 
-    Cache.delete(:instances)
-
     {:ok, %{resource: validating_install}} =
       Packages.transition_install_with(install, actor, "validate")
 
     {:ok, %{resource: executing_install}} =
       Packages.transition_install_with(validating_install, actor, "execute")
+
+    project =
+      "#{metadata.channel.package.organization.slug}.#{metadata.channel.package.slug}"
 
     empty_instances = File.read!("test/fixtures/lxd/instances/list/empty.json")
 
@@ -109,7 +110,8 @@ defmodule Uplink.Packages.Install.ExecuteTest do
      actor: actor,
      bypass: bypass,
      instance: instance,
-     empty_instances: empty_instances}
+     empty_instances: empty_instances,
+     project: project}
   end
 
   describe "boostrap instance" do
@@ -120,10 +122,26 @@ defmodule Uplink.Packages.Install.ExecuteTest do
       install: install,
       actor: actor,
       instance: instance,
-      empty_instances: empty_instances
+      empty_instances: empty_instances,
+      project: project_name
     } do
+      project_found = File.read!("test/fixtures/lxd/projects/show.json")
+
+      Bypass.expect_once(
+        bypass,
+        "GET",
+        "/1.0/projects/#{project_name}",
+        fn conn ->
+          conn
+          |> Plug.Conn.put_resp_header("content-type", "application/json")
+          |> Plug.Conn.resp(200, project_found)
+        end
+      )
+
       Bypass.expect_once(bypass, "GET", "/1.0/instances", fn conn ->
-        %{"recursion" => "1"} = conn.query_params
+        assert %{"recursion" => "1", "project" => project} = conn.query_params
+
+        assert project == project_name
 
         conn
         |> Plug.Conn.put_resp_header("content-type", "application/json")
@@ -170,10 +188,26 @@ defmodule Uplink.Packages.Install.ExecuteTest do
       install: install,
       actor: actor,
       instance: instance,
-      existing_instances: existing_instances
+      existing_instances: existing_instances,
+      project: project_name
     } do
+      project_found = File.read!("test/fixtures/lxd/projects/show.json")
+
+      Bypass.expect_once(
+        bypass,
+        "GET",
+        "/1.0/projects/#{project_name}",
+        fn conn ->
+          conn
+          |> Plug.Conn.put_resp_header("content-type", "application/json")
+          |> Plug.Conn.resp(200, project_found)
+        end
+      )
+
       Bypass.expect_once(bypass, "GET", "/1.0/instances", fn conn ->
-        %{"recursion" => "1"} = conn.query_params
+        assert %{"recursion" => "1", "project" => project} = conn.query_params
+
+        assert project == project_name
 
         conn
         |> Plug.Conn.put_resp_header("content-type", "application/json")

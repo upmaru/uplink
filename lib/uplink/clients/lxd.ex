@@ -13,7 +13,7 @@ defmodule Uplink.Clients.LXD do
     to: __MODULE__.Profile.Manager,
     as: :get
 
-  defdelegate list_instances(),
+  defdelegate list_instances(project),
     to: __MODULE__.Instance.Manager,
     as: :list
 

@@ -47,11 +47,15 @@ defmodule Uplink.Packages.Install.Execute do
 
   defp validate_and_execute_instances(
          %{
-           metadata: %Metadata{instances: instances}
+           metadata: %Metadata{instances: instances} = metadata
          } = state
        ) do
+    client = LXD.client()
+
+    project = Packages.get_project_name(client, metadata)
+
     existing_instances_name =
-      LXD.list_instances()
+      LXD.list_instances(project)
       |> Enum.filter(&only_uplink_instance/1)
       |> Enum.map(fn instance ->
         instance.name
