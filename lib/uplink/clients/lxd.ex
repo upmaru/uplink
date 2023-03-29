@@ -33,6 +33,15 @@ defmodule Uplink.Clients.LXD do
       (
         config = Application.get_env(:uplink, Uplink.Data) || []
         uplink_project = Keyword.get(config, :project, "default")
+        client = LXD.client()
+
+        uplink_project =
+          client
+          |> Lexdee.get_project(uplink_project)
+          |> case do
+            {:ok, %{body: %{"name" => name}}} -> name
+            {:error, %{"error_code" => 404}} -> "default"
+          end
 
         case LXD.network_leases(uplink_project) do
           leases when is_list(leases) ->

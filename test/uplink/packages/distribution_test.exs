@@ -139,7 +139,24 @@ defmodule Uplink.Packages.DistributionTest do
       {:ok, archive: archive, deployment: completed_deployment}
     end
 
-    test "successfully fetch file", %{deployment: deployment, address: address} do
+    test "successfully fetch file", %{
+      bypass: bypass,
+      deployment: deployment,
+      address: address
+    } do
+      project_found = File.read!("test/fixtures/lxd/projects/show.json")
+
+      Bypass.expect_once(
+        bypass,
+        "GET",
+        "/1.0/projects/default",
+        fn conn ->
+          conn
+          |> Plug.Conn.put_resp_header("content-type", "application/json")
+          |> Plug.Conn.resp(200, project_found)
+        end
+      )
+
       conn =
         conn(
           :get,
