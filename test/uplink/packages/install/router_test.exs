@@ -36,6 +36,21 @@ defmodule Uplink.Packages.Install.RouterTest do
 
     %LXD.Network{} = network = LXD.managed_network()
 
+    Uplink.Cache.delete({:leases, "uplink"})
+
+    project_found = File.read!("test/fixtures/lxd/projects/show.json")
+
+    Bypass.expect(
+      bypass,
+      "GET",
+      "/1.0/projects/default",
+      fn conn ->
+        conn
+        |> Plug.Conn.put_resp_header("content-type", "application/json")
+        |> Plug.Conn.resp(200, project_found)
+      end
+    )
+
     Bypass.expect(
       bypass,
       "GET",

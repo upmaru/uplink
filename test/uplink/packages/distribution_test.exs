@@ -97,6 +97,8 @@ defmodule Uplink.Packages.DistributionTest do
 
     %LXD.Network{} = network = LXD.managed_network()
 
+    Uplink.Cache.delete({:leases, "uplink"})
+
     Bypass.expect(
       bypass,
       "GET",
@@ -146,7 +148,7 @@ defmodule Uplink.Packages.DistributionTest do
     } do
       project_found = File.read!("test/fixtures/lxd/projects/show.json")
 
-      Bypass.expect_once(
+      Bypass.expect(
         bypass,
         "GET",
         "/1.0/projects/default",
