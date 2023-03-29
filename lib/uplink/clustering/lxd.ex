@@ -104,7 +104,11 @@ defmodule Uplink.Clustering.LXD do
           |> Enum.map(fn node ->
             "/1.0/instances/" <> node_name = node
 
-            [node_name, _] = String.split(node_name, "?")
+            node_name =
+              case String.split(node_name, "?") do
+                [node_name, _] -> node_name
+                [node_name] -> node_name
+              end
 
             :"#{app_name}@#{node_name}"
           end)
