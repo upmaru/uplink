@@ -1,8 +1,11 @@
 import Config
 
 uplink_mode = System.get_env("UPLINK_MODE") || "pro"
+project_name = System.get_env("INSTELLAR_PACKAGE_NAME") || "default"
 
-config :uplink, Uplink.Data, mode: uplink_mode
+config :uplink, Uplink.Data,
+  mode: uplink_mode,
+  project: project_name
 
 if config_env() == :prod do
   config :uplink, Uplink.Clients.Instellar,

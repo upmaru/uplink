@@ -103,6 +103,9 @@ defmodule Uplink.Clustering.LXD do
           profile.used_by
           |> Enum.map(fn node ->
             "/1.0/instances/" <> node_name = node
+
+            [node_name, _] = String.split(node_name, "?")
+
             :"#{app_name}@#{node_name}"
           end)
 

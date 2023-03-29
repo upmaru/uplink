@@ -5,10 +5,11 @@ defmodule Uplink.Data.Provisioner do
 
   alias Uplink.Clients.LXD
 
-  defstruct [:mode, :status]
+  defstruct [:mode, :project, :status]
 
   @type t :: %__MODULE__{
           mode: String.t(),
+          project: String.t(),
           status: :ok | :error | :provisioning | nil
         }
 
@@ -20,10 +21,11 @@ defmodule Uplink.Data.Provisioner do
   def init(_args) do
     config = Application.get_env(:uplink, Uplink.Data) || []
     mode = Keyword.get(config, :mode, "pro")
+    project = Keyword.get(config, :project, "default")
 
     send(self(), {:bootstrap, mode})
 
-    {:ok, %__MODULE__{mode: mode}}
+    {:ok, %__MODULE__{mode: mode, project: project}}
   end
 
   @impl true
@@ -64,7 +66,7 @@ defmodule Uplink.Data.Provisioner do
         Logger.info("[Data.Provisioner] provisioning local postgresql ...")
 
         client = LXD.client()
-        Formation.Lxd.Alpine.provision_postgresql(client)
+        Formation.Lxd.Alpine.provision_postgresql(client, project: state.project)
 
         Process.send_after(self(), {:bootstrap, state.mode}, 5_000)
 
