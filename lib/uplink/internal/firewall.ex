@@ -37,23 +37,39 @@ defmodule Uplink.Internal.Firewall do
   defp project_name(conn) do
     case conn.params do
       %{"glob" => params} ->
-        [_channel, org, package] = Enum.take(params, 3)
-        "#{org}.#{package}"
+        conn.script_name
+        |> List.first()
+        |> build_from_glob(params)
 
       %{"instellar_installation_id" => instellar_installation_id} ->
-        %Install{deployment: %{app: app}} =
-          from(
-            i in Install,
-            where: i.instellar_installation_id == ^instellar_installation_id,
-            limit: 1,
-            order_by: [desc: :inserted_at],
-            preload: [deployment: [:app]]
-          )
-          |> Repo.one!()
-
-        [org, package] = String.split(app.slug, "/")
-
-        "#{org}.#{package}"
+        build_from_install(instellar_installation_id)
     end
+  end
+
+  defp build_from_glob(script_name, params)
+       when script_name in ["distribution", "installs"] do
+    case Enum.take(params, 3) do
+      [_channel, org, package] ->
+        "#{org}.#{package}"
+
+      [instellar_installation_id, "variables"] ->
+        build_from_install(instellar_installation_id)
+    end
+  end
+
+  defp build_from_install(instellar_installation_id) do
+    %Install{deployment: %{app: app}} =
+      from(
+        i in Install,
+        where: i.instellar_installation_id == ^instellar_installation_id,
+        limit: 1,
+        order_by: [desc: :inserted_at],
+        preload: [deployment: [:app]]
+      )
+      |> Repo.one!()
+
+    [org, package] = String.split(app.slug, "/")
+
+    "#{org}.#{package}"
   end
 end
