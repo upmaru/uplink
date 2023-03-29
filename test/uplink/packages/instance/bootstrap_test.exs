@@ -22,7 +22,13 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
         "-"
       )
 
-    {:ok, cluster_members: cluster_members, public_key_name: public_key_name}
+    project =
+      "#{metadata.channel.package.organization.slug}.#{metadata.channel.package.slug}"
+
+    {:ok,
+     cluster_members: cluster_members,
+     public_key_name: public_key_name,
+     project: project}
   end
 
   setup %{bypass: bypass, cluster_members: cluster_members} do
@@ -80,7 +86,7 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
       exec_instance: exec_instance,
       wait_for_operation: wait_for_operation,
       wait_with_log: wait_with_log,
-      metadata: metadata
+      project: project_name
     } do
       instance_slug = "test-02"
 
@@ -90,7 +96,7 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
       Bypass.expect_once(
         bypass,
         "GET",
-        "/1.0/projects/#{metadata.channel.package.slug}",
+        "/1.0/projects/#{project_name}",
         fn conn ->
           conn
           |> Plug.Conn.put_resp_header("content-type", "application/json")
@@ -115,7 +121,7 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
         assert %{"target" => "ubuntu-s-1vcpu-1gb-sgp1-01", "project" => project} =
                  conn.query_params
 
-        assert project == metadata.channel.package.slug
+        assert project == project_name
 
         conn
         |> Plug.Conn.put_resp_header("content-type", "application/json")
@@ -145,7 +151,7 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
         fn conn ->
           assert %{"project" => project} = conn.query_params
 
-          assert project == metadata.channel.package.slug
+          assert project == project_name
 
           conn
           |> Plug.Conn.put_resp_header("content-type", "application/json")
@@ -182,7 +188,7 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
         fn conn ->
           assert %{"project" => project} = conn.query_params
 
-          assert project == metadata.channel.package.slug
+          assert project == project_name
 
           assert {:ok, body, conn} = Plug.Conn.read_body(conn)
           assert {:ok, %{"command" => command}} = Jason.decode(body)
@@ -230,7 +236,7 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
         fn conn ->
           assert %{"project" => project} = conn.query_params
 
-          assert project == metadata.channel.package.slug
+          assert project == project_name
 
           conn
           |> Plug.Conn.resp(
@@ -247,7 +253,7 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
         fn conn ->
           assert %{"project" => project} = conn.query_params
 
-          assert project == metadata.channel.package.slug
+          assert project == project_name
 
           conn
           |> Plug.Conn.resp(200, "")
@@ -261,7 +267,7 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
         fn conn ->
           assert %{"project" => project} = conn.query_params
 
-          assert project == metadata.channel.package.slug
+          assert project == project_name
 
           assert {:ok, body, conn} = Plug.Conn.read_body(conn)
           assert {:ok, body} = Jason.decode(body)
@@ -334,7 +340,7 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
       exec_instance: exec_instance,
       wait_for_operation: wait_for_operation,
       wait_with_log: wait_with_log,
-      metadata: metadata
+      project: project_name
     } do
       instance_slug = "test-02"
 
@@ -343,7 +349,7 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
       Bypass.expect_once(
         bypass,
         "GET",
-        "/1.0/projects/#{metadata.channel.package.slug}",
+        "/1.0/projects/#{project_name}",
         fn conn ->
           conn
           |> Plug.Conn.put_resp_header("content-type", "application/json")
@@ -355,7 +361,7 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
         assert %{"target" => "ubuntu-s-1vcpu-1gb-sgp1-01", "project" => project} =
                  conn.query_params
 
-        assert project == metadata.channel.package.slug
+        assert project == project_name
 
         conn
         |> Plug.Conn.put_resp_header("content-type", "application/json")
@@ -385,7 +391,7 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
         fn conn ->
           assert %{"project" => project} = conn.query_params
 
-          assert project == metadata.channel.package.slug
+          assert project == project_name
 
           conn
           |> Plug.Conn.put_resp_header("content-type", "application/json")
@@ -422,7 +428,7 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
         fn conn ->
           assert %{"project" => project} = conn.query_params
 
-          assert project == metadata.channel.package.slug
+          assert project == project_name
 
           assert {:ok, body, conn} = Plug.Conn.read_body(conn)
           assert {:ok, %{"command" => command}} = Jason.decode(body)
@@ -470,7 +476,7 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
         fn conn ->
           assert %{"project" => project} = conn.query_params
 
-          assert project == metadata.channel.package.slug
+          assert project == project_name
 
           conn
           |> Plug.Conn.resp(
@@ -487,7 +493,7 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
         fn conn ->
           assert %{"project" => project} = conn.query_params
 
-          assert project == metadata.channel.package.slug
+          assert project == project_name
 
           conn
           |> Plug.Conn.resp(200, "")
@@ -501,7 +507,7 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
         fn conn ->
           assert %{"project" => project} = conn.query_params
 
-          assert project == metadata.channel.package.slug
+          assert project == project_name
 
           assert {:ok, body, conn} = Plug.Conn.read_body(conn)
           assert {:ok, body} = Jason.decode(body)
@@ -575,7 +581,7 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
       exec_instance: exec_instance,
       wait_for_operation: wait_for_operation,
       wait_with_log: wait_with_log,
-      metadata: metadata
+      project: project_name
     } do
       instance_slug = "test-02"
 
@@ -583,7 +589,7 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
         assert %{"target" => "ubuntu-s-1vcpu-1gb-sgp1-01", "project" => project} =
                  conn.query_params
 
-        assert project == metadata.channel.package.slug
+        assert project == project_name
 
         conn
         |> Plug.Conn.put_resp_header("content-type", "application/json")
@@ -613,7 +619,7 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
         fn conn ->
           assert %{"project" => project} = conn.query_params
 
-          assert project == metadata.channel.package.slug
+          assert project == project_name
 
           conn
           |> Plug.Conn.put_resp_header("content-type", "application/json")
@@ -650,7 +656,7 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
         fn conn ->
           assert %{"project" => project} = conn.query_params
 
-          assert project == metadata.channel.package.slug
+          assert project == project_name
 
           assert {:ok, body, conn} = Plug.Conn.read_body(conn)
           assert {:ok, %{"command" => command}} = Jason.decode(body)
@@ -699,7 +705,7 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
         fn conn ->
           assert %{"project" => project} = conn.query_params
 
-          assert project == metadata.channel.package.slug
+          assert project == project_name
 
           conn
           |> Plug.Conn.resp(
@@ -716,7 +722,7 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
         fn conn ->
           assert %{"project" => project} = conn.query_params
 
-          assert project == metadata.channel.package.slug
+          assert project == project_name
 
           conn
           |> Plug.Conn.resp(200, "something went wrong")
@@ -730,7 +736,7 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
         fn conn ->
           assert %{"project" => project} = conn.query_params
 
-          assert project == metadata.channel.package.slug
+          assert project == project_name
 
           assert {:ok, body, conn} = Plug.Conn.read_body(conn)
           assert {:ok, body} = Jason.decode(body)
@@ -789,7 +795,7 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
       instance_slug: instance_slug,
       actor: actor,
       bypass: bypass,
-      metadata: metadata
+      project: project_name
     } do
       args = %{
         instance: %{
@@ -806,7 +812,7 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
       Bypass.expect_once(
         bypass,
         "GET",
-        "/1.0/projects/#{metadata.channel.package.slug}",
+        "/1.0/projects/#{project_name}",
         fn conn ->
           conn
           |> Plug.Conn.put_resp_header("content-type", "application/json")

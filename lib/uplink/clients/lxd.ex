@@ -21,7 +21,7 @@ defmodule Uplink.Clients.LXD do
     to: __MODULE__.Network.Manager,
     as: :managed
 
-  defdelegate network_leases(),
+  defdelegate network_leases(project),
     to: __MODULE__.Network.Manager,
     as: :leases
 

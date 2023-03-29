@@ -7,11 +7,11 @@ defmodule Uplink.Clients.LXD.Network.Manager do
   alias Clients.LXD
   alias LXD.Network
 
-  def leases do
+  def leases(project) do
     with %Network{name: name} <- managed(),
          {:ok, %{body: leases}} <-
            LXD.client()
-           |> Lexdee.list_network_leases(name) do
+           |> Lexdee.list_network_leases(name, query: [project: project]) do
       Enum.map(leases, fn lease ->
         Network.Lease.parse(lease)
       end)

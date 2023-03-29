@@ -88,7 +88,7 @@ defmodule Uplink.Packages.Instance.UpgradeTest do
   describe "upgrade instance" do
     alias Uplink.Packages.Instance.Upgrade
 
-    setup %{app: app} do
+    setup %{app: app, metadata: metadata} do
       {:ok, first_deployment} =
         Packages.get_or_create_deployment(app, @first_deployment)
 
@@ -109,10 +109,16 @@ defmodule Uplink.Packages.Instance.UpgradeTest do
       |> Ecto.Changeset.cast(%{current_state: "completed"}, [:current_state])
       |> Repo.update()
 
+      project =
+        "#{metadata.channel.package.organization.slug}.#{metadata.channel.package.slug}"
+
       wait_with_log =
         File.read!("test/fixtures/lxd/operations/wait_with_log.json")
 
-      {:ok, exec_instance: exec_instance, wait_with_log: wait_with_log}
+      {:ok,
+       exec_instance: exec_instance,
+       wait_with_log: wait_with_log,
+       project: project}
     end
 
     test "perform", %{
@@ -121,7 +127,8 @@ defmodule Uplink.Packages.Instance.UpgradeTest do
       install: install,
       exec_instance: exec_instance,
       wait_with_log: wait_with_log,
-      metadata: metadata
+      metadata: metadata,
+      project: project_name
     } do
       instance_slug = "some-instance-01"
 
@@ -130,7 +137,7 @@ defmodule Uplink.Packages.Instance.UpgradeTest do
       Bypass.expect_once(
         bypass,
         "GET",
-        "/1.0/projects/#{metadata.channel.package.slug}",
+        "/1.0/projects/#{project_name}",
         fn conn ->
           conn
           |> Plug.Conn.put_resp_header("content-type", "application/json")
@@ -145,7 +152,7 @@ defmodule Uplink.Packages.Instance.UpgradeTest do
         fn conn ->
           assert %{"project" => project} = conn.query_params
 
-          assert project == metadata.channel.package.slug
+          assert project == project_name
 
           assert {:ok, body, conn} = Plug.Conn.read_body(conn)
           assert {:ok, %{"command" => command}} = Jason.decode(body)
@@ -185,7 +192,7 @@ defmodule Uplink.Packages.Instance.UpgradeTest do
         fn conn ->
           assert %{"project" => project} = conn.query_params
 
-          assert project == metadata.channel.package.slug
+          assert project == project_name
 
           conn
           |> Plug.Conn.resp(
@@ -202,7 +209,7 @@ defmodule Uplink.Packages.Instance.UpgradeTest do
         fn conn ->
           assert %{"project" => project} = conn.query_params
 
-          assert project == metadata.channel.package.slug
+          assert project == project_name
 
           conn
           |> Plug.Conn.resp(200, "")
@@ -248,7 +255,8 @@ defmodule Uplink.Packages.Instance.UpgradeTest do
       install: install,
       exec_instance: exec_instance,
       wait_with_log: wait_with_log,
-      metadata: metadata
+      metadata: metadata,
+      project: project_name
     } do
       instance_slug = "some-instance-01"
 
@@ -257,7 +265,7 @@ defmodule Uplink.Packages.Instance.UpgradeTest do
       Bypass.expect_once(
         bypass,
         "GET",
-        "/1.0/projects/#{metadata.channel.package.slug}",
+        "/1.0/projects/#{project_name}",
         fn conn ->
           conn
           |> Plug.Conn.put_resp_header("content-type", "application/json")
@@ -272,7 +280,7 @@ defmodule Uplink.Packages.Instance.UpgradeTest do
         fn conn ->
           assert %{"project" => project} = conn.query_params
 
-          assert project == metadata.channel.package.slug
+          assert project == project_name
 
           assert {:ok, body, conn} = Plug.Conn.read_body(conn)
           assert {:ok, %{"command" => command}} = Jason.decode(body)
@@ -312,7 +320,7 @@ defmodule Uplink.Packages.Instance.UpgradeTest do
         fn conn ->
           assert %{"project" => project} = conn.query_params
 
-          assert project == metadata.channel.package.slug
+          assert project == project_name
 
           conn
           |> Plug.Conn.resp(
@@ -329,7 +337,7 @@ defmodule Uplink.Packages.Instance.UpgradeTest do
         fn conn ->
           assert %{"project" => project} = conn.query_params
 
-          assert project == metadata.channel.package.slug
+          assert project == project_name
 
           conn
           |> Plug.Conn.resp(200, "timeout")

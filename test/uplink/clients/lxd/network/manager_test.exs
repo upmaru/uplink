@@ -70,13 +70,17 @@ defmodule Uplink.Clients.LXD.Network.ManagerTest do
         "GET",
         "/1.0/networks/#{network.name}/leases",
         fn conn ->
+          assert %{"project" => project} = conn.query_params
+
+          assert project == "something"
+
           conn
           |> Plug.Conn.put_resp_header("content-type", "application/json")
           |> Plug.Conn.resp(200, response)
         end
       )
 
-      assert [lease, _, _] = Manager.leases()
+      assert [lease, _, _] = Manager.leases("something")
 
       assert %Lease{} = lease
     end

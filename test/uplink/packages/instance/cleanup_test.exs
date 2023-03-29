@@ -93,6 +93,9 @@ defmodule Uplink.Packages.Instance.CleanupTest do
 
     {:ok, install} = Packages.create_install(deployment, 1)
 
+    project =
+      "#{metadata.channel.package.organization.slug}.#{metadata.channel.package.slug}"
+
     {:ok,
      bypass: bypass,
      actor: actor,
@@ -102,7 +105,8 @@ defmodule Uplink.Packages.Instance.CleanupTest do
      wait_for_operation: wait_for_operation,
      show_instance: show_instance,
      instance_not_found: instance_not_found,
-     delete_instance: delete_instance}
+     delete_instance: delete_instance,
+     project: project}
   end
 
   describe "clean up instance" do
@@ -112,11 +116,11 @@ defmodule Uplink.Packages.Instance.CleanupTest do
       bypass: bypass,
       install: install,
       actor: actor,
-      metadata: metadata,
       stop_instance: stop_instance,
       delete_instance: delete_instance,
       show_instance: show_instance,
-      wait_for_operation: wait_for_operation
+      wait_for_operation: wait_for_operation,
+      project: project_name
     } do
       instance_slug = "test-02"
 
@@ -125,7 +129,7 @@ defmodule Uplink.Packages.Instance.CleanupTest do
       Bypass.expect_once(
         bypass,
         "GET",
-        "/1.0/projects/#{metadata.channel.package.slug}",
+        "/1.0/projects/#{project_name}",
         fn conn ->
           conn
           |> Plug.Conn.put_resp_header("content-type", "application/json")
@@ -140,7 +144,7 @@ defmodule Uplink.Packages.Instance.CleanupTest do
         fn conn ->
           assert %{"project" => project} = conn.query_params
 
-          assert project == metadata.channel.package.slug
+          assert project == project_name
 
           conn
           |> Plug.Conn.put_resp_header("content-type", "application/json")
@@ -155,7 +159,7 @@ defmodule Uplink.Packages.Instance.CleanupTest do
         fn conn ->
           assert %{"project" => project} = conn.query_params
 
-          assert project == metadata.channel.package.slug
+          assert project == project_name
 
           conn
           |> Plug.Conn.put_resp_header("content-type", "application/json")
@@ -186,7 +190,7 @@ defmodule Uplink.Packages.Instance.CleanupTest do
         fn conn ->
           assert %{"project" => project} = conn.query_params
 
-          assert project == metadata.channel.package.slug
+          assert project == project_name
 
           conn
           |> Plug.Conn.put_resp_header("content-type", "application/json")
@@ -255,8 +259,8 @@ defmodule Uplink.Packages.Instance.CleanupTest do
       bypass: bypass,
       install: install,
       actor: actor,
-      metadata: metadata,
-      instance_not_found: instance_not_found
+      instance_not_found: instance_not_found,
+      project: project_name
     } do
       instance_slug = "test-02"
 
@@ -265,7 +269,7 @@ defmodule Uplink.Packages.Instance.CleanupTest do
       Bypass.expect_once(
         bypass,
         "GET",
-        "/1.0/projects/#{metadata.channel.package.slug}",
+        "/1.0/projects/#{project_name}",
         fn conn ->
           conn
           |> Plug.Conn.put_resp_header("content-type", "application/json")
@@ -280,7 +284,7 @@ defmodule Uplink.Packages.Instance.CleanupTest do
         fn conn ->
           assert %{"project" => project} = conn.query_params
 
-          assert project == metadata.channel.package.slug
+          assert project == project_name
 
           conn
           |> Plug.Conn.put_resp_header("content-type", "application/json")

@@ -112,6 +112,9 @@ defmodule Uplink.Packages.Instance.InstallTest do
     wait_with_log =
       File.read!("test/fixtures/lxd/operations/wait_with_log.json")
 
+    project =
+      "#{metadata.channel.package.organization.slug}.#{metadata.channel.package.slug}"
+
     {:ok,
      bypass: bypass,
      actor: actor,
@@ -120,7 +123,8 @@ defmodule Uplink.Packages.Instance.InstallTest do
      wait_for_operation: wait_for_operation,
      wait_with_log: wait_with_log,
      install: executing_install,
-     metadata: metadata}
+     metadata: metadata,
+     project: project}
   end
 
   describe "perform" do
@@ -132,7 +136,7 @@ defmodule Uplink.Packages.Instance.InstallTest do
       wait_for_operation: wait_for_operation,
       wait_with_log: wait_with_log,
       install: install,
-      metadata: metadata
+      project: project_name
     } do
       instance_slug = "test-02"
 
@@ -141,7 +145,7 @@ defmodule Uplink.Packages.Instance.InstallTest do
       Bypass.expect_once(
         bypass,
         "GET",
-        "/1.0/projects/#{metadata.channel.package.slug}",
+        "/1.0/projects/#{project_name}",
         fn conn ->
           conn
           |> Plug.Conn.put_resp_header("content-type", "application/json")
@@ -159,7 +163,7 @@ defmodule Uplink.Packages.Instance.InstallTest do
         fn conn ->
           assert %{"project" => project} = conn.query_params
 
-          assert project == metadata.channel.package.slug
+          assert project == project_name
 
           assert {:ok, body, conn} = Plug.Conn.read_body(conn)
           assert {:ok, body} = Jason.decode(body)
@@ -192,7 +196,7 @@ defmodule Uplink.Packages.Instance.InstallTest do
         fn conn ->
           assert %{"project" => project} = conn.query_params
 
-          assert project == metadata.channel.package.slug
+          assert project == project_name
 
           assert {:ok, body, conn} = Plug.Conn.read_body(conn)
           assert {:ok, %{"command" => command}} = Jason.decode(body)
@@ -233,7 +237,7 @@ defmodule Uplink.Packages.Instance.InstallTest do
         fn conn ->
           assert %{"project" => project} = conn.query_params
 
-          assert project == metadata.channel.package.slug
+          assert project == project_name
 
           conn
           |> Plug.Conn.resp(
@@ -250,7 +254,7 @@ defmodule Uplink.Packages.Instance.InstallTest do
         fn conn ->
           assert %{"project" => project} = conn.query_params
 
-          assert project == metadata.channel.package.slug
+          assert project == project_name
 
           conn
           |> Plug.Conn.resp(200, "")
@@ -300,7 +304,7 @@ defmodule Uplink.Packages.Instance.InstallTest do
   describe "on error" do
     setup %{
       bypass: bypass,
-      metadata: metadata
+      project: project_name
     } do
       instance_slug = "test-02"
 
@@ -311,7 +315,7 @@ defmodule Uplink.Packages.Instance.InstallTest do
         fn conn ->
           assert %{"project" => project} = conn.query_params
 
-          assert project == metadata.channel.package.slug
+          assert project == project_name
 
           assert {:ok, body, conn} = Plug.Conn.read_body(conn)
           assert {:ok, %{"command" => command}} = Jason.decode(body)
@@ -338,16 +342,16 @@ defmodule Uplink.Packages.Instance.InstallTest do
     test "should snooze", %{
       instance_slug: instance_slug,
       bypass: bypass,
-      metadata: metadata,
       install: install,
-      actor: actor
+      actor: actor,
+      project: project_name
     } do
       project_found = File.read!("test/fixtures/lxd/projects/show.json")
 
       Bypass.expect_once(
         bypass,
         "GET",
-        "/1.0/projects/#{metadata.channel.package.slug}",
+        "/1.0/projects/#{project_name}",
         fn conn ->
           conn
           |> Plug.Conn.put_resp_header("content-type", "application/json")

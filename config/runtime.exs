@@ -1,7 +1,15 @@
 import Config
 
 uplink_mode = System.get_env("UPLINK_MODE") || "pro"
-project_name = System.get_env("INSTELLAR_PACKAGE_NAME") || "default"
+package_name = System.get_env("INSTELLAR_PACKAGE_NAME")
+org_name = System.get_env("INSTELLAR_ORGANIZATION_NAME")
+
+project_name =
+  if org_name && package_name do
+    "#{org_name}.#{package_name}"
+  else
+    "default"
+  end
 
 config :uplink, Uplink.Data,
   mode: uplink_mode,

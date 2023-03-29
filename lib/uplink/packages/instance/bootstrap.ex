@@ -111,8 +111,8 @@ defmodule Uplink.Packages.Instance.Bootstrap do
       formation_instance = Formation.new_lxd_instance(formation_instance_params)
 
       client
-      |> Formation.lxd_create(node_name, instance_params, project: package.slug)
-      |> Formation.lxd_start(name, project: package.slug)
+      |> Formation.lxd_create(node_name, instance_params, project: project_name)
+      |> Formation.lxd_start(name, project: project_name)
       |> Formation.setup_lxd_instance(formation_instance)
       |> case do
         {:ok, _message} ->

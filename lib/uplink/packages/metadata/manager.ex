@@ -5,8 +5,10 @@ defmodule Uplink.Packages.Metadata.Manager do
     to: Metadata
 
   def get_project_name(client, %Metadata{} = metadata) do
+    project = project_name(metadata)
+
     client
-    |> Lexdee.get_project(metadata.channel.package.slug)
+    |> Lexdee.get_project(project)
     |> case do
       {:ok, %{body: %{"name" => name}}} ->
         name
@@ -17,8 +19,10 @@ defmodule Uplink.Packages.Metadata.Manager do
   end
 
   def get_or_create_project_name(client, %Metadata{} = metadata) do
+    project = project_name(metadata)
+
     client
-    |> Lexdee.get_project(metadata.channel.package.slug)
+    |> Lexdee.get_project(project)
     |> case do
       {:ok, %{body: %{"name" => name}}} ->
         name
@@ -29,6 +33,8 @@ defmodule Uplink.Packages.Metadata.Manager do
   end
 
   defp create_project(client, %Metadata{} = metadata) do
+    project = project_name(metadata)
+
     params = %{
       "config" => %{
         "features.networks" => "false",
@@ -36,19 +42,24 @@ defmodule Uplink.Packages.Metadata.Manager do
         "features.images" => "false",
         "features.storage.volumes" => "false"
       },
-      "description" => "#{metadata.channel.package.slug}",
-      "name" => metadata.channel.package.slug
+      "description" =>
+        "#{metadata.channel.package.organization.slug}/#{metadata.channel.package.slug}",
+      "name" => project
     }
 
     client
     |> Lexdee.create_project(params)
     |> case do
       {:ok, _} ->
-        metadata.channel.package.slug
+        project
 
       {:error, _} ->
         nil
     end
+  end
+
+  defp project_name(%Metadata{channel: channel}) do
+    "#{channel.package.organization.slug}.#{channel.package.slug}"
   end
 
   def public_key_name(%Metadata{channel: channel}) do
