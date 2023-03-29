@@ -8,6 +8,8 @@ defmodule Uplink.Internal.Firewall do
   import Ecto.Query, only: [from: 2]
 
   def allowed?(conn) do
+    uplink_addresses = LXD.uplink_leases()
+
     conn
     |> project_name()
     |> LXD.network_leases()
@@ -23,7 +25,9 @@ defmodule Uplink.Internal.Firewall do
           |> :inet.ntoa()
           |> to_string()
 
-        if detected_ip_address in ip_addresses do
+        allowed_addresses = ip_addresses ++ uplink_addresses
+
+        if detected_ip_address in allowed_addresses do
           :ok
         else
           {:error, :forbidden}
