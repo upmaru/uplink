@@ -66,6 +66,7 @@ defmodule Uplink.Data.Provisioner do
         Logger.info("[Data.Provisioner] provisioning local postgresql ...")
 
         client = LXD.client()
+
         Formation.Lxd.Alpine.provision_postgresql(client, project: state.project)
 
         Process.send_after(self(), {:bootstrap, state.mode}, 5_000)
