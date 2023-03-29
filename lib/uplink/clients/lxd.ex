@@ -41,7 +41,9 @@ defmodule Uplink.Clients.LXD do
                 lease.address
               end)
 
-            Cache.put({:leases, "uplink"}, uplink_addresses, ttl: :timer.hours(3))
+            Cache.put({:leases, "uplink"}, uplink_addresses,
+              ttl: :timer.hours(3)
+            )
 
             uplink_addresses
 
