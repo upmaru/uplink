@@ -1,0 +1,63 @@
+{
+  "type": "sync",
+  "status": "Success",
+  "status_code": 200,
+  "operation": "",
+  "error_code": 0,
+  "error": "",
+  "metadata": {
+    "architecture": "x86_64",
+    "config": {
+      "image.architecture": "amd64",
+      "image.description": "Alpine 3.11 amd64 (20200820_13:00)",
+      "image.os": "Alpine",
+      "image.release": "3.11",
+      "image.serial": "20200820_13:00",
+      "image.type": "squashfs",
+      "volatile.apply_template": "create",
+      "volatile.base_image": "7b96a8223a3694ae48c0e303cbfb14b084668e9378f2a96422e69af97bfa4719",
+      "volatile.eth0.hwaddr": "00:16:3e:7c:6b:2a",
+      "volatile.idmap.base": "0",
+      "volatile.idmap.next": "[{\"Isuid\":true,\"Isgid\":false,\"Hostid\":1000000,\"Nsid\":0,\"Maprange\":1000000000},{\"Isuid\":false,\"Isgid\":true,\"Hostid\":1000000,\"Nsid\":0,\"Maprange\":1000000000}]",
+      "volatile.last_state.idmap": "[]"
+    },
+    "devices": {},
+    "ephemeral": false,
+    "profiles": ["default"],
+    "stateful": false,
+    "description": "",
+    "created_at": "2020-08-20T15:30:23.473648129Z",
+    "expanded_config": {
+      "image.architecture": "amd64",
+      "image.description": "Alpine 3.11 amd64 (20200820_13:00)",
+      "image.os": "Alpine",
+      "image.release": "3.11",
+      "image.serial": "20200820_13:00",
+      "image.type": "squashfs",
+      "volatile.apply_template": "create",
+      "volatile.base_image": "7b96a8223a3694ae48c0e303cbfb14b084668e9378f2a96422e69af97bfa4719",
+      "volatile.eth0.hwaddr": "00:16:3e:7c:6b:2a",
+      "volatile.idmap.base": "0",
+      "volatile.idmap.next": "[{\"Isuid\":true,\"Isgid\":false,\"Hostid\":1000000,\"Nsid\":0,\"Maprange\":1000000000},{\"Isuid\":false,\"Isgid\":true,\"Hostid\":1000000,\"Nsid\":0,\"Maprange\":1000000000}]",
+      "volatile.last_state.idmap": "[]"
+    },
+    "expanded_devices": {
+      "eth0": {
+        "name": "eth0",
+        "network": "lxdfan0",
+        "type": "nic"
+      },
+      "root": {
+        "path": "/",
+        "pool": "local",
+        "type": "disk"
+      }
+    },
+    "name": "instellar-staging-01",
+    "status": "Stopped",
+    "status_code": 102,
+    "last_used_at": "1970-01-01T00:00:00Z",
+    "location": "ubuntu-s-2vcpu-2gb-sgp1-01",
+    "type": "container"
+  }
+}

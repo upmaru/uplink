@@ -1,0 +1,50 @@
+name: 'Deployment'
+
+on:
+  workflow_run: 
+    workflows: ["CI"]
+    branches: [master, develop]
+    types: 
+      - completed
+
+jobs:
+  build_and_deploy:
+    name: Build and Deploy
+    runs-on: ubuntu-20.04
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    steps:
+      - name: 'Checkout'
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.workflow_run.head_branch }}
+          fetch-depth: 0
+
+      - name: 'Pakman'
+        uses: upmaru/pakman@alpine-3.17-7.1
+        with:
+          command: 'bootstrap'
+        env:
+          ABUILD_PRIVATE_KEY: ${{secrets.ABUILD_PRIVATE_KEY}}
+          ABUILD_PUBLIC_KEY: ${{secrets.ABUILD_PUBLIC_KEY}}
+
+      - name: 'Build APK'
+        uses: upmaru/pakman@alpine-3.17-7.1
+        with:
+          entrypoint: /var/lib/pakman/bin/build.sh
+
+      - name: 'Archive'
+        uses: upmaru/pakman@alpine-3.17-7.1
+        with:
+          entrypoint: /var/lib/pakman/bin/archive.sh
+
+      - name: 'Create Deployment'
+        uses: upmaru/pakman@alpine-3.17-7.1
+        with:
+          command: 'create_deployment'
+          archive: 'packages.zip'
+        env:
+          WORKFLOW_REF: ${{ github.event.workflow_run.head_branch }}
+          WORKFLOW_SHA: ${{ github.event.workflow_run.head_sha }}
+          INSTELLAR_ENDPOINT: ${{secrets.INSTELLAR_ENDPOINT}}
+          INSTELLAR_PACKAGE_TOKEN: ${{secrets.INSTELLAR_PACKAGE_TOKEN}}
+          INSTELLAR_AUTH_TOKEN: ${{secrets.INSTELLAR_AUTH_TOKEN}}

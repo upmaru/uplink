@@ -1,11 +1,15 @@
 defmodule Uplink.Members do
   alias __MODULE__.Actor
 
-  defdelegate get_actor(identifier),
-    to: Actor.Manager,
-    as: :get
+  def build_params(params) do
+    Actor.Params.build(params)
+  end
 
-  defdelegate create_actor(params),
+  defdelegate get_bot!(),
     to: Actor.Manager,
-    as: :create
+    as: :bot!
+
+  defdelegate get_or_create_actor(params),
+    to: Actor.Manager,
+    as: :get_or_create
 end

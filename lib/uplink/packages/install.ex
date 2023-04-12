@@ -2,6 +2,8 @@ defmodule Uplink.Packages.Install do
   use Ecto.Schema
   import Ecto.Changeset
 
+  import Ecto.Query, only: [from: 2]
+
   alias Uplink.Packages.Deployment
 
   use Eventful.Transitable,
@@ -20,5 +22,31 @@ defmodule Uplink.Packages.Install do
     install
     |> cast(params, [:instellar_installation_id])
     |> validate_required([:instellar_installation_id])
+    |> unique_constraint(:deployment_id,
+      name: :installs_deployment_id_instellar_installation_id_index
+    )
+  end
+
+  def latest_by_installation_id(count \\ 1) do
+    ranking_query =
+      from(
+        i in __MODULE__,
+        select: %{
+          id: i.id,
+          row_number: over(row_number(), :installations_partition)
+        },
+        windows: [
+          installations_partition: [
+            partition_by: :instellar_installation_id,
+            order_by: [desc: :inserted_at]
+          ]
+        ]
+      )
+
+    from(
+      i in __MODULE__,
+      join: r in subquery(ranking_query),
+      on: i.id == r.id and r.row_number <= ^count
+    )
   end
 end

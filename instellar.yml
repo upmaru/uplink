@@ -1,19 +1,21 @@
 dependencies:
+  trace: true
   build:
     - elixir
   runtime:
-    - nginx
     - bash
     - curl
     - jq
     - ca-certificates
+    - inotify-tools
     - s6
     - uplink-openrc
     
-stack: alpine/3.14
+stack: alpine/3.17
 
 build:
-  destination: '_build/prod/rel/uplink'
+  destinations: 
+    - '_build/prod/rel/uplink/*'
   command: |
     export MIX_ENV=prod
 
@@ -25,19 +27,28 @@ build:
 
 run: 
   name: uplink
-  start: 
-    call: 'start'
-  stop:
-    call: 'stop'
+  commands:
+  - name: migrate
+    binary: uplink
+    call: 'eval Uplink.Release.Tasks.migrate'
+  services:
+  - name: web
+    binary: uplink
+    start:
+      call: 'start'
+    stop:
+      call: 'stop'
 
 hook:
   post-install: |
     rc-update add uplink
+    rc-service uplink migrate
 
   pre-upgrade: |
     rc-service uplink stop
 
   post-upgrade: |
+    rc-service uplink migrate
     rc-service uplink start
 
   post-deinstall: |

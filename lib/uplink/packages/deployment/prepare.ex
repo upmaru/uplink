@@ -1,5 +1,5 @@
 defmodule Uplink.Packages.Deployment.Prepare do
-  use Oban.Worker, queue: :prepare_deployment, max_attempts: 1
+  use Oban.Worker, queue: :deployment, max_attempts: 1
 
   require Logger
 
@@ -19,23 +19,23 @@ defmodule Uplink.Packages.Deployment.Prepare do
   def perform(%Oban.Job{
         args: %{"deployment_id" => deployment_id, "actor_id" => actor_id}
       }) do
+    actor = Repo.get(Members.Actor, actor_id)
+
     %Deployment{} =
       deployment =
       Deployment
       |> Repo.get(deployment_id)
       |> Repo.preload([:app])
 
-    Members.Actor
-    |> Repo.get(actor_id)
-    |> execute(deployment)
+    handle_prepare(deployment, actor)
   end
 
-  defp execute(
-         %Members.Actor{} = actor,
+  defp handle_prepare(
          %Deployment{
            hash: hash,
            archive_url: archive_url
-         } = deployment
+         } = deployment,
+         %Members.Actor{} = actor
        ) do
     identifier = Deployment.identifier(deployment)
 
@@ -81,7 +81,7 @@ defmodule Uplink.Packages.Deployment.Prepare do
     |> :zip.unzip([{:cwd, to_charlist(extraction_path)}])
     |> case do
       {:ok, paths} ->
-        tmp_path = Path.join("tmp", "deployments")
+        tmp_path = Path.join(["tmp", "deployments", deployment.channel])
         File.mkdir_p!(tmp_path)
 
         [_, org, package, _] = String.split(identifier, "/")
@@ -148,6 +148,14 @@ defmodule Uplink.Packages.Deployment.Prepare do
         {:ok, _archive} ->
           Packages.transition_deployment_with(deployment, actor, "complete")
 
+        {:error,
+         %{
+           errors: [
+             deployment_id: {_, [constraint: :unique, constraint_name: _]}
+           ]
+         }} ->
+          update_archive_and_transition(deployment, actor)
+
         {:error, _error} ->
           Packages.transition_deployment_with(deployment, actor, "fail",
             comment: "archive not created"
@@ -160,6 +168,21 @@ defmodule Uplink.Packages.Deployment.Prepare do
       Packages.transition_deployment_with(deployment, actor, "fail",
         comment: comment
       )
+    end
+  end
+
+  defp update_archive_and_transition(deployment, actor) do
+    Packages.Archive
+    |> Repo.get_by(deployment_id: deployment.id)
+    |> Packages.update_archive(%{node: to_string(Node.self())})
+    |> case do
+      {:ok, _archive} ->
+        Packages.transition_deployment_with(deployment, actor, "complete")
+
+      {:error, _error} ->
+        Packages.transition_deployment_with(deployment, actor, "fail",
+          comment: "archive node could not be updated"
+        )
     end
   end
 end

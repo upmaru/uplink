@@ -1,0 +1,32 @@
+{
+  "apps": {
+    "http": {
+      "servers": {
+        "example": {
+          "listen": [
+            ":2015"
+          ],
+          "routes": [
+            {
+              "handle": [
+                {
+                  "@id": "test",
+                  "body": "Hello, world!",
+                  "handler": "static_response"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  },
+  "storage": {
+    "module": "s3",
+    "access_id": "something",
+    "secret_key": "secret",
+    "host": "some.host",
+    "bucket": "somebucket",
+    "prefix": "prefix"
+  }
+}

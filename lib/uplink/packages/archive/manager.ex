@@ -13,4 +13,10 @@ defmodule Uplink.Packages.Archive.Manager do
     |> Archive.changeset(params)
     |> Repo.insert()
   end
+
+  def update(archive, params) do
+    archive
+    |> Archive.changeset(params)
+    |> Repo.update()
+  end
 end

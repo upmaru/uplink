@@ -11,11 +11,31 @@ defmodule Uplink.Packages do
     to: Archive.Manager,
     as: :create
 
+  defdelegate update_archive(archive, params),
+    to: Archive.Manager,
+    as: :update
+
   alias __MODULE__.Install
+
+  defdelegate install_cache_key(install),
+    to: Install.Manager,
+    as: :cache_key
+
+  defdelegate build_install_state(install, actor \\ nil),
+    to: Install.Manager,
+    as: :build_state
+
+  defdelegate latest_install(instellar_installation_id),
+    to: Install.Manager,
+    as: :latest
 
   defdelegate create_install(deployment, instellar_installation_id),
     to: Install.Manager,
     as: :create
+
+  defdelegate transition_install_with(install, actor, event_name, opts \\ []),
+    to: Install.Manager,
+    as: :transition_with
 
   alias __MODULE__.Deployment
 
@@ -23,9 +43,17 @@ defmodule Uplink.Packages do
     to: Deployment.Manager,
     as: :get
 
+  defdelegate get_latest_deployment(slug, channel),
+    to: Deployment.Manager,
+    as: :get_latest
+
   defdelegate get_or_create_deployment(app, params),
     to: Deployment.Manager,
     as: :get_or_create
+
+  defdelegate update_deployment(deployment, params),
+    to: Deployment.Manager,
+    as: :update
 
   defdelegate transition_deployment_with(
                 deployment,
@@ -38,7 +66,25 @@ defmodule Uplink.Packages do
 
   alias __MODULE__.Metadata
 
+  defdelegate get_project_name(client, metadata),
+    to: Metadata.Manager
+
+  defdelegate get_or_create_project_name(client, metadata),
+    to: Metadata.Manager
+
+  defdelegate profile_name(metadata),
+    to: Metadata.Manager
+
+  defdelegate public_key_name(metadata),
+    to: Metadata.Manager
+
   defdelegate parse_metadata(params),
     to: Metadata.Manager,
     as: :parse
+
+  alias __MODULE__.Distribution
+
+  defdelegate distribution_url(metadata),
+    to: Distribution.Manager,
+    as: :url
 end

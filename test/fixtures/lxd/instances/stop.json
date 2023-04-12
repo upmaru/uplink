@@ -1,0 +1,24 @@
+{
+  "type": "async",
+  "status": "Operation created",
+  "status_code": 100,
+  "operation": "/1.0/operations/f3dbb959-9e1a-444d-bc2f-74b5103ff4bb",
+  "error_code": 0,
+  "error": "",
+  "metadata": {
+    "id": "f3dbb959-9e1a-444d-bc2f-74b5103ff4bb",
+    "class": "task",
+    "description": "Stopping container",
+    "created_at": "2021-01-08T13:59:52.059643903Z",
+    "updated_at": "2021-01-08T13:59:52.059643903Z",
+    "status": "Running",
+    "status_code": 103,
+    "resources": {
+      "containers": ["/1.0/containers/test-0012"]
+    },
+    "metadata": null,
+    "may_cancel": false,
+    "err": "",
+    "location": "ubuntu-s-2vcpu-2gb-sgp1-01"
+  }
+}

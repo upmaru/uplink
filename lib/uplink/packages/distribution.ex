@@ -2,49 +2,80 @@ defmodule Uplink.Packages.Distribution do
   use Plug.Builder
   plug Plug.Logger
 
-  alias Uplink.Clients.LXD
+  alias Uplink.{
+    Internal,
+    Packages
+  }
+
+  alias Packages.{
+    Deployment,
+    Archive
+  }
+
+  alias Internal.Firewall
 
   plug :validate
 
   plug :serve_or_proxy
 
-  # TODO move this into serve_or_proxy
-  # plug Plug.Static,
-  #   at: "/",
-  #   from: "tmp/deployments"
-
-  plug :respond
-
   defp validate(conn, _opts) do
-    case LXD.network_leases() do
-      leases when is_list(leases) ->
-        ip_addresses =
-          Enum.map(leases, fn lease ->
-            lease.address
-          end)
+    case Firewall.allowed?(conn) do
+      :ok ->
+        conn
 
-        detected_ip_address =
-          conn.remote_ip
-          |> :inet.ntoa()
-          |> to_string()
+      {:error, :forbidden} ->
+        conn
+        |> send_resp(:forbidden, "")
+        |> halt()
 
-        if detected_ip_address in ip_addresses do
-          conn
-        else
-          conn
-          |> send_resp(:not_allowed, "")
-          |> halt()
-        end
-
-      {:error, _error} ->
+      _ ->
         halt(conn)
     end
   end
 
   defp serve_or_proxy(conn, _opts) do
-    IO.inspect(conn)
+    %{"glob" => params} = conn.params
+
+    [channel, org, package] = Enum.take(params, 3)
+    app_slug = "#{org}/#{package}"
+
+    app_slug
+    |> Packages.get_latest_deployment(channel)
+    |> case do
+      %Deployment{archive: archive} ->
+        serve(conn, archive)
+
+      nil ->
+        conn
+        |> send_resp(:not_found, "")
+        |> halt()
+    end
   end
 
-  defp respond(conn, _opts),
-    do: send_resp(conn)
+  defp serve(conn, %Archive{node: node}) do
+    if Atom.to_string(Node.self()) == node do
+      static_options =
+        Plug.Static.init(
+          at: "/",
+          from: "tmp/deployments"
+        )
+
+      conn
+      |> Plug.Static.call(static_options)
+    else
+      [_app, node_host_name] = String.split(node, "@")
+      internal_router_config = Application.get_env(:uplink, Uplink.Internal)
+      port = Keyword.get(internal_router_config, :port, 4080)
+
+      upstream =
+        ["#{conn.scheme}://", "#{node_host_name}:#{port}", conn.request_path]
+        |> Path.join()
+
+      reverse_proxy_options = ReverseProxyPlug.init(upstream: upstream)
+
+      conn
+      |> Map.put(:path_info, [])
+      |> ReverseProxyPlug.call(reverse_proxy_options)
+    end
+  end
 end

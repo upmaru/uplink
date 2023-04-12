@@ -13,12 +13,36 @@ defmodule Uplink.Packages.Deployment.Transitions do
   Deployment
   |> transition(
     [from: "preparing", to: "live", via: "complete"],
+    fn changes -> transit(changes, Deployment.Triggers) end
+  )
+
+  Deployment
+  |> transition(
+    [from: "live", to: "hydrating", via: "hydrate"],
     fn changes -> transit(changes) end
   )
 
   Deployment
   |> transition(
-    [from: "preparing", to: "failed", via: "failed"],
+    [from: "hydrating", to: "hydrating", via: "hydrate"],
+    fn changes -> transit(changes) end
+  )
+
+  Deployment
+  |> transition(
+    [from: "hydrating", to: "live", via: "complete"],
+    fn changes -> transit(changes) end
+  )
+
+  Deployment
+  |> transition(
+    [from: "hydrating", to: "failed", via: "fail"],
+    fn changes -> transit(changes) end
+  )
+
+  Deployment
+  |> transition(
+    [from: "preparing", to: "failed", via: "fail"],
     fn changes -> transit(changes) end
   )
 end

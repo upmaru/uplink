@@ -1,0 +1,25 @@
+{
+  "type": "async",
+  "status": "Operation created",
+  "status_code": 100,
+  "operation": "/1.0/operations/b6ebd990-ee60-431f-8f3b-aa86298a2c99",
+  "error_code": 0,
+  "error": "",
+  "metadata": {
+    "id": "b6ebd990-ee60-431f-8f3b-aa86298a2c99",
+    "class": "task",
+    "description": "Creating container",
+    "created_at": "2020-05-15T17:28:35.855649154Z",
+    "updated_at": "2020-05-15T17:28:35.855649154Z",
+    "status": "Running",
+    "status_code": 103,
+    "resources": {
+      "containers": ["/1.0/containers/test-02"],
+      "instances": ["/1.0/instances/test-02"]
+    },
+    "metadata": null,
+    "may_cancel": false,
+    "err": "",
+    "location": "lxd-experiment"
+  }
+}

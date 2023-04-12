@@ -1,0 +1,21 @@
+{
+  "type": "sync",
+  "status": "Success",
+  "status_code": 200,
+  "operation": "",
+  "error_code": 0,
+  "error": "",
+  "metadata": {
+    "config": {
+      "features.images": "false",
+      "features.networks": "false",
+      "features.profiles": "false",
+      "features.storage.volumes": "false"
+    },
+    "description": "test",
+    "name": "upmaru.something-1640927800",
+    "used_by": [
+      "/1.0/instances/test-01?project=upmaru.something-1640927800"
+    ]
+  }
+}

@@ -1,4 +1,6 @@
-use Mix.Config
+import Config
+
+config :uplink, Uplink.Data, mode: "pro"
 
 config :uplink, Uplink.Repo,
   username:
@@ -13,10 +15,18 @@ config :uplink, Uplink.Repo,
   queue_interval: 50_000,
   pool: Ecto.Adapters.SQL.Sandbox
 
+config :uplink, Uplink.Clients.Caddy,
+  zero_ssl_api_key: System.get_env("ZERO_SSL_API_KEY", ""),
+  storage: %{
+    prefix: "uplink"
+  }
+
+config :uplink, :task_supervisor, Uplink.TaskSupervisorMock
+
 config :uplink, :environment, :test
 config :lexdee, :environment, :test
 
-config :uplink, Oban, plugins: false, queues: false
+config :uplink, Oban, testing: :manual
 
 config :uplink, Uplink.Secret, "secretsomethingsixteen"
 

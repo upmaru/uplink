@@ -1,0 +1,23 @@
+{
+  "type": "sync",
+  "status": "Success",
+  "status_code": 200,
+  "operation": "",
+  "error_code": 0,
+  "error": "",
+  "metadata": {
+    "config": {
+      "user.SOMETHING": "blah2"
+    },
+    "description": "installation 5",
+    "devices": {
+      "web": {
+        "connect": "tcp:127.0.0.1:5000",
+        "listen": "tcp:0.0.0.0:49152",
+        "type": "proxy"
+      }
+    },
+    "name": "instellar-develop-web2",
+    "used_by": ["/1.0/instances/instellar-web2-01"]
+  }
+}

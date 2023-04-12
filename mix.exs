@@ -4,13 +4,23 @@ defmodule Uplink.MixProject do
   def project do
     [
       app: :uplink,
-      version: "0.1.0",
+      version: "0.5.0",
       elixir: "~> 1.9",
+      elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       deps: deps(),
-      aliases: aliases()
+      aliases: aliases(),
+      releases: [
+        uplink: [
+          include_executables_for: [:unix]
+        ]
+      ]
     ]
   end
+
+  # Specifies which paths to compile per environment.
+  defp elixirc_paths(:test), do: ["lib", "test/scenarios", "test/fixture"]
+  defp elixirc_paths(_), do: ["lib"]
 
   # Run "mix help compile.app" to learn about applications.
   def application do
@@ -26,7 +36,7 @@ defmodule Uplink.MixProject do
       {:jason, "~> 1.0"},
 
       # Data
-      {:ecto_sql, "~> 3.7.1"},
+      {:ecto_sql, "~> 3.9"},
       {:postgrex, ">= 0.0.0"},
       {:eventful, "~> 0.2.3"},
 
@@ -37,10 +47,14 @@ defmodule Uplink.MixProject do
       {:telemetry, "~> 1.0"},
 
       # Worker
-      {:oban, "~> 2.10"},
+      {:oban, "~> 2.14"},
 
-      # Rest
+      # Rest Client
       {:req, "~> 0.2.1"},
+
+      # File System
+      {:file_system, "~> 0.2.10"},
+      {:libcluster, "~> 3.0"},
 
       # Downstream
       {:downstream, "~> 1.1.0"},
@@ -48,11 +62,15 @@ defmodule Uplink.MixProject do
       # One time password
       {:pot, "~> 1.0.2"},
 
+      # Certificate
+      {:x509, "~> 0.8.4"},
+
       # Infrastructure
-      {:formation, "~> 0.1.2"},
-      {:lexdee, "~> 1.0.1"},
+      {:formation, "~> 0.9"},
+      {:lexdee, "~> 2.3"},
       {:plug_cowboy, "~> 2.0"},
       {:reverse_proxy_plug, "~> 2.1"},
+      {:mint_web_socket, "~> 1.0.2"},
 
       # Test
       {:bypass, "~> 2.1", only: :test},
@@ -64,7 +82,9 @@ defmodule Uplink.MixProject do
 
   def aliases do
     [
-      test: ["ecto.create --quiet", "ecto.migrate", "test"]
+      test: ["ecto.create --quiet", "ecto.migrate", "test"],
+      "ecto.setup": ["ecto.create", "ecto.migrate"],
+      "ecto.reset": ["ecto.drop", "ecto.setup"]
     ]
   end
 end

@@ -19,6 +19,13 @@
       "address": "240.0.3.194",
       "type": "dynamic",
       "location": "ubuntu-s-1vcpu-1gb-sgp1-01"
+    },
+    {
+      "hostname": "localhost",
+      "hwaddr": "00:16:3e:ec:13:2f",
+      "address": "127.0.0.1",
+      "type": "dynamic",
+      "location": "ubuntu-s-1vcpu-1gb-sgp1-01"
     }
   ]
 }

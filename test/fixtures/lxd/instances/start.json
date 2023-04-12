@@ -1,0 +1,26 @@
+{
+  "type": "async",
+  "status": "Operation created",
+  "status_code": 100,
+  "operation": "/1.0/operations/f3daf90b-e51e-40b2-aabd-98d0330b4f95",
+  "error_code": 0,
+  "error": "",
+  "metadata": {
+    "id": "f3daf90b-e51e-40b2-aabd-98d0330b4f95",
+    "class": "task",
+    "description": "Starting container",
+    "created_at": "2020-09-05T05:16:30.34117045Z",
+    "updated_at": "2020-09-05T05:16:30.34117045Z",
+    "status": "Running",
+    "status_code": 103,
+    "resources": {
+      "containers": [
+        "/1.0/containers/test-02"
+      ]
+    },
+    "metadata": null,
+    "may_cancel": false,
+    "err": "",
+    "location": "ubuntu-s-2vcpu-2gb-sgp1-01"
+  }
+}

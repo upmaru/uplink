@@ -1,5 +1,5 @@
 defmodule Uplink.Packages.Deployment.PrepareTest do
-  use ExUnit.Case, async: true
+  use ExUnit.Case
   use Oban.Testing, repo: Uplink.Repo
 
   alias Uplink.{
@@ -22,7 +22,21 @@ defmodule Uplink.Packages.Deployment.PrepareTest do
     deployment_params = %{
       "hash" => "some-hash",
       "archive_url" => "http://localhost:#{bypass.port}/archives/packages.zip",
+      "stack" => "alpine/3.14",
+      "channel" => "develop",
       "metadata" => %{
+        "installation" => %{
+          "id" => 1,
+          "slug" => "uplink-web",
+          "service_port" => 4000,
+          "exposed_port" => 49152,
+          "instances" => [
+            %{
+              "installation_instance_id" => 1,
+              "slug" => "something-1"
+            }
+          ]
+        },
         "cluster" => %{
           "credential" => %{
             "certificate" => "cert",
@@ -35,19 +49,15 @@ defmodule Uplink.Packages.Deployment.PrepareTest do
             "slug" => "upmaru"
           }
         },
-        "id" => 8000,
-        "package" => %{
-          "slug" => "something-1640927800",
-          "organization" => %{
-            "slug" => "upmaru"
-          }
-        }
+        "id" => 8000
       }
     }
 
     {:ok, actor} =
-      Members.create_actor(%{
-        identifier: "zacksiri"
+      Members.get_or_create_actor(%{
+        "identifier" => "zacksiri",
+        "provider" => "instellar",
+        "id" => "1"
       })
 
     app = Packages.get_or_create_app(@app_slug)
