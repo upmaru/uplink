@@ -30,7 +30,7 @@ run:
   commands:
   - name: migrate
     binary: uplink
-    call: 'eval Rdio.Release.Tasks.migrate'
+    call: 'eval Uplink.Release.Tasks.migrate'
   services:
   - name: web
     binary: uplink
