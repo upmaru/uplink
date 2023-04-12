@@ -1,4 +1,5 @@
 dependencies:
+  trace: true
   build:
     - elixir
   runtime:
@@ -13,7 +14,8 @@ dependencies:
 stack: alpine/3.17
 
 build:
-  destination: '_build/prod/rel/uplink'
+  destinations: 
+    - '_build/prod/rel/uplink/*'
   command: |
     export MIX_ENV=prod
 
@@ -25,14 +27,17 @@ build:
 
 run: 
   name: uplink
-  start: 
-    call: 'start'
-  stop:
-    call: 'stop'
-  command:
-    call: 'eval'
-    variations:
-      migrate: Uplink.Release.Tasks.migrate
+  commands:
+  - name: migrate
+    binary: uplink
+    call: 'eval Rdio.Release.Tasks.migrate'
+  services:
+  - name: web
+    binary: uplink
+    start:
+      call: 'start'
+    stop:
+      call: 'stop'
 
 hook:
   post-install: |
