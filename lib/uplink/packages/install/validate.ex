@@ -3,6 +3,7 @@ defmodule Uplink.Packages.Install.Validate do
 
   alias Uplink.{
     Clients,
+    Cache,
     Members,
     Packages,
     Repo
@@ -100,6 +101,8 @@ defmodule Uplink.Packages.Install.Validate do
     |> Lexdee.create_profile(profile_params)
     |> case do
       {:ok, %{body: nil}} ->
+        Cache.delete(:profiles)
+
         {:ok, :profile_created}
 
       {:error, %{"error" => message}} ->
