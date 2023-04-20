@@ -20,7 +20,7 @@ jobs:
           fetch-depth: 0
 
       - name: 'Pakman'
-        uses: upmaru/pakman@alpine-3.17-7.1
+        uses: upmaru/pakman@alpine-3.17-7.2
         with:
           command: 'bootstrap'
         env:
@@ -28,17 +28,17 @@ jobs:
           ABUILD_PUBLIC_KEY: ${{secrets.ABUILD_PUBLIC_KEY}}
 
       - name: 'Build APK'
-        uses: upmaru/pakman@alpine-3.17-7.1
+        uses: upmaru/pakman@alpine-3.17-7.2
         with:
           entrypoint: /var/lib/pakman/bin/build.sh
 
       - name: 'Archive'
-        uses: upmaru/pakman@alpine-3.17-7.1
+        uses: upmaru/pakman@alpine-3.17-7.2
         with:
           entrypoint: /var/lib/pakman/bin/archive.sh
 
       - name: 'Create Deployment'
-        uses: upmaru/pakman@alpine-3.17-7.1
+        uses: upmaru/pakman@alpine-3.17-7.2
         with:
           command: 'create_deployment'
           archive: 'packages.zip'
