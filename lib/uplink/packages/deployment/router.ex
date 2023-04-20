@@ -77,7 +77,10 @@ defmodule Uplink.Packages.Deployment.Router do
   end
 
   delete "/:hash/installs/:instellar_installation_id/metadata" do
-    :ok = Cache.delete({:deployment, compute_signature(hash), instellar_installation_id})
+    :ok =
+      Cache.delete(
+        {:deployment, compute_signature(hash), instellar_installation_id}
+      )
 
     json(conn, :ok, %{})
   end

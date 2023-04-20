@@ -214,7 +214,10 @@ defmodule Uplink.Packages.Deployment.RouterTest do
       assert %{"id" => _id, "name" => "complete"} = data
     end
 
-    test "can delete metadata for given deployment", %{deployment: deployment, metadata: metadata} do
+    test "can delete metadata for given deployment", %{
+      deployment: deployment,
+      metadata: metadata
+    } do
       body = Jason.encode!(%{})
 
       signature =
@@ -223,7 +226,11 @@ defmodule Uplink.Packages.Deployment.RouterTest do
         |> String.downcase()
 
       conn =
-        conn(:delete, "/#{deployment.hash}/installs/#{metadata.id}/metadata", body)
+        conn(
+          :delete,
+          "/#{deployment.hash}/installs/#{metadata.id}/metadata",
+          body
+        )
         |> put_req_header("x-uplink-signature-256", "sha256=#{signature}")
         |> put_req_header("content-type", "application/json")
         |> Router.call(@opts)
