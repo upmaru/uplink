@@ -218,7 +218,12 @@ defmodule Uplink.Packages.Deployment.RouterTest do
       deployment: deployment,
       metadata: metadata
     } do
-      body = Jason.encode!(%{})
+      body =
+        Jason.encode!(%{
+          "event" => %{
+            "name" => "delete"
+          }
+        })
 
       signature =
         :crypto.mac(:hmac, :sha256, Uplink.Secret.get(), body)
@@ -227,8 +232,8 @@ defmodule Uplink.Packages.Deployment.RouterTest do
 
       conn =
         conn(
-          :delete,
-          "/#{deployment.hash}/installs/#{metadata.id}/metadata",
+          :post,
+          "/#{deployment.hash}/installs/#{metadata.id}/metadata/events",
           body
         )
         |> put_req_header("x-uplink-signature-256", "sha256=#{signature}")

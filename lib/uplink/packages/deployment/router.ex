@@ -76,13 +76,21 @@ defmodule Uplink.Packages.Deployment.Router do
     end
   end
 
-  delete "/:hash/installs/:instellar_installation_id/metadata" do
-    :ok =
-      Cache.delete(
-        {:deployment, compute_signature(hash), instellar_installation_id}
-      )
+  post "/:hash/installs/:instellar_installation_id/metadata/events" do
+    case conn.body_params do
+      %{"event" => %{"name" => "delete"}} ->
+        :ok =
+          Cache.delete(
+            {:deployment, compute_signature(hash), instellar_installation_id}
+          )
 
-    json(conn, :ok, %{})
+        json(conn, :ok, %{})
+
+      _ ->
+        json(conn, :unprocessable_entity, %{
+          error: %{message: "event not supported"}
+        })
+    end
   end
 
   post "/:hash/installs/:instellar_installation_id/events" do
