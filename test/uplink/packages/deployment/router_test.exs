@@ -214,6 +214,23 @@ defmodule Uplink.Packages.Deployment.RouterTest do
       assert %{"id" => _id, "name" => "complete"} = data
     end
 
+    test "can delete metadata for given deployment", %{deployment: deployment, metadata: metadata} do
+      body = Jason.encode!(%{})
+
+      signature =
+        :crypto.mac(:hmac, :sha256, Uplink.Secret.get(), body)
+        |> Base.encode16()
+        |> String.downcase()
+
+      conn =
+        conn(:delete, "/#{deployment.hash}/installs/#{metadata.id}/metadata", body)
+        |> put_req_header("x-uplink-signature-256", "sha256=#{signature}")
+        |> put_req_header("content-type", "application/json")
+        |> Router.call(@opts)
+
+      assert conn.status == 200
+    end
+
     test "return 422 when invalid state", %{
       body: body,
       deployment: deployment,
