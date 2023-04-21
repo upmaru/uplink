@@ -36,8 +36,6 @@ run:
     binary: uplink
     start:
       call: 'start'
-    stop:
-      call: 'stop'
 
 hook:
   post-install: |

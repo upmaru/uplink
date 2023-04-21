@@ -27,7 +27,7 @@ defmodule Uplink.Packages.Deployment.RouterTest do
                   "archive_url" =>
                     "archives/7a363fba-8ca7-4ea4-8e84-f3785ac97102/packages.zip",
                   "metadata" => %{
-                    "id" => 1,
+                    "id" => 3,
                     "slug" => "uplink-web",
                     "service_port" => 4000,
                     "exposed_port" => 49152,
@@ -146,8 +146,54 @@ defmodule Uplink.Packages.Deployment.RouterTest do
     end
   end
 
+  @uplink_installation_state_response %{
+    "data" => %{
+      "attributes" => %{
+        "id" => 1,
+        "slug" => "uplink-web",
+        "main_port" => %{
+          "slug" => "web",
+          "source" => 49142,
+          "target" => 4000
+        },
+        "variables" => [
+          %{"key" => "SOMETHING", "value" => "somevalue"}
+        ],
+        "channel" => %{
+          "slug" => "develop",
+          "package" => %{
+            "slug" => "something-1640927800",
+            "credential" => %{
+              "public_key" => "public_key"
+            },
+            "organization" => %{
+              "slug" => "upmaru"
+            }
+          }
+        },
+        "instances" => [
+          %{
+            "id" => 1,
+            "slug" => "something-1",
+            "node" => %{
+              "slug" => "some-node"
+            }
+          }
+        ]
+      }
+    }
+  }
+
   describe "create install event" do
     setup do
+      bypass = Bypass.open()
+
+      Application.put_env(
+        :uplink,
+        Uplink.Clients.Instellar,
+        endpoint: "http://localhost:#{bypass.port}/uplink"
+      )
+
       params = Jason.decode!(@valid_body)
 
       {:ok, actor} = Members.get_or_create_actor(Map.get(params, "actor"))
@@ -189,6 +235,7 @@ defmodule Uplink.Packages.Deployment.RouterTest do
        install: validating_install,
        signature: signature,
        deployment: deployment,
+       bypass: bypass,
        metadata: metadata}
     end
 
@@ -212,6 +259,74 @@ defmodule Uplink.Packages.Deployment.RouterTest do
       assert conn.status == 201
       assert %{"data" => data} = Jason.decode!(conn.resp_body)
       assert %{"id" => _id, "name" => "complete"} = data
+    end
+
+    test "can refresh metadata for given deployment", %{
+      deployment: deployment,
+      metadata: metadata,
+      bypass: bypass
+    } do
+      Bypass.expect_once(bypass, "GET", "/uplink/installations/3", fn conn ->
+        conn
+        |> Plug.Conn.put_resp_header("content-type", "application/json")
+        |> Plug.Conn.resp(
+          200,
+          Jason.encode!(@uplink_installation_state_response)
+        )
+      end)
+
+      body =
+        Jason.encode!(%{
+          "event" => %{
+            "name" => "refresh"
+          }
+        })
+
+      signature =
+        :crypto.mac(:hmac, :sha256, Uplink.Secret.get(), body)
+        |> Base.encode16()
+        |> String.downcase()
+
+      conn =
+        conn(
+          :post,
+          "/#{deployment.hash}/installs/#{metadata.id}/metadata/events",
+          body
+        )
+        |> put_req_header("x-uplink-signature-256", "sha256=#{signature}")
+        |> put_req_header("content-type", "application/json")
+        |> Router.call(@opts)
+
+      assert conn.status == 200
+    end
+
+    test "can delete metadata for a given deployment", %{
+      deployment: deployment,
+      metadata: metadata
+    } do
+      body =
+        Jason.encode!(%{
+          "event" => %{
+            "name" => "delete"
+          }
+        })
+
+      signature =
+        :crypto.mac(:hmac, :sha256, Uplink.Secret.get(), body)
+        |> Base.encode16()
+        |> String.downcase()
+
+      conn =
+        conn(
+          :post,
+          "/#{deployment.hash}/installs/#{metadata.id}/metadata/events",
+          body
+        )
+        |> put_req_header("x-uplink-signature-256", "sha256=#{signature}")
+        |> put_req_header("content-type", "application/json")
+        |> Router.call(@opts)
+
+      assert conn.status == 200
     end
 
     test "return 422 when invalid state", %{
