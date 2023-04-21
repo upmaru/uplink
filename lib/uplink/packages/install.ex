@@ -27,6 +27,16 @@ defmodule Uplink.Packages.Install do
     )
   end
 
+  def by_hash_and_installation(hash, instellar_installation_id) do
+    from(
+      i in __MODULE__,
+      join: d in assoc(i, :deployment),
+      where:
+        d.hash == ^hash and
+          i.instellar_installation_id == ^instellar_installation_id
+    )
+  end
+
   def latest_by_installation_id(count \\ 1) do
     ranking_query =
       from(
