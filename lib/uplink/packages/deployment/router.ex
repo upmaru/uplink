@@ -79,7 +79,8 @@ defmodule Uplink.Packages.Deployment.Router do
       %{"event" => %{"name" => "refresh"}} ->
         :ok =
           Cache.delete(
-            {:deployment, compute_signature(hash), instellar_installation_id}
+            {:deployment, compute_signature(hash),
+             String.to_integer(instellar_installation_id)}
           )
 
         hash
@@ -93,7 +94,8 @@ defmodule Uplink.Packages.Deployment.Router do
       %{"event" => %{"name" => "delete"}} ->
         :ok =
           Cache.delete(
-            {:deployment, compute_signature(hash), instellar_installation_id}
+            {:deployment, compute_signature(hash),
+             String.to_integer(instellar_installation_id)}
           )
 
         json(conn, :ok, %{})
