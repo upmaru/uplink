@@ -18,7 +18,7 @@ Then select the option you want and simply click `Next`
 
 Uplink is a module that is installed on the cluster that is being managed by [instellar.app](https://instellar.app). It provides some useful functionality such as:
 
-- Configure load balancing based on apps running on the cluster (Caddy)
+- Dynamically configuring load balancing based on apps running on the cluster (Caddy)
 - Container orchestration
   - Upgrading of existing apps
   - Bootstrapping new apps
@@ -30,7 +30,7 @@ Uplink is a module that is installed on the cluster that is being managed by [in
 
 Caddy provides the heavy lifting of load balancing, routing traffic to the containers running inside the cluster and handles automatic ssl certificate issuing.
 
-Uplink ensures that the configuration provided by the user on [instellar.app](https://instellar.app) is correctly fed into Caddy.
+Uplink ensures that the configuration provided by the user on [instellar.app](https://instellar.app) is correctly fed into Caddy. When there is a change in configuration (i.e. new apps deployed on a cluster) uplink will automatically update caddy.
 
 ## Future Plans
 
