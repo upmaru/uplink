@@ -36,7 +36,7 @@ Uplink ensures that the configuration provided by the user on [instellar.app](ht
 
 Here are some features we're planning to develop for uplink.
 
-- [ ] Pro Mode - Currently the lite version is available on instellar. We want to enable pro mode to allow users to persist state to a database not running on the cluster. This will open up many more opportunities.
+- [ ] Pro Mode - Currently the lite version is available on instellar. We want to enable pro mode to allow users to persist state to a database running outside the cluster. This will open up many more opportunities.
 
 - [ ] Vault - Provides ability to store secrets securely on the cluster. This means all storage of environment variables will be persisted inside a cluster marked as `trusted`. Applications will directly fetch variables from uplink on the cluster without relying on [instellar.app](https://instellar.app). This will only work for uplink in `pro` mode.
 
