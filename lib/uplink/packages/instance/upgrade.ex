@@ -64,7 +64,7 @@ defmodule Uplink.Packages.Instance.Upgrade do
         ]
       })
       |> validate_stack(install)
-      |> handle_upgrade(job)
+      |> handle_upgrade(job, actor)
     end
   end
 
@@ -94,7 +94,11 @@ defmodule Uplink.Packages.Instance.Upgrade do
     end
   end
 
-  defp handle_upgrade({:upgrade, formation_instance, install}, %Job{} = job) do
+  defp handle_upgrade(
+         {:upgrade, formation_instance, install},
+         %Job{} = job,
+         actor
+       ) do
     LXD.client()
     |> Formation.lxd_upgrade_alpine_package(formation_instance)
     |> case do
@@ -105,6 +109,8 @@ defmodule Uplink.Packages.Instance.Upgrade do
           "complete",
           comment: upgrade_package_output
         )
+
+        maybe_mark_install_complete(install, actor)
 
       {:error, error} ->
         handle_error(error, job)
@@ -128,5 +134,15 @@ defmodule Uplink.Packages.Instance.Upgrade do
     })
     |> Instance.Cleanup.new()
     |> Oban.insert()
+  end
+
+  defp maybe_mark_install_complete(install, actor) do
+    case Instellar.deployment_metadata(install) do
+      {:ok, %{"current_state" => "synced"}} ->
+        Packages.transition_install_with(install, actor, "complete")
+
+      _ ->
+        :ok
+    end
   end
 end
