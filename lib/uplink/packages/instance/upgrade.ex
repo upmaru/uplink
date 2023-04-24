@@ -138,12 +138,13 @@ defmodule Uplink.Packages.Instance.Upgrade do
   end
 
   defp maybe_mark_install_complete(install, actor) do
-    case Instellar.deployment_metadata(install) do
-      {:ok, %{"current_state" => "synced"}} ->
-        Packages.transition_install_with(install, actor, "complete")
-
-      _ ->
-        :ok
+    with {:ok, %{"current_state" => "synced"}} <-
+           Instellar.deployment_metadata(install),
+         {:ok, transition} <-
+           Packages.transition_install_with(install, actor, "complete") do
+      {:ok, transition}
+    else
+      _ -> :ok
     end
   end
 end
