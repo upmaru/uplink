@@ -119,7 +119,8 @@ defmodule Uplink.Packages.Instance.Upgrade do
 
   defp handle_upgrade(
          {:deactivate_and_bootstrap, _formation_instance, _install},
-         %Job{args: args}
+         %Job{args: args},
+         _actor
        ),
        do: deactivate_and_boot(args)
 
