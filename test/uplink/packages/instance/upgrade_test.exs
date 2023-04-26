@@ -85,6 +85,45 @@ defmodule Uplink.Packages.Instance.UpgradeTest do
     }
   }
 
+  @uplink_installation_state_response %{
+    "data" => %{
+      "attributes" => %{
+        "id" => 1,
+        "slug" => "uplink-web",
+        "main_port" => %{
+          "slug" => "web",
+          "source" => 49142,
+          "target" => 4000
+        },
+        "current_state" => "synced",
+        "variables" => [
+          %{"key" => "SOMETHING", "value" => "somevalue"}
+        ],
+        "channel" => %{
+          "slug" => "develop",
+          "package" => %{
+            "slug" => "something-1640927800",
+            "credential" => %{
+              "public_key" => "public_key"
+            },
+            "organization" => %{
+              "slug" => "upmaru"
+            }
+          }
+        },
+        "instances" => [
+          %{
+            "id" => 1,
+            "slug" => "something-1",
+            "node" => %{
+              "slug" => "some-node"
+            }
+          }
+        ]
+      }
+    }
+  }
+
   describe "upgrade instance" do
     alias Uplink.Packages.Instance.Upgrade
 
@@ -238,7 +277,16 @@ defmodule Uplink.Packages.Instance.UpgradeTest do
         end
       )
 
-      assert {:ok, _transition} =
+      Bypass.expect(bypass, "GET", "/uplink/installations/1", fn conn ->
+        conn
+        |> Plug.Conn.put_resp_header("content-type", "application/json")
+        |> Plug.Conn.resp(
+          200,
+          Jason.encode!(@uplink_installation_state_response)
+        )
+      end)
+
+      assert {:ok, %{event: event}} =
                perform_job(Upgrade, %{
                  instance: %{
                    slug: instance_slug,
@@ -247,6 +295,8 @@ defmodule Uplink.Packages.Instance.UpgradeTest do
                  install_id: install.id,
                  actor_id: actor.id
                })
+
+      assert event.name == "complete"
     end
 
     test "on error it enqueue deactivate and bootstrap", %{

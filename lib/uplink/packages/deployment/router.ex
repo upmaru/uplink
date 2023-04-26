@@ -33,8 +33,6 @@ defmodule Uplink.Packages.Deployment.Router do
 
   require Logger
 
-  import Ecto.Query, only: [from: 2]
-
   post "/" do
     %{
       "actor" => actor_params,
@@ -76,20 +74,46 @@ defmodule Uplink.Packages.Deployment.Router do
     end
   end
 
+  post "/:hash/installs/:instellar_installation_id/metadata/events" do
+    case conn.body_params do
+      %{"event" => %{"name" => "refresh"}} ->
+        :ok =
+          Cache.delete(
+            {:deployment, compute_signature(hash),
+             String.to_integer(instellar_installation_id)}
+          )
+
+        hash
+        |> Install.by_hash_and_installation(instellar_installation_id)
+        |> Repo.one()
+        |> Repo.preload([:deployment])
+        |> Packages.build_install_state()
+
+        json(conn, :ok, %{})
+
+      %{"event" => %{"name" => "delete"}} ->
+        :ok =
+          Cache.delete(
+            {:deployment, compute_signature(hash),
+             String.to_integer(instellar_installation_id)}
+          )
+
+        json(conn, :ok, %{})
+
+      _ ->
+        json(conn, :unprocessable_entity, %{
+          error: %{message: "event not supported"}
+        })
+    end
+  end
+
   post "/:hash/installs/:instellar_installation_id/events" do
     %{
       "actor" => actor_params,
       "event" => event_params
     } = conn.body_params
 
-    query =
-      from(
-        i in Install,
-        join: d in assoc(i, :deployment),
-        where:
-          d.hash == ^hash and
-            i.instellar_installation_id == ^instellar_installation_id
-      )
+    query = Install.by_hash_and_installation(hash, instellar_installation_id)
 
     with %Install{} = install <- Repo.one(query),
          {:ok, %Members.Actor{} = actor} <-

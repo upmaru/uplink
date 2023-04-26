@@ -33,4 +33,9 @@ defmodule Uplink.Packages.Install.Triggers do
   |> trigger([currently: "refreshing"], fn event, install ->
     Clients.Caddy.schedule_config_reload(install, actor_id: event.actor_id)
   end)
+
+  Install
+  |> trigger([currently: "completed"], fn event, install ->
+    Clients.Caddy.schedule_config_reload(install, actor_id: event.actor_id)
+  end)
 end

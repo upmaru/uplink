@@ -37,7 +37,7 @@ defmodule Uplink.Packages.Install.Transitions do
   Install
   |> transition(
     [from: "executing", to: "completed", via: "complete"],
-    fn changes -> transit(changes) end
+    fn changes -> transit(changes, Install.Triggers) end
   )
 
   Install
