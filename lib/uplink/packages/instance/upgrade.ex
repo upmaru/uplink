@@ -72,11 +72,16 @@ defmodule Uplink.Packages.Instance.Upgrade do
          formation_instance,
          %Install{
            id: install_id,
+           instellar_installation_id: instellar_installation_id,
            deployment: incoming_deployment
          } = install
        ) do
     Install
-    |> where([i], i.id != ^install_id)
+    |> where(
+      [i],
+      i.id != ^install_id and
+        i.instellar_installation_id == ^instellar_installation_id
+    )
     |> order_by(desc: :inserted_at)
     |> preload([:deployment])
     |> limit(1)
