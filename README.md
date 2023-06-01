@@ -4,7 +4,11 @@
 
 ![Uplink](cover.png)
 
-## Installation
+## Why?
+
+Uplink is designed to work with [instellar](https://github.com/upmaru/instellar). It provides protocols that enable instellar to push changes and events that propagate into dynamic configuration changes.
+
+### Click Ops
 
 You can install uplink via [instellar.app](https://instellar.app). On the cluster page. When you add a new empty cluster you can simply click on the `Setup` button.
 
@@ -13,6 +17,10 @@ You can install uplink via [instellar.app](https://instellar.app). On the cluste
 Then select the option you want and simply click `Next` 
 
 ![Configure installation](/public/images/select-options.png)
+
+### Infrastructure as Code
+
+You can use our terraform module to install uplink on your cluster. You can create a repo from one of the templates listed here [insterra](https://github.com/orgs/insterra/repositories).
 
 ## What is Uplink?
 
@@ -36,7 +44,7 @@ Uplink ensures that the configuration provided by the user on [instellar.app](ht
 
 Here are some features we're planning to develop for uplink.
 
-- [ ] Pro Mode - Currently the lite version is available on instellar. We want to enable pro mode to allow users to persist state to a database running outside the cluster. This will open up many more opportunities.
+- [x] Pro Mode - Currently the lite version is available on instellar. We want to enable pro mode to allow users to persist state to a database running outside the cluster. This will open up many more opportunities.
 
 - [ ] Vault - Provides ability to store secrets securely on the cluster. This means all storage of environment variables will be persisted inside a cluster marked as `trusted`. Applications will directly fetch variables from uplink on the cluster without relying on [instellar.app](https://instellar.app). This will only work for uplink in `pro` mode.
 
