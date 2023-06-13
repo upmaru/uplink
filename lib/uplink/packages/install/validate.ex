@@ -122,7 +122,7 @@ defmodule Uplink.Packages.Install.Validate do
     end
   end
 
-  defp build_profile_params(profile_name, %Install{} = install, metadata) do
+  defp build_profile_params(profile_name, %Install{} = install, _metadata) do
     hostname = System.get_env("HOSTNAME")
 
     internal_router_config =
@@ -133,27 +133,12 @@ defmodule Uplink.Packages.Install.Validate do
     %{
       "name" => profile_name,
       "description" => "#{install.id}/#{install.instellar_installation_id}",
-      "devices" => build_proxy(metadata),
       "config" => %{
         "user.managed_by" => "uplink",
         "user.install_variables_endpoint" =>
           "http://#{hostname}:#{internal_router_port}/installs/#{install.instellar_installation_id}/variables",
         "user.service_discovery_endpoint" =>
           "http://#{hostname}:#{internal_router_port}/installs/#{install.instellar_installation_id}/instances"
-      }
-    }
-  end
-
-  defp build_proxy(%Metadata{main_port: nil}), do: %{}
-
-  defp build_proxy(%Metadata{
-         main_port: %{target: target, source: source, slug: slug}
-       }) do
-    %{
-      "#{slug}" => %{
-        "type" => "proxy",
-        "connect" => "tcp:127.0.0.1:#{target}",
-        "listen" => "tcp:0.0.0.0:#{source}"
       }
     }
   end
