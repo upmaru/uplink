@@ -11,7 +11,7 @@ defmodule Uplink.Router do
   plug :dispatch
 
   get "/health" do
-    json(conn, :ok, %{message: "Live long, and prosper."})
+    json(conn, :ok, %{message: "Live long and prosper."})
   end
 
   forward "/deployments", to: Deployment.Router

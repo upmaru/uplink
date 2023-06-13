@@ -12,8 +12,7 @@ defmodule Uplink.Packages.Install.Validate do
   alias Members.Actor
 
   alias Packages.{
-    Install,
-    Metadata
+    Install
   }
 
   alias Clients.LXD
