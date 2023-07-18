@@ -28,7 +28,8 @@ config :uplink, Oban,
     install: 1,
     deployment: 1,
     instance: 1,
-    caddy: 1
+    caddy: 1,
+    components: 1
   ]
 
 config :logger,
