@@ -41,7 +41,7 @@ defmodule Uplink.Components.Instance.ProvisionTest do
 
   describe "perform" do
     test "provisions new postgresql database", %{bypass: bypass} do
-      Bypass.expect_once(bypass, "GET", "/uplink/components/1", fn conn ->
+      Bypass.expect_once(bypass, "GET", "/uplink/self/components/1", fn conn ->
         conn
         |> Plug.Conn.put_resp_header("content-type", "application/json")
         |> Plug.Conn.resp(
@@ -53,7 +53,7 @@ defmodule Uplink.Components.Instance.ProvisionTest do
       Bypass.expect_once(
         bypass,
         "POST",
-        "/uplink/components/1/instances",
+        "/uplink/self/components/1/instances",
         fn conn ->
           conn
           |> Plug.Conn.put_resp_header("content-type", "application/json")

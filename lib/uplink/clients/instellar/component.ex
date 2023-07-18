@@ -4,6 +4,7 @@ defmodule Uplink.Clients.Instellar.Component do
   def show(component_id) do
     [
       Instellar.endpoint(),
+      "self",
       "components",
       "#{component_id}"
     ]

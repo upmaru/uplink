@@ -4,6 +4,7 @@ defmodule Uplink.Clients.Instellar.Component.Instance do
   def create(component_id, params) do
     [
       Instellar.endpoint(),
+      "self",
       "components",
       "#{component_id}",
       "instances"
