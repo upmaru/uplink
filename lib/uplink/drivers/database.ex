@@ -4,12 +4,7 @@ defmodule Uplink.Drivers.Database do
       with {:ok, master_credential} <-
              Formation.Postgresql.Credential.create(credential_params),
            {:ok, generated_credential} <-
-             Formation.Postgresql.create_user_and_database(
-               master_credential.host,
-               master_credential.port,
-               master_credential.username,
-               master_credential.password
-             ) do
+             Formation.Postgresql.create_user_and_database(master_credential) do
         {:ok, generated_credential}
       end
     end

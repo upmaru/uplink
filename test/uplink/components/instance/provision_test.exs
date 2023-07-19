@@ -12,7 +12,8 @@ defmodule Uplink.Components.Instance.ProvisionTest do
           "username" => System.get_env("POSTGRES_USERNAME"),
           "password" => System.get_env("POSTGRES_PASSWORD"),
           "host" => System.get_env("POSTGRES_HOST"),
-          "port" => "5432"
+          "port" => "5432",
+          "ssl" => false
         }
       }
     }
