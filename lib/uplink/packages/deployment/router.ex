@@ -52,7 +52,7 @@ defmodule Uplink.Packages.Deployment.Router do
            Packages.get_or_create_deployment(app, deployment_params),
          {:ok, %Members.Actor{} = actor} <-
            Members.get_or_create_actor(actor_params),
-         {:ok, %Install{} = _install} <-
+         {:ok, %Install{} = install} <-
            Packages.create_install(deployment, instellar_installation_id),
          :ok <-
            Cache.put(
@@ -60,11 +60,18 @@ defmodule Uplink.Packages.Deployment.Router do
               instellar_installation_id},
              metadata
            ) do
-      if deployment.current_state == "created" do
-        Packages.transition_deployment_with(deployment, actor, "prepare")
+      case deployment.current_state do
+        "created" ->
+          Packages.transition_deployment_with(deployment, actor, "prepare")
+
+        "live" ->
+          Packages.transition_install_with(install, actor, "validate")
+
+        _ ->
+          {:ok, :do_nothing}
       end
 
-      json(conn, :created, %{id: deployment.id})
+      json(conn, :created, %{id: deployment.id, install: %{id: install.id}})
     else
       {:error, %Ecto.Changeset{} = error} ->
         json(conn, :unprocessable_entity, handle_changeset(error))

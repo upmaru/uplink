@@ -3,6 +3,7 @@ defmodule Uplink.Packages.Deployment.RouterTest do
   use Plug.Test
 
   alias Uplink.{
+    Repo,
     Packages,
     Members
   }
@@ -90,8 +91,12 @@ defmodule Uplink.Packages.Deployment.RouterTest do
 
       assert conn.status == 201
 
-      assert %{"data" => %{"id" => _deployment_id}} =
+      assert %{"data" => %{"id" => deployment_id}} =
                Jason.decode!(conn.resp_body)
+
+      deployment = Uplink.Repo.get(Uplink.Packages.Deployment, deployment_id)
+
+      assert deployment.current_state == "preparing"
     end
   end
 
@@ -124,6 +129,70 @@ defmodule Uplink.Packages.Deployment.RouterTest do
                  "errors" => %{"deployment_id" => ["has already been taken"]}
                }
              } = Jason.decode!(conn.resp_body)
+    end
+  end
+
+  describe "repeated deployment push with different installation_id" do
+    setup do
+      original_signature =
+        :crypto.mac(:hmac, :sha256, Uplink.Secret.get(), @valid_body)
+        |> Base.encode16()
+        |> String.downcase()
+
+      conn =
+        conn(:post, "/", @valid_body)
+        |> put_req_header(
+          "x-uplink-signature-256",
+          "sha256=#{original_signature}"
+        )
+        |> put_req_header("content-type", "application/json")
+        |> Router.call(@opts)
+
+      %{"data" => %{"id" => deployment_id}} = Jason.decode!(conn.resp_body)
+
+      deployment = Uplink.Repo.get(Uplink.Packages.Deployment, deployment_id)
+
+      {:ok, _deployment} =
+        deployment
+        |> Ecto.Changeset.cast(%{current_state: "live"}, [:current_state])
+        |> Repo.update()
+
+      body =
+        Jason.decode!(@valid_body)
+        |> Map.merge(%{"installation_id" => 2})
+        |> Jason.encode!()
+
+      signature =
+        :crypto.mac(:hmac, :sha256, Uplink.Secret.get(), body)
+        |> Base.encode16()
+        |> String.downcase()
+
+      {:ok, body: body, signature: signature}
+    end
+
+    test "returns 201 for creating install", %{body: body, signature: signature} do
+      conn =
+        conn(:post, "/", body)
+        |> put_req_header("x-uplink-signature-256", "sha256=#{signature}")
+        |> put_req_header("content-type", "application/json")
+        |> Router.call(@opts)
+
+      assert conn.status == 201
+
+      assert %{
+               "data" => %{
+                 "id" => deployment_id,
+                 "install" => %{"id" => install_id}
+               }
+             } = Jason.decode!(conn.resp_body)
+
+      deployment = Uplink.Repo.get(Uplink.Packages.Deployment, deployment_id)
+
+      assert deployment.current_state == "live"
+
+      install = Uplink.Repo.get(Uplink.Packages.Install, install_id)
+
+      assert install.current_state == "validating"
     end
   end
 
