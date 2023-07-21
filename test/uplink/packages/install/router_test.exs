@@ -88,4 +88,21 @@ defmodule Uplink.Packages.Install.RouterTest do
       assert %{"SOMETHING" => "blah"} = variables
     end
   end
+
+  describe "render instances" do
+    test "successfully returns instances", %{install: install, address: address} do
+      conn =
+        conn(:get, "/#{install.instellar_installation_id}/instances")
+        |> Map.put(:remote_ip, address)
+        |> put_req_header("content-type", "application/json")
+        |> Router.call(@opts)
+
+      assert conn.status == 200
+
+      assert %{"data" => %{"attributes" => %{"instances" => instances}}} =
+               Jason.decode!(conn.resp_body)
+
+      assert ["something-1"] = instances
+    end
+  end
 end

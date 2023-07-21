@@ -94,6 +94,15 @@ defmodule Uplink.Packages.Install.Manager do
       |> Cache.put(metadata)
 
       %{metadata: metadata}
+    else
+      {:error, _} ->
+        metadata = %Metadata{}
+
+        install
+        |> cache_key()
+        |> Cache.put(metadata)
+
+        %{metadata: metadata}
     end
   end
 end

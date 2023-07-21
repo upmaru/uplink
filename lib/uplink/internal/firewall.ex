@@ -56,7 +56,8 @@ defmodule Uplink.Internal.Firewall do
       [_channel, org, package] ->
         "#{org}.#{package}"
 
-      [instellar_installation_id, "variables"] ->
+      [instellar_installation_id, path]
+      when path in ["variables", "instances"] ->
         build_from_install(instellar_installation_id)
     end
   end

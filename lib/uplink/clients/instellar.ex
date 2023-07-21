@@ -8,6 +8,7 @@ defmodule Uplink.Clients.Instellar do
     Deployment,
     Instance,
     Register,
+    Component,
     Self
   }
 
@@ -35,6 +36,14 @@ defmodule Uplink.Clients.Instellar do
   defdelegate get_deployment(install),
     to: Deployment,
     as: :show
+
+  defdelegate get_component(component_id),
+    to: Component,
+    as: :show
+
+  defdelegate create_component_instance(component_id, params),
+    to: Component.Instance,
+    as: :create
 
   defdelegate transition_instance(instance, install, event_name, options \\ []),
     to: Instance,

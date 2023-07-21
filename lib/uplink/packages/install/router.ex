@@ -26,16 +26,7 @@ defmodule Uplink.Packages.Install.Router do
 
   get "/:instellar_installation_id/variables" do
     with :ok <- Firewall.allowed?(conn),
-         %Install{} = install <-
-           Install
-           |> order_by(desc: :inserted_at)
-           |> preload([:deployment])
-           |> where(
-             [i],
-             i.instellar_installation_id == ^instellar_installation_id
-           )
-           |> limit(1)
-           |> Repo.one(),
+         %Install{} = install <- get_install(instellar_installation_id),
          %{metadata: %{variables: variables}} <-
            Packages.build_install_state(install) do
       json(conn, :ok, %{
@@ -55,5 +46,38 @@ defmodule Uplink.Packages.Install.Router do
       _ ->
         halt(conn)
     end
+  end
+
+  get "/:instellar_installation_id/instances" do
+    with :ok <- Firewall.allowed?(conn),
+         %Install{} = install <- get_install(instellar_installation_id),
+         %{metadata: %{instances: instances}} <-
+           Packages.build_install_state(install) do
+      json(conn, :ok, %{
+        attributes: %{
+          instances:
+            instances
+            |> Enum.map(fn instance -> instance.slug end)
+        }
+      })
+    else
+      {:error, :forbidden} ->
+        json(conn, :forbidden, %{error: %{message: "forbidden"}})
+
+      _ ->
+        halt(conn)
+    end
+  end
+
+  defp get_install(instellar_installation_id) do
+    Install
+    |> order_by(desc: :inserted_at)
+    |> preload([:deployment])
+    |> where(
+      [i],
+      i.instellar_installation_id == ^instellar_installation_id
+    )
+    |> limit(1)
+    |> Repo.one()
   end
 end
