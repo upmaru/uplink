@@ -23,6 +23,13 @@ defmodule Uplink.Scenarios.Deployment do
         "source" => 49152,
         "target" => 4000
       },
+      "ports" => [
+        %{
+          "slug" => "grpc",
+          "source" => 49153,
+          "target" => 6000
+        }
+      ],
       "hosts" => ["something.com"],
       "variables" => [
         %{"key" => "SOMETHING", "value" => "blah"}

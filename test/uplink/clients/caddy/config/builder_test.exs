@@ -20,8 +20,17 @@ defmodule Uplink.Clients.Caddy.Config.BuilderTest do
              Uplink.Clients.Caddy.build_new_config()
 
     assert %{http: %{servers: %{"uplink" => server}}} = apps
-    assert %{routes: [route]} = server
-    assert %{handle: [handle], match: [match]} = route
+    assert %{routes: [first_route, second_route]} = server
+
+    assert %{handle: [handle], match: [match]} = first_route
+    assert %{handle: [second_handle], match: [second_match]} = second_route
+
+    assert "grpc.something.com" in second_match.host
+
+    [second_upstream] = second_handle.upstreams
+
+    assert second_upstream.dial =~ "6000"
+
     assert %{handler: "reverse_proxy"} = handle
     assert %{host: _hosts} = match
 
