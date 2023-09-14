@@ -57,7 +57,9 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
     %{
       "uplink" => %{
         listen: [":443"],
-        routes: Enum.map(installs, &build_route/1)
+        routes:
+          Enum.map(installs, &build_route/1)
+          |> List.flatten()
       }
     }
   end
@@ -65,7 +67,8 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
   defp build_route(
          %{install: %{deployment: %{app: _app}}, metadata: metadata} = _state
        ) do
-    %{
+    main_route = %{
+      group: "installation_#{metadata.id}",
       match: [%{host: metadata.hosts}],
       handle: [
         %{
@@ -94,5 +97,47 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
         }
       ]
     }
+
+    sub_routes =
+      metadata.ports
+      |> Enum.map(fn port ->
+        hosts =
+          Enum.map(metadata.hosts, fn host ->
+            port.slug <> "." <> host
+          end)
+
+        %{
+          group: "installation_#{metadata.id}",
+          match: [%{host: hosts}],
+          handle: [
+            %{
+              handler: "reverse_proxy",
+              load_balancing: %{
+                selection_policy: %{
+                  policy: "ip_hash"
+                }
+              },
+              health_checks: %{
+                passive: %{
+                  fail_duration: "10s",
+                  max_fails: 3,
+                  unhealthy_request_count: 80,
+                  unhealthy_status: [500, 501, 502, 503, 504],
+                  unhealthy_latency: "30s"
+                }
+              },
+              upstreams:
+                Enum.map(metadata.instances, fn instance ->
+                  %{
+                    dial: "#{instance.slug}:#{port.target}",
+                    max_requests: 80
+                  }
+                end)
+            }
+          ]
+        }
+      end)
+
+    [main_route | sub_routes]
   end
 end

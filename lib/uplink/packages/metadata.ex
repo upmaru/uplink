@@ -8,11 +8,9 @@ defmodule Uplink.Packages.Metadata do
     field :slug, :string
     field :hosts, {:array, :string}, default: []
 
-    embeds_one :main_port, Port, primary_key: false do
-      field :slug, :string
-      field :source, :integer
-      field :target, :integer
-    end
+    embeds_one :main_port, __MODULE__.Port
+
+    embeds_many :ports, __MODULE__.Port
 
     embeds_one :channel, Channel, primary_key: false do
       field :slug, :string
@@ -51,14 +49,9 @@ defmodule Uplink.Packages.Metadata do
     |> validate_required([:id, :slug])
     |> cast_embed(:channel, required: true, with: &channel_changeset/2)
     |> cast_embed(:instances, required: true, with: &instance_changeset/2)
-    |> cast_embed(:main_port, with: &port_changeset/2)
+    |> cast_embed(:main_port)
+    |> cast_embed(:ports)
     |> cast_embed(:variables, with: &variable_changeset/2)
-  end
-
-  defp port_changeset(port, params) do
-    port
-    |> cast(params, [:slug, :source, :target])
-    |> validate_required([:slug, :source, :target])
   end
 
   defp organization_changeset(organization, params) do

@@ -38,7 +38,7 @@ defmodule Uplink.Clients.Caddy.Apps.Server do
 
   defp route_changeset(route, params) do
     route
-    |> cast(params, [:handle])
+    |> cast(params, [:handle, :group])
     |> cast_embed(:match, with: &match_changeset/2)
   end
 
