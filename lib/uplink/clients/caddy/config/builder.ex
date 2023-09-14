@@ -101,9 +101,10 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
     sub_routes =
       metadata.ports
       |> Enum.map(fn port ->
-        hosts = Enum.map(metadata.hosts, fn host ->
-          port.slug <> "." <> host
-        end)
+        hosts =
+          Enum.map(metadata.hosts, fn host ->
+            port.slug <> "." <> host
+          end)
 
         %{
           group: "installation_#{metadata.id}",
