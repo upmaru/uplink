@@ -21,7 +21,11 @@ defmodule Uplink.Scenarios.Deployment do
       "main_port" => %{
         "slug" => "web",
         "source" => 49152,
-        "target" => 4000
+        "target" => 4000,
+        "routing" => %{
+          "router_id" => 1,
+          "paths" => ["/configure*"]
+        }
       },
       "ports" => [
         %{

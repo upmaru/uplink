@@ -67,9 +67,30 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
   defp build_route(
          %{install: %{deployment: %{app: _app}}, metadata: metadata} = _state
        ) do
+    main_routing = Map.get(metadata.main_port, :routing)
+
+    main_paths =
+      if main_routing do
+        main_routing.paths
+      else
+        ["*"]
+      end
+
+    main_group =
+      if main_routing do
+        "router_#{main_routing.router_id}"
+      else
+        "installation_#{metadata.id}"
+      end
+
     main_route = %{
-      group: "installation_#{metadata.id}",
-      match: [%{host: metadata.hosts}],
+      group: main_group,
+      match: [
+        %{
+          host: metadata.hosts,
+          path: main_paths
+        }
+      ],
       handle: [
         %{
           handler: "reverse_proxy",
@@ -106,9 +127,28 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
             port.slug <> "." <> host
           end)
 
+        routing = Map.get(port, :routing)
+
+        paths =
+          if routing do
+            routing.paths
+          else
+            ["*"]
+          end
+
+        group =
+          if routing,
+            do: "router_#{routing.router_id}",
+            else: "installation_#{metadata.id}"
+
         %{
-          group: "installation_#{metadata.id}",
-          match: [%{host: hosts}],
+          group: group,
+          match: [
+            %{
+              host: hosts,
+              path: paths
+            }
+          ],
           handle: [
             %{
               handler: "reverse_proxy",
