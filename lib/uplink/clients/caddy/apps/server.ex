@@ -17,6 +17,7 @@ defmodule Uplink.Clients.Caddy.Apps.Server do
         @derive Jason.Encoder
 
         field :host, {:array, :string}
+        field :path, {:array, :string}, default: ["*"]
       end
 
       field :handle, {:array, :map}
@@ -44,6 +45,6 @@ defmodule Uplink.Clients.Caddy.Apps.Server do
 
   defp match_changeset(match, params) do
     match
-    |> cast(params, [:host])
+    |> cast(params, [:host, :path])
   end
 end

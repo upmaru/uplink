@@ -25,6 +25,10 @@ defmodule Uplink.Clients.Caddy.Config.BuilderTest do
     assert %{handle: [handle], match: [match]} = first_route
     assert %{handle: [second_handle], match: [second_match]} = second_route
 
+    assert match.path == ["/configure*"]
+
+    assert second_match.path == ["*"]
+
     assert "grpc.something.com" in second_match.host
 
     [second_upstream] = second_handle.upstreams
