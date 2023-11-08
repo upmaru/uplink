@@ -76,8 +76,8 @@ jobs:
         run: pakman push
         shell: alpine.sh {0}
         env:
-          WORKFLOW_REF: ${{ github.ref }}
-          WORKFLOW_SHA: ${{ github.sha }}
+          WORKFLOW_REF: ${{ github.event.workflow_run.head_branch }}
+          WORKFLOW_SHA: ${{ github.event.workflow_run.head_sha }}
           INSTELLAR_ENDPOINT: ${{vars.INSTELLAR_ENDPOINT}}
           INSTELLAR_PACKAGE_TOKEN: ${{secrets.INSTELLAR_PACKAGE_TOKEN}}
           INSTELLAR_AUTH_TOKEN: ${{secrets.INSTELLAR_AUTH_TOKEN}}
