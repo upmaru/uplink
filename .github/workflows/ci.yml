@@ -30,7 +30,7 @@ jobs:
       - name: Install OS Deps
         run: |
           apk update && apk add --update tar build-base libsodium-dev \
-            elixir nodejs npm
+            elixir nodejs npm erlang-dialyzer
       - name: Retrieve Cached Dependencies
         uses: actions/cache@v3
         id: mix-cache
@@ -73,7 +73,7 @@ jobs:
       - name: Install Dependencies
         run: |
           apk update && apk add --update tar build-base libsodium-dev \
-            elixir nodejs npm
+            elixir nodejs npm erlang-dialyzer
           mix local.rebar --force
           mix local.hex --force
       - name: Retrieve Cached Dependencies
@@ -126,7 +126,7 @@ jobs:
       - name: Install Dependencies
         run: |
           apk update && apk add --update tar build-base libsodium-dev \
-            elixir nodejs npm
+            elixir nodejs npm erlang-dialyzer
           mix local.rebar --force
           mix local.hex --force
       - name: Retrieve Cached Dependencies
