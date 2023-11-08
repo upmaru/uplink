@@ -11,7 +11,7 @@ dependencies:
     - s6
     - uplink-openrc
     
-stack: alpine/3.17
+stack: alpine/3.18
 
 build:
   destinations: 
@@ -31,6 +31,13 @@ run:
   - name: migrate
     binary: uplink
     call: 'eval Uplink.Release.Tasks.migrate'
+  - name: console
+    binary: uplink
+    call: remote
+  - name: logs
+    binary: tail
+    path: /usr/bin
+    call: -f -n 100 /var/log/uplink/current
   services:
   - name: web
     binary: uplink

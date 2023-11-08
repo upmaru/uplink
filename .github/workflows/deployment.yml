@@ -8,43 +8,73 @@ on:
       - completed
 
 jobs:
-  build_and_deploy:
-    name: Build and Deploy
-    runs-on: ubuntu-20.04
+  build:
+    name: Build
+    runs-on: ubuntu-latest
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
       - name: 'Checkout'
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: ${{ github.event.workflow_run.head_branch }}
           fetch-depth: 0
 
-      - name: 'Pakman'
-        uses: upmaru/pakman@alpine-3.17-7.4
+      - name: Setup Pakman
+        uses: upmaru/pakman@v8
         with:
-          command: 'bootstrap'
+          alpine: v3.18
+
+      - name: Bootstrap Configuration
+        run: |
+          pakman bootstrap
+        shell: alpine.sh {0}
         env:
           ABUILD_PRIVATE_KEY: ${{secrets.ABUILD_PRIVATE_KEY}}
           ABUILD_PUBLIC_KEY: ${{secrets.ABUILD_PUBLIC_KEY}}
 
-      - name: 'Build APK'
-        uses: upmaru/pakman@alpine-3.17-7.4
-        with:
-          entrypoint: /var/lib/pakman/bin/build.sh
+      - name: 'Build Package'
+        run: |
+          cd "$GITHUB_WORKSPACE"/.apk/"$GITHUB_REPOSITORY" || exit
 
-      - name: 'Archive'
-        uses: upmaru/pakman@alpine-3.17-7.4
-        with:
-          entrypoint: /var/lib/pakman/bin/archive.sh
+          abuild snapshot
+          abuild -r
+        shell: alpine.sh {0}
 
-      - name: 'Create Deployment'
-        uses: upmaru/pakman@alpine-3.17-7.4
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v3
         with:
-          command: 'create_deployment'
-          archive: 'packages.zip'
+          name: ${{ runner.arch }}
+          path: /home/runner/packages
+
+  deploy:
+    name: Deploy
+    needs: build
+    runs-on: ubuntu-latest
+    steps: 
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v3
+        with: 
+          path: /home/runner/artifacts
+
+      - name: Setup Pakman
+        uses: upmaru/pakman@v8
+        with:
+          alpine: v3.18
+
+      - name: Merge Artifact
+        run: |
+          cp -R /home/runner/artifacts/X64/. /home/runner/packages/
+          sudo zip -r /home/runner/packages.zip "$HOME"/packages
+        shell: alpine.sh {0}
+
+      - name: Push
+        run: pakman push
+        shell: alpine.sh {0}
         env:
-          WORKFLOW_REF: ${{ github.event.workflow_run.head_branch }}
-          WORKFLOW_SHA: ${{ github.event.workflow_run.head_sha }}
-          INSTELLAR_ENDPOINT: ${{secrets.INSTELLAR_ENDPOINT}}
+          WORKFLOW_REF: ${{ github.ref }}
+          WORKFLOW_SHA: ${{ github.sha }}
+          INSTELLAR_ENDPOINT: ${{vars.INSTELLAR_ENDPOINT}}
           INSTELLAR_PACKAGE_TOKEN: ${{secrets.INSTELLAR_PACKAGE_TOKEN}}
           INSTELLAR_AUTH_TOKEN: ${{secrets.INSTELLAR_AUTH_TOKEN}}
