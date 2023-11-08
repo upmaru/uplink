@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
 
     container:
-      image: alpine:3.14
+      image: alpine:3.18
 
     steps:
       - name: Cancel Previous Runs
@@ -50,13 +50,14 @@ jobs:
           mix deps.get
           mix deps.compile
           mix dialyzer --plt
+
   static_code_analysis:
     name: Static Code Analysis
     needs: deps
     runs-on: ubuntu-latest
 
     container:
-      image: alpine:3.14
+      image: alpine:3.18
 
     steps:
       - name: Cancel Previous Runs
@@ -97,11 +98,11 @@ jobs:
     runs-on: ubuntu-latest
 
     container:
-      image: alpine:3.14
+      image: alpine:3.18
 
     services:
       postgres:
-        image: postgres:11.5
+        image: postgres:15.4
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
