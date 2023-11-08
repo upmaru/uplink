@@ -75,6 +75,6 @@ jobs:
         env:
           WORKFLOW_REF: ${{ github.ref }}
           WORKFLOW_SHA: ${{ github.sha }}
-          INSTELLAR_ENDPOINT: ${{env.INSTELLAR_ENDPOINT}}
+          INSTELLAR_ENDPOINT: ${{vars.INSTELLAR_ENDPOINT}}
           INSTELLAR_PACKAGE_TOKEN: ${{secrets.INSTELLAR_PACKAGE_TOKEN}}
           INSTELLAR_AUTH_TOKEN: ${{secrets.INSTELLAR_AUTH_TOKEN}}
