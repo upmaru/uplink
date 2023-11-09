@@ -42,7 +42,7 @@ defmodule Uplink.Clients.Caddy.Config do
   def load(params) do
     [Caddy.config(:endpoint), "load"]
     |> Path.join()
-    |> Req.post!({:json, params})
+    |> Req.post!(json: params, receive_timeout: 60_000)
     |> case do
       %{status: 200, body: body} ->
         {:ok, body}

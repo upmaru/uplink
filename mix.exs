@@ -4,7 +4,7 @@ defmodule Uplink.MixProject do
   def project do
     [
       app: :uplink,
-      version: "0.9.5",
+      version: "0.9.6",
       elixir: "~> 1.9",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
@@ -50,7 +50,7 @@ defmodule Uplink.MixProject do
       {:oban, "~> 2.14"},
 
       # Rest Client
-      {:req, "~> 0.2.1"},
+      {:req, "~> 0.4"},
 
       # File System
       {:file_system, "~> 0.2.10"},

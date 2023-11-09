@@ -22,7 +22,7 @@ defmodule Uplink.Clients.Instellar.Self do
   def restore do
     [Clients.Instellar.endpoint(), "self", "restore"]
     |> Path.join()
-    |> Req.post!({:json, %{}}, headers: headers())
+    |> Req.post!(json: %{}, headers: headers())
     |> case do
       %{status: status, body: %{"data" => %{"attributes" => attributes}}}
       when status in [201, 200] ->
