@@ -11,12 +11,32 @@ defmodule Uplink.Packages.App.Manager do
     |> Repo.get_by(slug: slug)
     |> case do
       nil ->
-        %App{}
-        |> App.changeset(%{slug: slug})
-        |> Repo.insert!()
+        create(%{slug: slug})
 
       %App{} = app ->
         app
+    end
+  end
+
+  def create(params) do
+    %App{}
+    |> App.changeset(params)
+    |> Repo.insert()
+    |> case do
+      {:ok, app} ->
+        app
+
+      {:error,
+       %Ecto.Changeset{
+         changes: %{slug: slug},
+         errors: [
+           slug: {_, [constraint: :unique, constraint_name: "apps_slug_index"]}
+         ]
+       }} ->
+        Repo.get_by!(App, slug: slug)
+
+      error ->
+        error
     end
   end
 end
