@@ -50,7 +50,7 @@ defmodule Uplink.MixProject do
       {:oban, "~> 2.14"},
 
       # Rest Client
-      {:req, "~> 0.2.1"},
+      {:req, "~> 0.4"},
 
       # File System
       {:file_system, "~> 0.2.10"},

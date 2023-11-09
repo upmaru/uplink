@@ -18,13 +18,12 @@ defmodule Uplink.Clients.Instellar.Instance do
     ]
     |> Path.join()
     |> Req.post!(
-      {:json,
-       %{
-         "event" => %{
-           "name" => event_name,
-           "comment" => Keyword.get(options, :comment)
-         }
-       }},
+      json: %{
+        "event" => %{
+          "name" => event_name,
+          "comment" => Keyword.get(options, :comment)
+        }
+      },
       headers: Instellar.headers(install.deployment.hash)
     )
     |> case do

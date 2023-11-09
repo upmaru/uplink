@@ -7,7 +7,7 @@ defmodule Uplink.Clients.Instellar.Register do
 
     [Instellar.endpoint(), "self", "registration"]
     |> Path.join()
-    |> Req.post!({:json, %{}}, headers: headers)
+    |> Req.post!(json: %{}, headers: headers)
     |> case do
       %{status: status, body: %{"data" => %{"attributes" => attributes}}}
       when status in [201, 200] ->

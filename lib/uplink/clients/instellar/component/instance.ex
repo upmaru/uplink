@@ -11,7 +11,7 @@ defmodule Uplink.Clients.Instellar.Component.Instance do
     ]
     |> Path.join()
     |> Req.post!(
-      {:json, params},
+      json: params,
       headers: Instellar.Self.headers()
     )
     |> case do
