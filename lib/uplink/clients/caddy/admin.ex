@@ -4,10 +4,6 @@ defmodule Uplink.Clients.Caddy.Admin do
 
   @derive Jason.Encoder
 
-  @mappings %{
-    "zerossl" => __MODULE__.Issuer.ZeroSSL
-  }
-
   @primary_key false
   embedded_schema do
     embeds_one :identity, Identity, primary_key: false do
@@ -34,24 +30,5 @@ defmodule Uplink.Clients.Caddy.Admin do
   defp identity_changeset(identity, params) do
     identity
     |> cast(params, [:identifiers, :issuers])
-    |> maybe_cast_issuers()
-  end
-
-  defp maybe_cast_issuers(changeset) do
-    if issuers = get_change(changeset, :issuers) do
-      issuers =
-        issuers
-        |> Enum.map(fn issuer ->
-          module =
-            Map.get(@mappings, issuer["module"]) ||
-              Map.get(@mappings, issuer[:module])
-
-          module.parse(issuer)
-        end)
-
-      put_change(changeset, :issuers, issuers)
-    else
-      changeset
-    end
   end
 end
