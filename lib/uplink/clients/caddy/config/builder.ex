@@ -30,18 +30,17 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
       logging: %{
         sink: %{
           writer: %{
-            output: "stdout"
+            output: "discard"
           }
         },
         logs: %{
-          uplink: %{
+          default: %{
             writer: %{
               output: "stdout"
             },
             encoder: %{
               format: "console"
-            },
-            include: ["http.log.access"]
+            }
           }
         }
       }
@@ -88,7 +87,7 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
           Enum.map(installs, &build_route/1)
           |> List.flatten(),
         logs: %{
-          default_logger_name: "uplink"
+          default_logger_name: "default"
         }
       }
     }
