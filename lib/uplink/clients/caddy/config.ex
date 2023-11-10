@@ -16,9 +16,12 @@ defmodule Uplink.Clients.Caddy.Config do
   def parse(body) do
     body
     |> Enum.map(fn {key, result} ->
-      mapping = Map.fetch!(@mappings, key)
-      {atom_key, module} = mapping
-      {atom_key, module.parse(result)}
+      if mapping = Map.get(@mappings, key) do
+        {atom_key, module} = mapping
+        {atom_key, module.parse(result)}
+      else
+        {String.to_existing_atom(key), result}
+      end
     end)
     |> Enum.into(%{})
   end

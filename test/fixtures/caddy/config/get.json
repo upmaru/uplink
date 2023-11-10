@@ -21,6 +21,23 @@
       }
     }
   },
+  "logging": {
+    "sink": {
+      "writer": {
+        "output": "stdout"
+      }
+    },
+    "logs": {
+      "default": {
+        "writer": {
+          "output": "stdout"
+        },
+        "encoder": {
+          "format": "console"
+        }
+      }
+    }
+  },
   "storage": {
     "module": "s3",
     "access_id": "something",
