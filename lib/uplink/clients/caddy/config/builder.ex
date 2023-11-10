@@ -34,13 +34,14 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
           }
         },
         logs: %{
-          default: %{
+          uplink: %{
             writer: %{
               output: "stdout"
             },
             encoder: %{
               format: "console"
-            }
+            },
+            include: ["http.log.access"]
           }
         }
       }
@@ -79,9 +80,16 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
     %{
       "uplink" => %{
         listen: [":443"],
+        listener_wrappers: [
+          %{wrapper: "proxy_protocol"},
+          %{wrapper: "tls"}
+        ],
         routes:
           Enum.map(installs, &build_route/1)
-          |> List.flatten()
+          |> List.flatten(),
+        logs: %{
+          default_logger_name: "uplink"
+        }
       }
     }
   end
@@ -118,7 +126,7 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
           handler: "reverse_proxy",
           load_balancing: %{
             selection_policy: %{
-              policy: "ip_hash"
+              policy: "least_conn"
             }
           },
           health_checks: %{
@@ -176,7 +184,7 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
               handler: "reverse_proxy",
               load_balancing: %{
                 selection_policy: %{
-                  policy: "ip_hash"
+                  policy: "least_conn"
                 }
               },
               health_checks: %{

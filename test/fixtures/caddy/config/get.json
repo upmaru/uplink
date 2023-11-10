@@ -6,6 +6,10 @@
           "listen": [
             ":2015"
           ],
+          "listener_wrappers": [
+            {"wrapper": "proxy_protocol"},
+            {"wrapper": "tls"}
+          ],
           "routes": [
             {
               "handle": [
@@ -16,7 +20,10 @@
                 }
               ]
             }
-          ]
+          ],
+          "logs": {
+            "default_logger_name": "default"
+          }
         }
       }
     }

@@ -7,6 +7,8 @@ defmodule Uplink.Clients.Caddy.Apps.Server do
   @primary_key false
   embedded_schema do
     field :listen, {:array, :string}
+    field :listener_wrappers, {:array, :map}
+    field :logs, :map
 
     embeds_many :routes, Route, primary_key: false do
       @derive Jason.Encoder
@@ -27,7 +29,7 @@ defmodule Uplink.Clients.Caddy.Apps.Server do
 
   def changeset(server, params) do
     server
-    |> cast(params, [:listen])
+    |> cast(params, [:listen, :listener_wrappers, :logs])
     |> cast_embed(:routes, with: &route_changeset/2)
   end
 
