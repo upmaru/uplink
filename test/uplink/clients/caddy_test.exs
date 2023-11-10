@@ -28,6 +28,17 @@ defmodule Uplink.Clients.CaddyTest do
 
       assert {:ok, config} = Caddy.get_config()
 
+      assert %{apps: %{http: %{servers: servers}}} = config
+
+      assert %{"example" => server} = servers
+
+      assert %{
+               listen: _listen,
+               listener_wrappers: _wrappers,
+               logs: %{"default_logger_name" => _},
+               routes: _routes
+             } = server
+
       assert %{apps: %Caddy.Apps{}} = config
     end
   end
