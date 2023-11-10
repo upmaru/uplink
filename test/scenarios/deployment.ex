@@ -83,7 +83,18 @@ defmodule Uplink.Scenarios.Deployment do
             "secret_access_key" => "secret"
           }
         }
-      }
+      },
+      "instances" => [
+        %{
+          "id" => 1,
+          "slug" => "uplink-01",
+          "node" => %{
+            "id" => 1,
+            "slug" => "some-node-01",
+            "public_ip" => "127.0.0.1"
+          }
+        }
+      ]
     })
 
     Application.put_env(

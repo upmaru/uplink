@@ -39,8 +39,7 @@ defmodule Uplink.Clients.Caddy.Config.BuilderTest do
     assert %{host: _hosts} = match
 
     assert %{identity: identity} = admin
-    assert %{issuers: [zerossl]} = identity
-    assert %{module: "zerossl"} = zerossl
+    assert %{issuers: [], identifiers: ["127.0.0.1"]} = identity
 
     assert %{module: "s3"} = storage
   end

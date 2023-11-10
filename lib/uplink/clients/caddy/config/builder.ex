@@ -20,25 +20,47 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
         metadata.hosts == [] || is_nil(metadata.main_port)
       end)
 
-    %{"organization" => %{"storage" => storage_params} = organization} =
-      Uplink.Clients.Instellar.get_self()
+    %{"organization" => %{"storage" => storage_params}} =
+      uplink = Uplink.Clients.Instellar.get_self()
 
     %{
-      admin: admin(organization),
+      admin: admin(uplink),
       apps: apps(install_states),
-      storage: Storage.parse(storage_params)
+      storage: Storage.parse(storage_params),
+      logging: %{
+        sink: %{
+          writer: %{
+            output: "stdout"
+          }
+        },
+        logs: %{
+          default: %{
+            writer: %{
+              output: "stdout"
+            },
+            encoder: %{
+              format: "console"
+            }
+          }
+        }
+      }
     }
   end
 
-  def admin(%{"slug" => slug}) do
-    zero_ssl_api_key = Caddy.config(:zero_ssl_api_key)
+  def admin(uplink) do
+    identifiers =
+      if instances = Map.get(uplink, "instances") do
+        instances
+        |> Enum.map(fn i ->
+          i["node"]["public_ip"]
+        end)
+      else
+        []
+      end
 
     %{
       identity: %{
-        identifiers: ["uplink", slug],
-        issuers: [
-          %{module: "zerossl", api_key: zero_ssl_api_key}
-        ]
+        identifiers: identifiers
       }
     }
     |> Admin.parse()
