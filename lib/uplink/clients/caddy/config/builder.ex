@@ -26,7 +26,24 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
     %{
       admin: admin(uplink),
       apps: apps(install_states),
-      storage: Storage.parse(storage_params)
+      storage: Storage.parse(storage_params),
+      logging: %{
+        sink: %{
+          writer: %{
+            output: "stdout"
+          }
+        },
+        logs: %{
+          default: %{
+            writer: %{
+              output: "stdout"
+            },
+            encoder: %{
+              format: "console"
+            }
+          }
+        }
+      }
     }
   end
 
