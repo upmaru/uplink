@@ -60,4 +60,25 @@ hook:
     rc-service uplink stop
     rc-update del uplink
 
-
+kits:
+  - description: Limited to single node, good for simple setups
+    main: true
+    name: lite
+    ports: 
+      - name: web
+        target: 4040
+    variables:
+      - key: UPLINK_MODE
+        default_value: lite
+      - key: UPLINK_SECRET
+        driver: uplink/secret
+  - description: Can run on multiple nodes, requires postgresql database
+    name: pro
+    ports:
+      - name: web
+        target: 4040
+    variables:
+      - key: UPLINK_MODE
+        default_value: pro
+      - key: UPLINK_SECRET
+        driver: uplink/secret
