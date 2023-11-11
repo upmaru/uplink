@@ -27,7 +27,11 @@ defmodule Uplink.Packages.Deployment.Prepare do
       |> Repo.get(deployment_id)
       |> Repo.preload([:app])
 
-    handle_prepare(deployment, actor)
+    if deployment.current_state == "live" do
+      {:ok, :already_live}
+    else
+      handle_prepare(deployment, actor)
+    end
   end
 
   defp handle_prepare(

@@ -67,7 +67,7 @@ defmodule Uplink.Packages.Deployment.PrepareTest do
 
     {:ok, _installation} = Packages.create_install(deployment, 1)
 
-    {:ok, _transition} =
+    {:ok, %{resource: deployment}} =
       Packages.transition_deployment_with(deployment, actor, "prepare")
 
     {:ok, actor: actor, deployment: deployment, bypass: bypass}
@@ -89,5 +89,22 @@ defmodule Uplink.Packages.Deployment.PrepareTest do
                deployment_id: deployment.id,
                actor_id: actor.id
              })
+  end
+
+  describe "already live" do
+    setup %{deployment: deployment, actor: actor} do
+      {:ok, %{resource: deployment}} =
+        Packages.transition_deployment_with(deployment, actor, "complete")
+
+      {:ok, deployment: deployment}
+    end
+
+    test "dont prepare again", %{deployment: deployment, actor: actor} do
+      assert {:ok, :already_live} =
+               perform_job(Prepare, %{
+                 deployment_id: deployment.id,
+                 actor_id: actor.id
+               })
+    end
   end
 end
