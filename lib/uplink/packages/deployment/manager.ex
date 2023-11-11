@@ -36,19 +36,44 @@ defmodule Uplink.Packages.Deployment.Manager do
   end
 
   @spec get_or_create(%App{}, map) :: {:ok, %Deployment{}}
-  def get_or_create(%App{id: app_id}, params) do
+  def get_or_create(%App{id: app_id} = app, params) do
     hash = Map.get(params, :hash) || Map.get(params, "hash")
 
     Deployment
     |> Repo.get_by(app_id: app_id, hash: hash)
     |> case do
       nil ->
-        %Deployment{app_id: app_id}
-        |> Deployment.changeset(params)
-        |> Repo.insert()
+        create(app, params)
 
       %Deployment{} = deployment ->
         {:ok, deployment}
+    end
+  end
+
+  def create(%App{id: app_id}, params) do
+    %Deployment{app_id: app_id}
+    |> Deployment.changeset(params)
+    |> Repo.insert()
+    |> case do
+      {:ok, deployment} ->
+        {:ok, deployment}
+
+      {:error,
+       %Ecto.Changeset{
+         changes: %{hash: hash},
+         errors: [
+           hash:
+             {_,
+              [
+                constraint: :unique,
+                constraint_name: "deployments_app_id_hash_index"
+              ]}
+         ]
+       }} ->
+        {:ok, Repo.get_by!(Deployment, app_id: app_id, hash: hash)}
+
+      error ->
+        error
     end
   end
 
