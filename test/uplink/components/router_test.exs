@@ -1,5 +1,5 @@
 defmodule Uplink.Components.RouterTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
   use Plug.Test
   use Oban.Testing, repo: Uplink.Repo
 

@@ -68,24 +68,30 @@ defmodule Uplink.Packages.Instance.Cleanup do
     end
   end
 
-  defp finalize(name, install, "cleanup", %{
-         "instance" => %{"current_state" => current_state}
-       }) do
+  defp finalize(
+         name,
+         install,
+         "cleanup",
+         %{
+           "instance" => %{"current_state" => current_state}
+         } = args
+       ) do
     event_name = Map.get(@cleanup_mappings, current_state, "off")
+    comment = Map.get(args, "comment")
 
     Caddy.schedule_config_reload(install)
 
     Instellar.transition_instance(name, install, event_name,
-      comment: "[Uplink.Packages.Instance.Cleanup]"
+      comment: "[Uplink.Packages.Instance.Cleanup] #{inspect(comment)}"
     )
   end
 
   defp finalize(name, install, "deactivate_and_boot", args) do
-    comment = Map.get(args, "comment", "[Uplink.Packages.Instance.Cleanup]")
+    comment = Map.get(args, "comment")
 
     with {:ok, _transition} <-
            Instellar.transition_instance(name, install, "deactivate",
-             comment: comment
+             comment: "[Uplink.Packages.Instance.Cleanup] #{inspect(comment)}"
            ) do
       Instellar.transition_instance(name, install, "boot", comment: comment)
     end

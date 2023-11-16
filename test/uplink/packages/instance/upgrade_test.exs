@@ -429,5 +429,107 @@ defmodule Uplink.Packages.Instance.UpgradeTest do
       assert %Oban.Job{args: args} = job
       assert Map.get(args, "mode") == "deactivate_and_boot"
     end
+
+    test "on fail to retrieve pid error it schedules clean up", %{
+      bypass: bypass,
+      actor: actor,
+      install: install,
+      exec_instance: exec_instance,
+      metadata: metadata,
+      project: project_name
+    } do
+      instance_slug = "some-instance-01"
+
+      project_found = File.read!("test/fixtures/lxd/projects/show.json")
+
+      Bypass.expect_once(
+        bypass,
+        "GET",
+        "/1.0/projects/#{project_name}",
+        fn conn ->
+          conn
+          |> Plug.Conn.put_resp_header("content-type", "application/json")
+          |> Plug.Conn.resp(200, project_found)
+        end
+      )
+
+      Bypass.expect_once(
+        bypass,
+        "POST",
+        "/1.0/instances/#{instance_slug}/exec",
+        fn conn ->
+          assert %{"project" => project} = conn.query_params
+
+          assert project == project_name
+
+          assert {:ok, body, conn} = Plug.Conn.read_body(conn)
+          assert {:ok, %{"command" => command}} = Jason.decode(body)
+
+          assert command == [
+                   "/bin/sh",
+                   "-c",
+                   "apk update && apk add --upgrade #{metadata.channel.package.slug}\n"
+                 ]
+
+          conn
+          |> Plug.Conn.put_resp_header("content-type", "application/json")
+          |> Plug.Conn.resp(200, exec_instance)
+        end
+      )
+
+      exec_instance_params = Jason.decode!(exec_instance)
+      exec_instance_operation_id = exec_instance_params["metadata"]["id"]
+
+      pid_error = File.read!("test/fixtures/lxd/operations/pid_error.json")
+
+      Bypass.expect(
+        bypass,
+        "GET",
+        "/1.0/operations/#{exec_instance_operation_id}/wait",
+        fn conn ->
+          assert %{"timeout" => "120"} = conn.query_params
+
+          conn
+          |> Plug.Conn.put_resp_header("content-type", "application/json")
+          |> Plug.Conn.resp(200, pid_error)
+        end
+      )
+
+      Bypass.expect(
+        bypass,
+        "POST",
+        "/uplink/installations/#{install.instellar_installation_id}/instances/#{instance_slug}/events",
+        fn conn ->
+          assert {:ok, body, conn} = Plug.Conn.read_body(conn)
+          assert {:ok, body} = Jason.decode(body)
+
+          assert %{"event" => %{"name" => event_name}} = body
+          assert event_name == "upgrade"
+
+          conn
+          |> Plug.Conn.put_resp_header("content-type", "application/json")
+          |> Plug.Conn.resp(
+            201,
+            Jason.encode!(%{
+              "data" => %{"attributes" => %{"id" => 1, "name" => event_name}}
+            })
+          )
+        end
+      )
+
+      assert {:ok, job} =
+               perform_job(Upgrade, %{
+                 instance: %{
+                   slug: instance_slug,
+                   node: %{slug: "some-node-01"}
+                 },
+                 install_id: install.id,
+                 actor_id: actor.id
+               })
+
+      assert %Oban.Job{args: args} = job
+      assert Map.get(args, "mode") == "cleanup"
+      assert %{"err" => _err} = Map.get(args, "comment")
+    end
   end
 end
