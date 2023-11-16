@@ -504,7 +504,7 @@ defmodule Uplink.Packages.Instance.UpgradeTest do
           assert {:ok, body} = Jason.decode(body)
 
           assert %{"event" => %{"name" => event_name}} = body
-          assert event_name == "upgrade"
+          assert event_name in ["upgrade", "revert"]
 
           conn
           |> Plug.Conn.put_resp_header("content-type", "application/json")
@@ -517,7 +517,7 @@ defmodule Uplink.Packages.Instance.UpgradeTest do
         end
       )
 
-      assert {:ok, job} =
+      assert {:ok, %{"id" => _, "name" => "revert"}} =
                perform_job(Upgrade, %{
                  instance: %{
                    slug: instance_slug,
@@ -526,10 +526,6 @@ defmodule Uplink.Packages.Instance.UpgradeTest do
                  install_id: install.id,
                  actor_id: actor.id
                })
-
-      assert %Oban.Job{args: args} = job
-      assert Map.get(args, "mode") == "cleanup"
-      assert %{"err" => _err} = Map.get(args, "comment")
     end
   end
 end
