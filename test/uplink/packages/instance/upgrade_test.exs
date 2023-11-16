@@ -529,6 +529,7 @@ defmodule Uplink.Packages.Instance.UpgradeTest do
 
       assert %Oban.Job{args: args} = job
       assert Map.get(args, "mode") == "cleanup"
+      assert %{"err" => _err} = Map.get(args, "comment")
     end
   end
 end
