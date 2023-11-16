@@ -90,7 +90,7 @@ defmodule Uplink.Packages.Instance.Install do
             formation_instance.slug,
             install,
             "fail",
-            comment: "[Uplink.Packages.Instance.Install]"
+            comment: "[Uplink.Packages.Instance.Install] #{inspect(error)}"
           )
         end
 

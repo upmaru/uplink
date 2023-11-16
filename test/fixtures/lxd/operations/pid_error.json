@@ -1,0 +1,32 @@
+{
+  "error": "",
+  "error_code": 0,
+  "metadata": {
+    "class": "task",
+    "created_at": "2023-11-16T07:30:39.402322763Z",
+    "description": "Executing command",
+    "err": "Failed to retrieve PID of executing child process",
+    "id": "f8e2714c-b06f-4629-a961-df0946d0760c",
+    "location": "knowhere-nqo-bootstrap-node",
+    "may_cancel": false,
+    "metadata": null,
+    "resources":
+    {
+      "containers":
+      [
+        "/1.0/containers/insterra-ce3a12e6-01"
+      ],
+      "instances":
+      [
+        "/1.0/instances/insterra-ce3a12e6-01"
+      ]
+    },
+    "status": "Failure",
+    "status_code": 400,
+    "updated_at": "2023-11-16T07:30:39.402322763Z"
+  },
+  "operation": "",
+  "status": "Failure",
+  "status_code": 400,
+  "type": "sync"
+}

@@ -101,7 +101,7 @@ defmodule Uplink.Packages.Instance.Upgrade do
 
   defp handle_upgrade(
          {:upgrade, formation_instance, install},
-         %Job{} = job,
+         %Job{args: args} = job,
          actor
        ) do
     LXD.client()
@@ -116,6 +116,16 @@ defmodule Uplink.Packages.Instance.Upgrade do
         )
 
         maybe_mark_install_complete(install, actor)
+
+      {:error,
+       %{"err" => "Failed to retrieve PID of executing child process"} = error} ->
+        args
+        |> Map.merge(%{
+          "mode" => "cleanup",
+          "comment" => error
+        })
+        |> Instance.Cleanup.new()
+        |> Oban.insert()
 
       {:error, error} ->
         handle_error(error, job)
