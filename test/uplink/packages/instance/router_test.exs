@@ -1,5 +1,5 @@
 defmodule Uplink.Packages.Instance.RouterTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
   use Plug.Test
 
   @app_slug "upmaru/something-1640927800"
