@@ -77,7 +77,7 @@ defmodule Uplink.Packages.Instance.Cleanup do
          } = args
        ) do
     event_name = Map.get(@cleanup_mappings, current_state, "off")
-    comment = Map.get(args, "comment")
+    comment = Map.get(args, "comment", "no comment")
 
     Caddy.schedule_config_reload(install)
 
@@ -87,7 +87,7 @@ defmodule Uplink.Packages.Instance.Cleanup do
   end
 
   defp finalize(name, install, "deactivate_and_boot", args) do
-    comment = Map.get(args, "comment")
+    comment = Map.get(args, "comment", "no comment")
 
     with {:ok, _transition} <-
            Instellar.transition_instance(name, install, "deactivate",
