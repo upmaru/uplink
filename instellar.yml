@@ -64,6 +64,7 @@ kits:
   - description: Limited to single node, good for simple setups
     main: true
     name: lite
+    max_instances_count: 1
     ports: 
       - name: web
         target: 4040
