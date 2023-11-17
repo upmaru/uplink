@@ -136,7 +136,7 @@ defmodule Uplink.Packages.Instance.Upgrade do
          %Job{args: args},
          _actor
        ),
-       do: deactivate_and_boot(args)
+       do: deactivate_and_boot(args, comment: "stack changed deactivating and bootstrapping")
 
   defp handle_error(comment, %Job{attempt: _attempt, args: args}),
     do: deactivate_and_boot(args, comment: comment)

@@ -132,7 +132,7 @@ defmodule Uplink.Packages.Instance.Bootstrap do
         {:error, error} ->
           # will put instance in failing
           Instellar.transition_instance(name, install, "fail",
-            comment: "[Uplink.Packages.Instance.Bootstrap] #{error}"
+            comment: "[Uplink.Packages.Instance.Bootstrap] #{inspect(error)}"
           )
           |> handle_event(job_args)
       end
