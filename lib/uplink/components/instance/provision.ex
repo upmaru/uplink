@@ -28,9 +28,9 @@ defmodule Uplink.Components.Instance.Provision do
       |> String.split("-")
       |> List.first()
 
-    [_, db_engine] = String.split(module, "/")
+    [_, component_type] = String.split(module, "/")
 
-    name = "#{db_engine}-#{id}"
+    name = "#{component_type}-#{id}"
 
     with {:ok, credential} <-
            Drivers.perform(module, %{"credential" => credential_params}),
