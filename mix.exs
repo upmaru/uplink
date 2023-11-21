@@ -5,7 +5,7 @@ defmodule Uplink.MixProject do
     [
       app: :uplink,
       version: "0.9.16",
-      elixir: "~> 1.9",
+      elixir: "~> 1.13",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       deps: deps(),
