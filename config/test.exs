@@ -32,6 +32,8 @@ config :uplink, Uplink.Secret, "secretsomethingsixteen"
 
 config :uplink, Uplink.Clients.Instellar, endpoint: "http://localhost/uplink"
 
+config :uplink, :drivers, aws_s3: Uplink.Drivers.Bucket.AwsMock
+
 # config :plug, :validate_header_keys_during_test, false
 # Print only warnings and errors during test
 config :logger, level: :warn

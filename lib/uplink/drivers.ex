@@ -1,11 +1,17 @@
 defmodule Uplink.Drivers do
-  @drivers %{
+  @drivers Application.compile_env(:uplink, :drivers, [])
+
+  @driver_mapping %{
     "database/postgresql" => __MODULE__.Database.Postgresql,
-    "bucket/aws" => __MODULE__.Bucket.Aws
+    "bucket/aws-s3" => Keyword.get(@drivers, :aws_s3, __MODULE__.Bucket.Aws)
   }
 
-  def perform(module, params) do
-    driver = Map.fetch!(@drivers, module)
-    driver.perform(params)
+  defmodule Behaviour do
+    @callback perform(map(), Keyword.t()) :: {:ok, map()}
+  end
+
+  def perform(module, params, options) do
+    driver = Map.fetch!(@driver_mapping, module)
+    driver.perform(params, options)
   end
 end
