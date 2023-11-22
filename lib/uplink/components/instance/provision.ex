@@ -19,7 +19,8 @@ defmodule Uplink.Components.Instance.Provision do
            "generator" => %{"module" => module},
            "credential" => credential_params
          },
-         %{"component_id" => component_id, "variable_id" => variable_id}
+         %{"component_id" => component_id, "variable_id" => variable_id} =
+           job_args
        ) do
     uuid = Ecto.UUID.generate()
 
@@ -28,12 +29,21 @@ defmodule Uplink.Components.Instance.Provision do
       |> String.split("-")
       |> List.first()
 
-    [_, db_engine] = String.split(module, "/")
+    [_, component_type] = String.split(module, "/")
 
-    name = "#{db_engine}-#{id}"
+    name = "#{component_type}-#{id}"
+
+    options =
+      job_args
+      |> Map.get("arguments", %{})
+      |> Enum.map(fn {k, v} -> {String.to_atom(k), v} end)
 
     with {:ok, credential} <-
-           Drivers.perform(module, %{"credential" => credential_params}),
+           Drivers.perform(
+             module,
+             %{"credential" => credential_params},
+             options
+           ),
          {:ok, component_instance_attributes} <-
            Instellar.create_component_instance(component_id, %{
              "variable_id" => variable_id,

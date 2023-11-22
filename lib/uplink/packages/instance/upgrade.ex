@@ -144,7 +144,7 @@ defmodule Uplink.Packages.Instance.Upgrade do
   defp handle_error(comment, %Job{attempt: _attempt, args: args}),
     do: deactivate_and_boot(args, comment: comment)
 
-  defp deactivate_and_boot(args, options \\ []) do
+  defp deactivate_and_boot(args, options) do
     args
     |> Map.merge(%{
       "mode" => "deactivate_and_boot",

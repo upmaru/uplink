@@ -5,7 +5,7 @@ defmodule Uplink.MixProject do
     [
       app: :uplink,
       version: "0.9.16",
-      elixir: "~> 1.9",
+      elixir: "~> 1.13",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       deps: deps(),
@@ -52,8 +52,7 @@ defmodule Uplink.MixProject do
       # Rest Client
       {:req, "~> 0.4"},
 
-      # File System
-      {:file_system, "~> 0.2.10"},
+      # Clustering
       {:libcluster, "~> 3.0"},
 
       # Downstream
@@ -66,7 +65,7 @@ defmodule Uplink.MixProject do
       {:x509, "~> 0.8.4"},
 
       # Infrastructure
-      {:formation, "~> 0.11"},
+      {:formation, "~> 0.13"},
       {:lexdee, "~> 2.3"},
       {:plug_cowboy, "~> 2.0"},
       {:reverse_proxy_plug, "~> 2.1"},
@@ -74,6 +73,7 @@ defmodule Uplink.MixProject do
 
       # Test
       {:bypass, "~> 2.1", only: :test},
+      {:mox, "~> 1.0", only: :test},
       {:dialyxir, "~> 1.0", only: [:dev], runtime: false}
       # {:dep_from_hexpm, "~> 0.3.0"},
       # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"}
