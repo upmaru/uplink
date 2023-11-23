@@ -10,10 +10,13 @@ defmodule Uplink.Packages.Install.Execute do
 
   alias Members.Actor
 
-  alias Packages.{
-    Install,
-    Metadata
-  }
+  alias Uplink.Packages
+  alias Uplink.Packages.Install
+  alias Uplink.Packages.Metadata
+  alias Uplink.Packages.Instance
+
+  alias Uplink.Packages.Instance.Bootstrap
+  alias Uplink.Packages.Instance.Upgrade
 
   alias Clients.{
     LXD,
@@ -24,6 +27,14 @@ defmodule Uplink.Packages.Install.Execute do
     only: [where: 3, preload: 2]
 
   @state ~s(executing)
+
+  @task_supervisor Application.compile_env(:uplink, :task_supervisor) ||
+                     Task.Supervisor
+
+  @transition_parameters %{
+    "from" => "uplink",
+    "trigger" => false
+  }
 
   def perform(%Oban.Job{
         args: %{"install_id" => install_id, "actor_id" => actor_id}
@@ -54,16 +65,13 @@ defmodule Uplink.Packages.Install.Execute do
 
     project = Packages.get_project_name(client, metadata)
 
-    existing_instances_name =
+    existing_instances =
       LXD.list_instances(project)
       |> Enum.filter(&only_uplink_instance/1)
-      |> Enum.map(fn instance ->
-        instance.name
-      end)
 
     jobs =
       instances
-      |> Enum.map(&choose_execution_path(&1, existing_instances_name, state))
+      |> Enum.map(&choose_execution_path(&1, existing_instances, state))
 
     {:ok, jobs}
   end
@@ -75,11 +83,46 @@ defmodule Uplink.Packages.Install.Execute do
   end
 
   defp choose_execution_path(instance, existing_instances, state) do
-    event_name =
-      if instance.slug in existing_instances, do: "upgrade", else: "boot"
+    existing_instances_name = Enum.map(existing_instances, & &1.name)
 
-    Instellar.transition_instance(instance.slug, state.install, event_name,
-      comment: "[Uplink.Packages.Install.Execute]"
-    )
+    event_name =
+      if instance.slug in existing_instances_name, do: "upgrade", else: "boot"
+
+    @task_supervisor.async_nolink(Uplink.TaskSupervisor, fn ->
+      Instellar.transition_instance(instance.slug, state.install, event_name,
+        comment: "[Uplink.Packages.Install.Execute]",
+        parameters: @transition_parameters
+      )
+    end)
+
+    case event_name do
+      "upgrade" ->
+        existing_instance =
+          Enum.find(existing_instances, &(&1.name == instance.slug))
+
+        %{
+          "instance" => %{
+            "slug" => instance.slug,
+            "node" => %{
+              "slug" => existing_instance.location
+            }
+          },
+          "install_id" => state.install.id,
+          "actor_id" => state.actor.id
+        }
+        |> Upgrade.new()
+        |> Oban.insert()
+
+      "boot" ->
+        %{
+          "instance" => %{
+            "slug" => instance.slug,
+          },
+          "install_id" => state.install.id,
+          "actor_id" => state.actor.id
+        }
+        Bootstrap.new(job_args)
+        |> Oban.insert()
+    end
   end
 end

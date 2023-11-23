@@ -3,26 +3,23 @@ defmodule Uplink.Packages.Instance.Bootstrap do
     queue: :instance,
     max_attempts: 1
 
-  alias Uplink.{
-    Members,
-    Clients,
-    Packages,
-    Repo
-  }
+  alias Uplink.Repo
+  alias Uplink.Members
+  alias Uplink.Members.Actor
 
-  alias Clients.{
-    LXD,
-    Instellar
-  }
+  alias Uplink.Packages
+  alias Uplink.Packages.Install
+  alias Uplink.Packages.Instance
+  alias Uplink.Packages.Instance.Cleanup
 
-  alias LXD.Cluster
-  alias Cluster.Member
+  alias Uplink.Clients.LXD
+  alias Uplink.Clients.Instellar
+  alias Uplink.Clients.LXD.Cluster
+  alias Uplink.Clients.LXD.Cluster.Member
 
-  alias Members.Actor
-
-  alias Packages.{
-    Install,
-    Instance
+  @transition_parameters %{
+    "from" => "uplink",
+    "trigger" => false
   }
 
   @default_params %{
@@ -30,17 +27,18 @@ defmodule Uplink.Packages.Instance.Bootstrap do
     "type" => "container"
   }
 
+  @task_supervisor Application.compile_env(:uplink, :task_supervisor) ||
+                     Task.Supervisor
+
   import Ecto.Query, only: [preload: 2]
 
   def perform(%Oban.Job{
         args:
           %{
-            "instance" => %{
-              "slug" => name,
-              "node" => %{
-                "slug" => node_name
-              }
-            },
+            "instance" =>
+              %{
+                "slug" => name,
+              } = instance_params,
             "install_id" => install_id,
             "actor_id" => actor_id
           } = job_args
@@ -53,18 +51,35 @@ defmodule Uplink.Packages.Instance.Bootstrap do
       |> preload([:deployment])
       |> Repo.get(install_id)
 
+    cluster_member_names = 
+      LXD.list_cluster_members()
+      |> Enum.map(& &1.server_name)
+
+    frequency = 
+      LXD.list_instances()
+      |> Enum.frequencies_by(fn instance -> 
+        instance.location 
+      end)
+
+    selected_member = 
+      LXD.list_cluster_members()
+      |> Enum.min_by(fn m -> frequency[m.server_name] || 0 end)
+
     with %{metadata: %{channel: channel} = metadata} <-
            Packages.build_install_state(install, actor),
          members when is_list(members) <- LXD.list_cluster_members(),
          %Member{architecture: architecture} <-
            members
            |> Enum.find(fn member ->
-             member.server_name == node_name
+             member.server_name == selected_member.server_name
            end),
-         {:ok, _transition} <-
-           Instellar.transition_instance(name, install, "boot",
-             comment: "[Uplink.Packages.Instance.Bootstrap]"
-           ) do
+         %Task{} <-
+           @task_supervisor.async_nolink(Uplink.TaskSupervisor, fn ->
+             Instellar.transition_instance(name, install, "boot",
+               comment: "[Uplink.Packages.Instance.Bootstrap]",
+               parameters: @transition_parameters
+             )
+           end) do
       profile_name = Packages.profile_name(metadata)
       package = channel.package
 
@@ -130,36 +145,33 @@ defmodule Uplink.Packages.Instance.Bootstrap do
           |> Oban.insert()
 
         {:error, error} ->
-          # will put instance in failing
-          Instellar.transition_instance(name, install, "fail",
-            comment: "[Uplink.Packages.Instance.Bootstrap] #{inspect(error)}"
-          )
-          |> handle_event(job_args)
+          @task_supervisor.async_nolink(Uplink.TaskSupervisor, fn ->
+            Instellar.transition_instance(name, install, "fail",
+              comment: "[Uplink.Packages.Instance.Bootstrap] #{inspect(error)}",
+              parameters: @transition_parameters
+            )
+          end)
+
+          instance_params = Map.put(instance_params, "current_state", "failing")
+
+          %{
+            "instance" => instance_params,
+            "install_id" => install_id,
+            "actor_id" => actor_id
+          }
+          |> Cleanup.new()
+          |> Oban.insert()
       end
     else
       {:error, error} ->
-        Packages.transition_install_with(install, actor, "fail", comment: error)
+        Packages.transition_install_with(install, actor, "fail",
+          comment: "#{inspect(error)}"
+        )
 
       nil ->
         Packages.transition_install_with(install, actor, "fail",
           comment: "cluster member not found"
         )
     end
-  end
-
-  defp handle_event({:ok, %{"name" => "fail"}}, %{
-         "instance" => instance_params,
-         "install_id" => install_id,
-         "actor_id" => actor_id
-       }) do
-    job_args = %{
-      "instance" => Map.merge(instance_params, %{"current_state" => "failing"}),
-      "install_id" => install_id,
-      "actor_id" => actor_id
-    }
-
-    job_args
-    |> Packages.Instance.Cleanup.new()
-    |> Oban.insert()
   end
 end

@@ -17,7 +17,15 @@ defmodule Uplink.Packages.Instance.Cleanup do
   }
 
   alias Packages.{
-    Install
+    Install,
+    Instance
+  }
+
+  alias Instance.Bootstrap
+
+  @transition_parameters %{
+    "from" => "uplink",
+    "trigger" => false
   }
 
   @cleanup_mappings %{
@@ -29,10 +37,7 @@ defmodule Uplink.Packages.Instance.Cleanup do
         args:
           %{
             "instance" => %{
-              "slug" => name,
-              "node" => %{
-                "slug" => _node_name
-              }
+              "slug" => name
             },
             "install_id" => install_id,
             "actor_id" => actor_id
@@ -87,13 +92,25 @@ defmodule Uplink.Packages.Instance.Cleanup do
   end
 
   defp finalize(name, install, "deactivate_and_boot", args) do
-    comment = Map.get(args, "comment", "no comment")
+    Uplink.TaskSupervisor
+    |> @task_supervisor.async_nolink(fn ->
+      comment = Map.get(args, "comment", "no comment")
 
-    with {:ok, _transition} <-
-           Instellar.transition_instance(name, install, "deactivate",
-             comment: "[Uplink.Packages.Instance.Cleanup] #{inspect(comment)}"
-           ) do
-      Instellar.transition_instance(name, install, "boot", comment: comment)
-    end
+      with {:ok, _transition} <-
+             Instellar.transition_instance(name, install, "deactivate",
+               comment:
+                 "[Uplink.Packages.Instance.Cleanup] #{inspect(comment)}",
+               parameters: @transition_parameters
+             ) do
+        Instellar.transition_instance(name, install, "boot",
+          comment: "[Uplink.Packages.Instance.Cleanup] #{inspect(comment)}",
+          parameters: @transition_parameters
+        )
+      end
+    end)
+
+    args
+    |> Bootstrap.new()
+    |> Oban.insert()
   end
 end

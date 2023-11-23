@@ -21,7 +21,8 @@ defmodule Uplink.Clients.Instellar.Instance do
       json: %{
         "event" => %{
           "name" => event_name,
-          "comment" => Keyword.get(options, :comment)
+          "comment" => Keyword.get(options, :comment),
+          "parameters" => Keyword.get(options, :parameters, %{})
         }
       },
       headers: Instellar.headers(install.deployment.hash)
