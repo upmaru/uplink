@@ -65,6 +65,8 @@ defmodule Uplink.Packages.Instance.Bootstrap do
       LXD.list_cluster_members()
       |> Enum.min_by(fn m -> frequency[m.server_name] || 0 end)
 
+    transition_parameters = Map.put(@transition_parameters, "node", selected_member.server_name)
+
     with %{metadata: %{channel: channel} = metadata} <-
            Packages.build_install_state(install, actor),
          members when is_list(members) <- LXD.list_cluster_members(),
@@ -77,7 +79,7 @@ defmodule Uplink.Packages.Instance.Bootstrap do
            @task_supervisor.async_nolink(Uplink.TaskSupervisor, fn ->
              Instellar.transition_instance(name, install, "boot",
                comment: "[Uplink.Packages.Instance.Bootstrap]",
-               parameters: @transition_parameters
+               parameters: transition_parameters
              )
            end) do
       profile_name = Packages.profile_name(metadata)
