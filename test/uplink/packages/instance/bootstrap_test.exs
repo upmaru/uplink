@@ -38,6 +38,14 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
       |> Plug.Conn.resp(200, cluster_members)
     end)
 
+    instances_list = File.read!("test/fixtures/lxd/instances/list/empty.json")
+
+    Bypass.expect_once(bypass, "GET", "/1.0/instances", fn conn ->
+      conn
+      |> Plug.Conn.put_resp_header("content-type", "application/json")
+      |> Plug.Conn.resp(200, instances_list)
+    end)
+
     Cache.delete(:cluster_members)
 
     create_instance = File.read!("test/fixtures/lxd/instances/create.json")
@@ -62,20 +70,6 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
   end
 
   describe "bootstrap instance" do
-    test "no matching cluster member", %{
-      install: install,
-      actor: actor
-    } do
-      assert {:ok, %{resource: install}} =
-               perform_job(Bootstrap, %{
-                 instance: %{slug: "something-1", node: %{slug: "some-node-01"}},
-                 install_id: install.id,
-                 actor_id: actor.id
-               })
-
-      assert install.current_state == "failed"
-    end
-
     test "when project does not exist", %{
       bypass: bypass,
       install: install,

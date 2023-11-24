@@ -52,6 +52,17 @@ defmodule Uplink.Packages.Install.Manager do
     |> Repo.one()
   end
 
+  def maybe_mark_complete(%Install{} = install, actor) do
+    completed_instances = Cache.get({:install, install.id, "completed"})
+    executing_instances = Cache.get({:install, install.id, "executing"})
+
+    if Enum.count(completed_instances) == Enum.count(executing_instances) do
+      Packages.transition_install_with(install, actor, "complete")
+    else
+      {:ok, :executing}
+    end
+  end
+
   @spec build_state(%Install{}, %Actor{} | nil) :: %{
           install: %Install{},
           metadata: %Metadata{},

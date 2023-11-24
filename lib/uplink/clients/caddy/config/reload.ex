@@ -43,26 +43,6 @@ defmodule Uplink.Clients.Caddy.Config.Reload do
       end)
     end)
 
-    maybe_mark_install_complete(install, params)
-
     :ok
   end
-
-  defp maybe_mark_install_complete(
-         %Install{current_state: "refreshing"} = install,
-         params
-       ) do
-    actor_id = Map.get(params, "actor_id")
-
-    actor =
-      if actor_id do
-        Repo.get(Members.Actor, actor_id)
-      else
-        Members.get_bot!()
-      end
-
-    Packages.transition_install_with(install, actor, "complete")
-  end
-
-  defp maybe_mark_install_complete(_install, _params), do: :ok
 end
