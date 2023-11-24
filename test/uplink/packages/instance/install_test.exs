@@ -274,7 +274,7 @@ defmodule Uplink.Packages.Instance.InstallTest do
 
           %{"event" => %{"name" => event_name}} = body
 
-          assert event_name in ["complete", "boot"]
+          assert event_name in ["boot"]
 
           conn
           |> Plug.Conn.put_resp_header("content-type", "application/json")

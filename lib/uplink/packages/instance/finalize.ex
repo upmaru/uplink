@@ -15,7 +15,10 @@ defmodule Uplink.Packages.Instance.Finalize do
   def perform(%Oban.Job{
         args:
           %{
-            "instance" => %{"slug" => name} = instance_params,
+            "instance" =>
+              %{
+                "slug" => name
+              } = instance_params,
             "comment" => comment,
             "install_id" => install_id,
             "actor_id" => actor_id

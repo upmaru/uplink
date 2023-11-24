@@ -29,7 +29,7 @@ defmodule Uplink.Clients.Caddy do
       end
 
     params
-    |> Config.Reload.new(schedule_in: 5)
+    |> Config.Reload.new(schedule_in: 1)
     |> Oban.insert()
   end
 
