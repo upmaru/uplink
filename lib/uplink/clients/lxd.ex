@@ -20,7 +20,7 @@ defmodule Uplink.Clients.LXD do
     to: __MODULE__.Instance.Manager,
     as: :list
 
-  defdelegate list_instances(), 
+  defdelegate list_instances(),
     to: __MODULE__.Instance.Manager,
     as: :list
 

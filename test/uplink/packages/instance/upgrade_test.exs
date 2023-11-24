@@ -517,7 +517,7 @@ defmodule Uplink.Packages.Instance.UpgradeTest do
         end
       )
 
-      assert {:ok, %{"id" => _, "name" => "revert"}} =
+      assert {:ok, :reverted} =
                perform_job(Upgrade, %{
                  instance: %{
                    slug: instance_slug,

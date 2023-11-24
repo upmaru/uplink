@@ -6,7 +6,6 @@ defmodule Uplink.Clients.LXD.Instance.Manager do
   alias Clients.LXD
   alias LXD.Instance
 
-
   def list do
     LXD.client()
     |> Lexdee.list_instances(query: [{:recursion, 1}, {"all-projects", true}])

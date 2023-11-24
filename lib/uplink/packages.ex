@@ -37,6 +37,10 @@ defmodule Uplink.Packages do
     to: Install.Manager,
     as: :transition_with
 
+  defdelegate maybe_mark_install_complete(install, actor),
+    to: Install.Manager,
+    as: :maybe_mark_complete
+
   alias __MODULE__.Deployment
 
   defdelegate get_deployment(id),

@@ -38,7 +38,7 @@ defmodule Uplink.Clients.LXD.Cluster.ManagerTest do
       end)
 
       assert [member1] = Manager.list_members()
-      assert %Cluster.Member{} = IO.inspect(member1)
+      assert %Cluster.Member{} = member1
     end
   end
 end

@@ -1,14 +1,13 @@
 defmodule Uplink.Packages.Install.Execute do
   use Oban.Worker, queue: :install, max_attempts: 1
 
-  alias Uplink.{
-    Clients,
-    Members,
-    Packages,
-    Repo
-  }
+  alias Uplink.Repo
+  alias Uplink.Cache
 
-  alias Members.Actor
+  alias Uplink.Clients.LXD
+  alias Uplink.Clients.Instellar
+
+  alias Uplink.Members.Actor
 
   alias Uplink.Packages
   alias Uplink.Packages.Install
@@ -17,11 +16,6 @@ defmodule Uplink.Packages.Install.Execute do
 
   alias Uplink.Packages.Instance.Bootstrap
   alias Uplink.Packages.Instance.Upgrade
-
-  alias Clients.{
-    LXD,
-    Instellar
-  }
 
   import Ecto.Query,
     only: [where: 3, preload: 2]
@@ -69,6 +63,14 @@ defmodule Uplink.Packages.Install.Execute do
       LXD.list_instances(project)
       |> Enum.filter(&only_uplink_instance/1)
 
+    Cache.put({:install, state.install.id, "completed"}, [],
+      ttl: :timer.hours(24)
+    )
+
+    Cache.put({:install, state.install.id, "executing"}, [],
+      ttl: :timer.hours(24)
+    )
+
     jobs =
       instances
       |> Enum.map(&choose_execution_path(&1, existing_instances, state))
@@ -95,6 +97,23 @@ defmodule Uplink.Packages.Install.Execute do
       )
     end)
 
+    Cache.transaction(
+      [keys: [{:install, state.install.id, "executing"}]],
+      fn ->
+        Cache.get_and_update(
+          {:install, state.install.id, "executing"},
+          fn current_value ->
+            executing_instances =
+              if current_value,
+                do: current_value ++ [instance.slug],
+                else: [instance.slug]
+
+            {current_value, Enum.uniq(executing_instances)}
+          end
+        )
+      end
+    )
+
     case event_name do
       "upgrade" ->
         existing_instance =
@@ -114,14 +133,13 @@ defmodule Uplink.Packages.Install.Execute do
         |> Oban.insert()
 
       "boot" ->
-        %{
+        Bootstrap.new(%{
           "instance" => %{
-            "slug" => instance.slug,
+            "slug" => instance.slug
           },
           "install_id" => state.install.id,
           "actor_id" => state.actor.id
-        }
-        Bootstrap.new(job_args)
+        })
         |> Oban.insert()
     end
   end

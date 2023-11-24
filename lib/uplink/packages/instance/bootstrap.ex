@@ -37,7 +37,7 @@ defmodule Uplink.Packages.Instance.Bootstrap do
           %{
             "instance" =>
               %{
-                "slug" => name,
+                "slug" => name
               } = instance_params,
             "install_id" => install_id,
             "actor_id" => actor_id
@@ -51,21 +51,33 @@ defmodule Uplink.Packages.Instance.Bootstrap do
       |> preload([:deployment])
       |> Repo.get(install_id)
 
-    cluster_member_names = 
+    cluster_member_names =
       LXD.list_cluster_members()
       |> Enum.map(& &1.server_name)
 
-    frequency = 
+    frequency =
       LXD.list_instances()
-      |> Enum.frequencies_by(fn instance -> 
-        instance.location 
+      |> Enum.frequencies_by(fn instance ->
+        instance.location
       end)
 
-    selected_member = 
+    selected_member =
       LXD.list_cluster_members()
       |> Enum.min_by(fn m -> frequency[m.server_name] || 0 end)
 
-    transition_parameters = Map.put(@transition_parameters, "node", selected_member.server_name)
+    transition_parameters =
+      Map.put(@transition_parameters, "node", selected_member.server_name)
+
+    Uplink.TaskSupervisor
+    |> @task_supervisor.async_nolink(
+      fn ->
+        Instellar.transition_instance(name, install, "boot",
+          comment: "[Uplink.Packages.Instance.Bootstrap] Starting bootstrap...",
+          parameters: transition_parameters
+        )
+      end,
+      shutdown: 30_000
+    )
 
     with %{metadata: %{channel: channel} = metadata} <-
            Packages.build_install_state(install, actor),
@@ -74,13 +86,6 @@ defmodule Uplink.Packages.Instance.Bootstrap do
            members
            |> Enum.find(fn member ->
              member.server_name == selected_member.server_name
-           end),
-         %Task{} <-
-           @task_supervisor.async_nolink(Uplink.TaskSupervisor, fn ->
-             Instellar.transition_instance(name, install, "boot",
-               comment: "[Uplink.Packages.Instance.Bootstrap]",
-               parameters: transition_parameters
-             )
            end) do
       profile_name = Packages.profile_name(metadata)
       package = channel.package
@@ -128,31 +133,38 @@ defmodule Uplink.Packages.Instance.Bootstrap do
       formation_instance = Formation.new_lxd_instance(formation_instance_params)
 
       client
-      |> Formation.lxd_create(node_name, instance_params, project: project_name)
+      |> Formation.lxd_create(selected_member.server_name, instance_params,
+        project: project_name
+      )
       |> Formation.lxd_start(name, project: project_name)
       |> Formation.setup_lxd_instance(formation_instance)
       |> case do
         {:ok, _message} ->
           %{
-            instance: %{
-              slug: name,
-              node: %{
-                slug: node_name
+            "instance" => %{
+              "slug" => name,
+              "node" => %{
+                "slug" => selected_member.server_name
               }
             },
-            install_id: install.id,
-            actor_id: actor_id
+            "install_id" => install.id,
+            "actor_id" => actor_id
           }
           |> Instance.Install.new()
           |> Oban.insert()
 
         {:error, error} ->
-          @task_supervisor.async_nolink(Uplink.TaskSupervisor, fn ->
-            Instellar.transition_instance(name, install, "fail",
-              comment: "[Uplink.Packages.Instance.Bootstrap] #{inspect(error)}",
-              parameters: @transition_parameters
-            )
-          end)
+          Uplink.TaskSupervisor
+          |> @task_supervisor.async_nolink(
+            fn ->
+              Instellar.transition_instance(name, install, "fail",
+                comment:
+                  "[Uplink.Packages.Instance.Bootstrap] #{inspect(error)}",
+                parameters: transition_parameters
+              )
+            end,
+            shutdown: 30_000
+          )
 
           instance_params = Map.put(instance_params, "current_state", "failing")
 

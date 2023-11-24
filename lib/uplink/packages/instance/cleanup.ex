@@ -33,6 +33,9 @@ defmodule Uplink.Packages.Instance.Cleanup do
     "deactivating" => "off"
   }
 
+  @task_supervisor Application.compile_env(:uplink, :task_supervisor) ||
+                     Task.Supervisor
+
   def perform(%Oban.Job{
         args:
           %{
@@ -81,33 +84,37 @@ defmodule Uplink.Packages.Instance.Cleanup do
            "instance" => %{"current_state" => current_state}
          } = args
        ) do
-    event_name = Map.get(@cleanup_mappings, current_state, "off")
-    comment = Map.get(args, "comment", "no comment")
-
     Caddy.schedule_config_reload(install)
 
-    Instellar.transition_instance(name, install, event_name,
-      comment: "[Uplink.Packages.Instance.Cleanup] #{inspect(comment)}"
+    Uplink.TaskSupervisor
+    |> @task_supervisor.async_nolink(
+      fn ->
+        event_name = Map.get(@cleanup_mappings, current_state, "off")
+        comment = Map.get(args, "comment", "no comment")
+
+        Instellar.transition_instance(name, install, event_name,
+          comment: "[Uplink.Packages.Instance.Cleanup] #{inspect(comment)}"
+        )
+      end,
+      shutdown: 30_000
     )
+
+    {:ok, :cleaned}
   end
 
   defp finalize(name, install, "deactivate_and_boot", args) do
     Uplink.TaskSupervisor
-    |> @task_supervisor.async_nolink(fn ->
-      comment = Map.get(args, "comment", "no comment")
+    |> @task_supervisor.async_nolink(
+      fn ->
+        comment = Map.get(args, "comment", "no comment")
 
-      with {:ok, _transition} <-
-             Instellar.transition_instance(name, install, "deactivate",
-               comment:
-                 "[Uplink.Packages.Instance.Cleanup] #{inspect(comment)}",
-               parameters: @transition_parameters
-             ) do
-        Instellar.transition_instance(name, install, "boot",
+        Instellar.transition_instance(name, install, "deactivate",
           comment: "[Uplink.Packages.Instance.Cleanup] #{inspect(comment)}",
           parameters: @transition_parameters
         )
-      end
-    end)
+      end,
+      shutdown: 30_000
+    )
 
     args
     |> Bootstrap.new()
