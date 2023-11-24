@@ -1,12 +1,14 @@
-defmodule Uplink.Drivers.Database do
-  defmodule Postgresql do
+defmodule Uplink.Drivers.Bucket do
+  defmodule Aws do
     @behaviour Uplink.Drivers.Behaviour
 
     def perform(%{"credential" => credential_params}, options \\ []) do
+      credential_params = Map.put(credential_params, "type", "component")
+
       with {:ok, master_credential} <-
-             Formation.Postgresql.Credential.create(credential_params),
+             Formation.S3.Credential.create(credential_params),
            {:ok, generated_credential} <-
-             Formation.Postgresql.create_user_and_database(
+             Formation.Aws.create_credential_and_bucket(
                master_credential,
                options
              ) do

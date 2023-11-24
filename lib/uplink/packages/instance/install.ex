@@ -1,34 +1,37 @@
 defmodule Uplink.Packages.Instance.Install do
-  use Oban.Worker, queue: :instance, max_attempts: 5
+  use Oban.Worker, queue: :instance, max_attempts: 3
 
-  alias Uplink.{
-    Clients,
-    Packages,
-    Members,
-    Repo
-  }
+  alias Uplink.Repo
+  alias Uplink.Cache
 
-  alias Members.Actor
+  alias Uplink.Clients
+  alias Uplink.Clients.LXD
+  alias Uplink.Clients.Caddy
+  alias Uplink.Clients.Instellar
 
-  alias Clients.{
-    LXD,
-    Caddy,
-    Instellar
-  }
+  alias Uplink.Packages
+  alias Uplink.Packages.Install
+  alias Uplink.Packages.Instance
 
-  alias Packages.Install
+  alias Uplink.Members.Actor
 
   import Ecto.Query, only: [preload: 2]
+
+  @transition_parameters %{
+    "from" => "uplink",
+    "trigger" => false
+  }
+
+  @task_supervisor Application.compile_env(:uplink, :task_supervisor) ||
+                     Task.Supervisor
 
   def perform(
         %Oban.Job{
           args: %{
-            "instance" => %{
-              "slug" => name,
-              "node" => %{
-                "slug" => _node_name
-              }
-            },
+            "instance" =>
+              %{
+                "slug" => name
+              } = instance_params,
             "install_id" => install_id,
             "actor_id" => actor_id
           }
@@ -68,29 +71,69 @@ defmodule Uplink.Packages.Instance.Install do
 
     formation_instance = Formation.new_lxd_instance(formation_instance_params)
 
+    node = Map.get(instance_params, "node", %{})
+
+    transition_parameters =
+      Map.put(@transition_parameters, "node", node["slug"])
+
+    Uplink.TaskSupervisor
+    |> @task_supervisor.async_nolink(
+      fn ->
+        Instellar.transition_instance(name, install, "boot",
+          comment:
+            "[Uplink.Packages.Instance.Install] Installing #{package.slug}...",
+          parameters: transition_parameters
+        )
+      end,
+      shutdown: 30_000
+    )
+
     client
     |> Formation.add_package_and_restart_lxd_instance(formation_instance)
     |> case do
       {:ok, add_package_output} ->
+        Cache.transaction([keys: [{:install, install_id, "completed"}]], fn ->
+          Cache.get_and_update(
+            {:install, install_id, "completed"},
+            fn current_value ->
+              completed_instances =
+                if current_value, do: current_value ++ [name], else: [name]
+
+              {current_value, Enum.uniq(completed_instances)}
+            end
+          )
+        end)
+
         Caddy.schedule_config_reload(install)
 
-        Instellar.transition_instance(
-          formation_instance.slug,
-          install,
-          "complete",
-          comment: add_package_output
-        )
+        Packages.maybe_mark_install_complete(install, actor)
+
+        %{
+          "instance" => instance_params,
+          "comment" => add_package_output,
+          "install_id" => install_id,
+          "actor_id" => actor_id
+        }
+        |> Instance.Finalize.new()
+        |> Oban.insert()
 
       {:error, %{"error" => "Instance is not running"}} ->
         {:snooze, 5}
 
       {:error, error} ->
         if job.attempt == job.max_attempts do
-          Instellar.transition_instance(
-            formation_instance.slug,
-            install,
-            "fail",
-            comment: "[Uplink.Packages.Instance.Install] #{inspect(error)}"
+          Uplink.TaskSupervisor
+          |> @task_supervisor.async_nolink(
+            fn ->
+              Instellar.transition_instance(
+                formation_instance.slug,
+                install,
+                "fail",
+                comment: "[Uplink.Packages.Instance.Install] #{inspect(error)}",
+                parameters: @transition_parameters
+              )
+            end,
+            shutdown: 30_000
           )
         end
 

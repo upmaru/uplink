@@ -1,14 +1,12 @@
 defmodule Uplink.Clients.Caddy.Config.Builder do
-  alias Uplink.{
-    Clients,
-    Packages,
-    Repo
-  }
+  alias Uplink.Repo
+  alias Uplink.Cache
 
-  alias Clients.Caddy
-  alias Caddy.Admin
-  alias Caddy.Apps
-  alias Caddy.Storage
+  alias Uplink.Packages
+
+  alias Uplink.Clients.Caddy.Admin
+  alias Uplink.Clients.Caddy.Apps
+  alias Uplink.Clients.Caddy.Storage
 
   def new do
     install_states =
@@ -94,7 +92,10 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
   end
 
   defp build_route(
-         %{install: %{deployment: %{app: _app}}, metadata: metadata} = _state
+         %{
+           install: %{id: install_id, deployment: %{app: _app}},
+           metadata: metadata
+         } = _state
        ) do
     main_routing = Map.get(metadata.main_port, :routing)
 
@@ -111,6 +112,8 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
       else
         "installation_#{metadata.id}"
       end
+
+    valid_instances = find_valid_instances(metadata.instances, install_id)
 
     main_route = %{
       group: main_group,
@@ -138,7 +141,7 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
             }
           },
           upstreams:
-            Enum.map(metadata.instances, fn instance ->
+            Enum.map(valid_instances, fn instance ->
               %{
                 dial: "#{instance.slug}:#{metadata.main_port.target}",
                 max_requests: 80
@@ -196,7 +199,7 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
                 }
               },
               upstreams:
-                Enum.map(metadata.instances, fn instance ->
+                Enum.map(valid_instances, fn instance ->
                   %{
                     dial: "#{instance.slug}:#{port.target}",
                     max_requests: 80
@@ -208,5 +211,18 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
       end)
 
     [main_route | sub_routes]
+  end
+
+  defp find_valid_instances(instances, install_id) do
+    completed_instances = Cache.get({:install, install_id, "completed"})
+
+    if is_list(completed_instances) and Enum.count(completed_instances) > 0 do
+      instances
+      |> Enum.filter(fn instance ->
+        instance.slug in completed_instances
+      end)
+    else
+      instances
+    end
   end
 end

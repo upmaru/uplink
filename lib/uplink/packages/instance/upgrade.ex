@@ -3,33 +3,36 @@ defmodule Uplink.Packages.Instance.Upgrade do
     queue: :instance,
     max_attempts: 1
 
-  alias Uplink.{
-    Members,
-    Clients,
-    Packages,
-    Repo
-  }
+  alias Uplink.Repo
+  alias Uplink.Cache
 
-  alias Members.Actor
+  alias Uplink.Packages
+  alias Uplink.Packages.Install
+  alias Uplink.Packages.Instance
 
-  alias Packages.{
-    Install,
-    Instance
-  }
+  alias Uplink.Members.Actor
 
-  alias Clients.{
-    LXD,
-    Instellar
-  }
+  alias Uplink.Clients.LXD
+  alias Uplink.Clients.Instellar
+  alias Uplink.Clients.Caddy
 
   import Ecto.Query, only: [limit: 2, where: 3, preload: 2, order_by: 2]
+
+  @transition_parameters %{
+    "from" => "uplink",
+    "trigger" => false
+  }
+
+  @task_supervisor Application.compile_env(:uplink, :task_supervisor) ||
+                     Task.Supervisor
 
   def perform(
         %Oban.Job{
           args: %{
-            "instance" => %{
-              "slug" => name
-            },
+            "instance" =>
+              %{
+                "slug" => name
+              } = instance_params,
             "install_id" => install_id,
             "actor_id" => actor_id
           }
@@ -43,29 +46,37 @@ defmodule Uplink.Packages.Instance.Upgrade do
       |> preload([:deployment])
       |> Repo.get(install_id)
 
-    with %{metadata: %{channel: channel} = metadata} <-
-           Packages.build_install_state(install, actor),
-         {:ok, _transition} <-
-           Instellar.transition_instance(name, install, "upgrade",
-             comment: "[Uplink.Packages.Instance.Upgrade]"
-           ) do
-      client = LXD.client()
+    node = Map.get(instance_params, "node", %{})
 
-      project_name = Packages.get_project_name(client, metadata)
+    transition_parameters =
+      Map.put(@transition_parameters, "node", node["slug"])
 
-      Formation.new_lxd_instance(%{
-        project: project_name,
-        slug: name,
-        repositories: [],
-        packages: [
-          %{
-            slug: channel.package.slug
-          }
-        ]
-      })
-      |> validate_stack(install)
-      |> handle_upgrade(job, actor)
-    end
+    %{metadata: %{channel: channel} = metadata} =
+      Packages.build_install_state(install, actor)
+
+    client = LXD.client()
+    project_name = Packages.get_project_name(client, metadata)
+
+    @task_supervisor.async_nolink(Uplink.TaskSupervisor, fn ->
+      Instellar.transition_instance(name, install, "upgrade",
+        comment:
+          "[Uplink.Packages.Instance.Upgrade] Upgrading #{channel.package.slug} on #{name}...",
+        parameters: transition_parameters
+      )
+    end)
+
+    Formation.new_lxd_instance(%{
+      project: project_name,
+      slug: name,
+      repositories: [],
+      packages: [
+        %{
+          slug: channel.package.slug
+        }
+      ]
+    })
+    |> validate_stack(install)
+    |> handle_upgrade(job, actor)
   end
 
   defp validate_stack(
@@ -101,30 +112,62 @@ defmodule Uplink.Packages.Instance.Upgrade do
 
   defp handle_upgrade(
          {:upgrade, formation_instance, install},
-         %Job{} = job,
+         %Job{args: %{"instance" => instance_params}} = job,
          actor
        ) do
+    node = Map.get(instance_params, "node", %{})
+
+    transition_parameters =
+      Map.put(@transition_parameters, "node", node["slug"])
+
     LXD.client()
     |> Formation.lxd_upgrade_alpine_package(formation_instance)
     |> case do
       {:ok, upgrade_package_output} ->
-        Instellar.transition_instance(
-          formation_instance.slug,
-          install,
-          "complete",
-          comment: upgrade_package_output
-        )
+        Cache.transaction([keys: [{:install, install.id, "completed"}]], fn ->
+          Cache.get_and_update(
+            {:install, install.id, "completed"},
+            fn current_value ->
+              completed_instances =
+                if current_value,
+                  do: current_value ++ [formation_instance.slug],
+                  else: [formation_instance.slug]
 
-        maybe_mark_install_complete(install, actor)
+              {current_value, Enum.uniq(completed_instances)}
+            end
+          )
+        end)
+
+        Caddy.schedule_config_reload(install)
+
+        Packages.maybe_mark_install_complete(install, actor)
+
+        %{
+          "instance" => instance_params,
+          "comment" => upgrade_package_output,
+          "install_id" => install.id,
+          "actor_id" => actor.id
+        }
+        |> Instance.Finalize.new()
+        |> Oban.insert()
 
       {:error, %{"err" => "Failed to retrieve PID of executing child process"}} ->
-        Instellar.transition_instance(
-          formation_instance.slug,
-          install,
-          "revert",
-          comment:
-            "Reverting please restart the underlying node and try upgrading again."
+        Uplink.TaskSupervisor
+        |> @task_supervisor.async_nolink(
+          fn ->
+            Instellar.transition_instance(
+              formation_instance.slug,
+              install,
+              "revert",
+              comment:
+                "Reverting please restart the underlying node and try upgrading again.",
+              parameters: transition_parameters
+            )
+          end,
+          shutdown: 30_000
         )
+
+        {:ok, :reverted}
 
       {:error, error} ->
         handle_error(error, job)
@@ -144,7 +187,7 @@ defmodule Uplink.Packages.Instance.Upgrade do
   defp handle_error(comment, %Job{attempt: _attempt, args: args}),
     do: deactivate_and_boot(args, comment: comment)
 
-  defp deactivate_and_boot(args, options \\ []) do
+  defp deactivate_and_boot(args, options) do
     args
     |> Map.merge(%{
       "mode" => "deactivate_and_boot",
@@ -152,16 +195,5 @@ defmodule Uplink.Packages.Instance.Upgrade do
     })
     |> Instance.Cleanup.new()
     |> Oban.insert()
-  end
-
-  defp maybe_mark_install_complete(install, actor) do
-    with {:ok, %{"current_state" => "synced"}} <-
-           Instellar.deployment_metadata(install),
-         {:ok, transition} <-
-           Packages.transition_install_with(install, actor, "complete") do
-      {:ok, transition}
-    else
-      _ -> :ok
-    end
   end
 end

@@ -4,10 +4,9 @@ defmodule Uplink.Packages.Instance.UpgradeTest do
 
   import Uplink.Scenarios.Deployment
 
-  alias Uplink.{
-    Packages,
-    Repo
-  }
+  alias Uplink.Repo
+  alias Uplink.Cache
+  alias Uplink.Packages
 
   setup [:setup_endpoints, :setup_base]
 
@@ -85,44 +84,12 @@ defmodule Uplink.Packages.Instance.UpgradeTest do
     }
   }
 
-  @uplink_installation_state_response %{
-    "data" => %{
-      "attributes" => %{
-        "id" => 1,
-        "slug" => "uplink-web",
-        "main_port" => %{
-          "slug" => "web",
-          "source" => 49142,
-          "target" => 4000
-        },
-        "current_state" => "synced",
-        "variables" => [
-          %{"key" => "SOMETHING", "value" => "somevalue"}
-        ],
-        "channel" => %{
-          "slug" => "develop",
-          "package" => %{
-            "slug" => "something-1640927800",
-            "credential" => %{
-              "public_key" => "public_key"
-            },
-            "organization" => %{
-              "slug" => "upmaru"
-            }
-          }
-        },
-        "instances" => [
-          %{
-            "id" => 1,
-            "slug" => "something-1",
-            "node" => %{
-              "slug" => "some-node"
-            }
-          }
-        ]
-      }
-    }
-  }
+  setup %{install: install} do
+    Cache.put({:install, install.id, "completed"}, [])
+    Cache.put({:install, install.id, "executing"}, ["some-instance-01"])
+
+    :ok
+  end
 
   describe "upgrade instance" do
     alias Uplink.Packages.Instance.Upgrade
@@ -224,6 +191,8 @@ defmodule Uplink.Packages.Instance.UpgradeTest do
         end
       )
 
+      complete_message = "upgrade complete"
+
       Bypass.expect_once(
         bypass,
         "GET",
@@ -236,7 +205,7 @@ defmodule Uplink.Packages.Instance.UpgradeTest do
           conn
           |> Plug.Conn.resp(
             200,
-            "upgrade complete"
+            complete_message
           )
         end
       )
@@ -277,16 +246,7 @@ defmodule Uplink.Packages.Instance.UpgradeTest do
         end
       )
 
-      Bypass.expect(bypass, "GET", "/uplink/installations/1", fn conn ->
-        conn
-        |> Plug.Conn.put_resp_header("content-type", "application/json")
-        |> Plug.Conn.resp(
-          200,
-          Jason.encode!(@uplink_installation_state_response)
-        )
-      end)
-
-      assert {:ok, %{event: event}} =
+      assert {:ok, %Oban.Job{worker: worker}} =
                perform_job(Upgrade, %{
                  instance: %{
                    slug: instance_slug,
@@ -296,7 +256,7 @@ defmodule Uplink.Packages.Instance.UpgradeTest do
                  actor_id: actor.id
                })
 
-      assert event.name == "complete"
+      assert worker == "Uplink.Packages.Instance.Finalize"
     end
 
     test "on error it enqueue deactivate and bootstrap", %{
@@ -517,7 +477,7 @@ defmodule Uplink.Packages.Instance.UpgradeTest do
         end
       )
 
-      assert {:ok, %{"id" => _, "name" => "revert"}} =
+      assert {:ok, :reverted} =
                perform_job(Upgrade, %{
                  instance: %{
                    slug: instance_slug,

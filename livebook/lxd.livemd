@@ -1,0 +1,32 @@
+# LXD Compute least used member
+
+## Update cache
+
+We need to update the cache with the key `:self` because that's where the credential for uplink's lxd is stored.
+
+```elixir
+cert = File.read!(Path.expand("~/.config/lxc/client.crt"))
+key = File.read!(Path.expand("~/.config/lxc/client.key"))
+
+credential = %{
+  "endpoint" => "https://198.19.249.83:8443",
+  "certificate" => cert,
+  "private_key" => key
+}
+
+Uplink.Cache.put(:self, %{"credential" => credential})
+```
+
+## Query instances
+
+```elixir
+alias Uplink.Clients.LXD
+
+frequency =
+  LXD.list_instances()
+  |> Enum.frequencies_by(fn i -> i.location end)
+  |> IO.inspect()
+
+LXD.list_cluster_members()
+|> Enum.min_by(fn m -> frequency[m.server_name] || 0 end)
+```
