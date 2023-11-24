@@ -70,20 +70,6 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
   end
 
   describe "bootstrap instance" do
-    test "no matching cluster member", %{
-      install: install,
-      actor: actor
-    } do
-      assert {:ok, %{resource: install}} =
-               perform_job(Bootstrap, %{
-                 instance: %{slug: "something-1", node: %{slug: "some-node-01"}},
-                 install_id: install.id,
-                 actor_id: actor.id
-               })
-
-      assert install.current_state == "failed"
-    end
-
     test "when project does not exist", %{
       bypass: bypass,
       install: install,

@@ -4,7 +4,6 @@ defmodule Uplink.Packages.Instance.Bootstrap do
     max_attempts: 1
 
   alias Uplink.Repo
-  alias Uplink.Members
   alias Uplink.Members.Actor
 
   alias Uplink.Packages
@@ -12,9 +11,9 @@ defmodule Uplink.Packages.Instance.Bootstrap do
   alias Uplink.Packages.Instance
   alias Uplink.Packages.Instance.Cleanup
 
-  alias Uplink.Clients.LXD
   alias Uplink.Clients.Instellar
-  alias Uplink.Clients.LXD.Cluster
+
+  alias Uplink.Clients.LXD
   alias Uplink.Clients.LXD.Cluster.Member
 
   @transition_parameters %{
@@ -33,15 +32,14 @@ defmodule Uplink.Packages.Instance.Bootstrap do
   import Ecto.Query, only: [preload: 2]
 
   def perform(%Oban.Job{
-        args:
-          %{
-            "instance" =>
-              %{
-                "slug" => name
-              } = instance_params,
-            "install_id" => install_id,
-            "actor_id" => actor_id
-          } = job_args
+        args: %{
+          "instance" =>
+            %{
+              "slug" => name
+            } = instance_params,
+          "install_id" => install_id,
+          "actor_id" => actor_id
+        }
       }) do
     %Actor{} = actor = Repo.get(Actor, actor_id)
 
@@ -50,10 +48,6 @@ defmodule Uplink.Packages.Instance.Bootstrap do
       Install
       |> preload([:deployment])
       |> Repo.get(install_id)
-
-    cluster_member_names =
-      LXD.list_cluster_members()
-      |> Enum.map(& &1.server_name)
 
     frequency =
       LXD.list_instances()
@@ -90,7 +84,7 @@ defmodule Uplink.Packages.Instance.Bootstrap do
       profile_name = Packages.profile_name(metadata)
       package = channel.package
 
-      instance_params =
+      lxd_instance_params =
         Map.merge(@default_params, %{
           "name" => name,
           "architecture" => architecture,
@@ -133,7 +127,7 @@ defmodule Uplink.Packages.Instance.Bootstrap do
       formation_instance = Formation.new_lxd_instance(formation_instance_params)
 
       client
-      |> Formation.lxd_create(selected_member.server_name, instance_params,
+      |> Formation.lxd_create(selected_member.server_name, lxd_instance_params,
         project: project_name
       )
       |> Formation.lxd_start(name, project: project_name)
