@@ -38,6 +38,14 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
       |> Plug.Conn.resp(200, cluster_members)
     end)
 
+    instances_list = File.read!("test/fixtures/lxd/instances/list/empty.json")
+
+    Bypass.expect_once(bypass, "GET", "/1.0/instances", fn conn ->
+      conn
+      |> Plug.Conn.put_resp_header("content-type", "application/json")
+      |> Plug.Conn.resp(200, instances_list)
+    end)
+
     Cache.delete(:cluster_members)
 
     create_instance = File.read!("test/fixtures/lxd/instances/create.json")

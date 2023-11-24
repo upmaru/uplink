@@ -151,8 +151,6 @@ defmodule Uplink.Packages.Instance.Upgrade do
         |> Instance.Finalize.new()
         |> Oban.insert()
 
-        {:ok, upgrade_package_output}
-
       {:error, %{"err" => "Failed to retrieve PID of executing child process"}} ->
         Uplink.TaskSupervisor
         |> @task_supervisor.async_nolink(

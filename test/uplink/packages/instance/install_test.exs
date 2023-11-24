@@ -105,6 +105,9 @@ defmodule Uplink.Packages.Instance.InstallTest do
     {:ok, %{resource: executing_install}} =
       Packages.transition_install_with(validating_install, actor, "execute")
 
+    Cache.put({:install, install.id, "completed"}, [])
+    Cache.put({:install, install.id, "executing"}, ["some-instance-01"])
+
     start_instance = File.read!("test/fixtures/lxd/instances/start.json")
     exec_instance = File.read!("test/fixtures/lxd/instances/exec.json")
     wait_for_operation = File.read!("test/fixtures/lxd/operations/wait.json")
@@ -261,7 +264,7 @@ defmodule Uplink.Packages.Instance.InstallTest do
         end
       )
 
-      Bypass.expect_once(
+      Bypass.expect(
         bypass,
         "POST",
         "/uplink/installations/#{install.instellar_installation_id}/instances/#{instance_slug}/events",
@@ -269,7 +272,9 @@ defmodule Uplink.Packages.Instance.InstallTest do
           assert {:ok, body, conn} = Plug.Conn.read_body(conn)
           assert {:ok, body} = Jason.decode(body)
 
-          %{"event" => %{"name" => "complete" = event_name}} = body
+          %{"event" => %{"name" => event_name}} = body
+
+          assert event_name in ["complete", "boot"]
 
           conn
           |> Plug.Conn.put_resp_header("content-type", "application/json")
@@ -282,7 +287,7 @@ defmodule Uplink.Packages.Instance.InstallTest do
         end
       )
 
-      assert {:ok, %{"id" => _id}} =
+      assert {:ok, %Oban.Job{worker: worker}} =
                perform_job(Install, %{
                  instance: %{
                    slug: instance_slug,
@@ -293,6 +298,8 @@ defmodule Uplink.Packages.Instance.InstallTest do
                  install_id: install.id,
                  actor_id: actor.id
                })
+
+      assert worker == "Uplink.Packages.Instance.Finalize"
 
       assert_enqueued(
         worker: Uplink.Clients.Caddy.Config.Reload,
@@ -347,6 +354,27 @@ defmodule Uplink.Packages.Instance.InstallTest do
       project: project_name
     } do
       project_found = File.read!("test/fixtures/lxd/projects/show.json")
+
+      Bypass.expect(
+        bypass,
+        "POST",
+        "/uplink/installations/#{install.instellar_installation_id}/instances/#{instance_slug}/events",
+        fn conn ->
+          assert {:ok, body, conn} = Plug.Conn.read_body(conn)
+          assert {:ok, body} = Jason.decode(body)
+
+          %{"event" => %{"name" => event_name}} = body
+
+          conn
+          |> Plug.Conn.put_resp_header("content-type", "application/json")
+          |> Plug.Conn.resp(
+            201,
+            Jason.encode!(%{
+              "data" => %{"attributes" => %{"id" => 1, "name" => event_name}}
+            })
+          )
+        end
+      )
 
       Bypass.expect_once(
         bypass,

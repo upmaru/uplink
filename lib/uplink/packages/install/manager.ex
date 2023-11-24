@@ -59,7 +59,7 @@ defmodule Uplink.Packages.Install.Manager do
     if Enum.count(completed_instances) == Enum.count(executing_instances) do
       Packages.transition_install_with(install, actor, "complete")
     else
-      {:ok, :still_executing}
+      {:ok, :executing}
     end
   end
 
