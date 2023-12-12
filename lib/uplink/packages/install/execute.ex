@@ -12,7 +12,6 @@ defmodule Uplink.Packages.Install.Execute do
   alias Uplink.Packages
   alias Uplink.Packages.Install
   alias Uplink.Packages.Metadata
-  alias Uplink.Packages.Instance
 
   alias Uplink.Packages.Instance.Bootstrap
   alias Uplink.Packages.Instance.Upgrade

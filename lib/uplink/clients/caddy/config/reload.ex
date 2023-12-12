@@ -8,8 +8,6 @@ defmodule Uplink.Clients.Caddy.Config.Reload do
   alias Uplink.Repo
   alias Uplink.Cache
 
-  alias Uplink.Members
-
   alias Uplink.Packages
   alias Uplink.Packages.Install
 
@@ -22,7 +20,7 @@ defmodule Uplink.Clients.Caddy.Config.Reload do
   @task_supervisor Application.compile_env(:uplink, :task_supervisor) ||
                      Task.Supervisor
 
-  def perform(%Oban.Job{args: %{"install_id" => install_id} = params}) do
+  def perform(%Oban.Job{args: %{"install_id" => install_id}}) do
     %Install{} =
       install =
       Install

@@ -21,8 +21,8 @@ defmodule Uplink.Packages.Instance.Finalize do
               } = instance_params,
             "comment" => comment,
             "install_id" => install_id,
-            "actor_id" => actor_id
-          } = args
+            "actor_id" => _actor_id
+          } = _args
       }) do
     %Install{} =
       install =

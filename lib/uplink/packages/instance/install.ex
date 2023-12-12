@@ -4,7 +4,6 @@ defmodule Uplink.Packages.Instance.Install do
   alias Uplink.Repo
   alias Uplink.Cache
 
-  alias Uplink.Clients
   alias Uplink.Clients.LXD
   alias Uplink.Clients.Caddy
   alias Uplink.Clients.Instellar
