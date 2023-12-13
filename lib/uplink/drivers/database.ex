@@ -2,7 +2,7 @@ defmodule Uplink.Drivers.Database do
   defmodule Postgresql do
     @behaviour Uplink.Drivers.Behaviour
 
-    def perform(%{"credential" => credential_params}, options \\ []) do
+    def provision(%{"credential" => credential_params}, options \\ []) do
       with {:ok, master_credential} <-
              Formation.Postgresql.Credential.create(credential_params),
            {:ok, generated_credential} <-
@@ -12,6 +12,15 @@ defmodule Uplink.Drivers.Database do
              ) do
         {:ok, generated_credential}
       end
+    end
+
+    def modify(
+          %{
+            "credential" => credential_params,
+            "component_instance_id" => component_instance_id
+          },
+          options \\ []
+        ) do
     end
   end
 end

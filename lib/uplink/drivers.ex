@@ -7,11 +7,12 @@ defmodule Uplink.Drivers do
   }
 
   defmodule Behaviour do
-    @callback perform(map(), Keyword.t()) :: {:ok, map()}
+    @callback provision(map(), Keyword.t()) :: {:ok, map()}
+    @callback modify(map(), Keyword.t()) :: {:ok, map()}
   end
 
-  def perform(module, params, options) do
+  def perform(call, module, params, options) do
     driver = Map.fetch!(@driver_mapping, module)
-    driver.perform(params, options)
+    apply(driver, call, [params, options])
   end
 end
