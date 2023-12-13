@@ -14,7 +14,7 @@ defmodule Uplink.Components.Instance.Modify do
     end
   end
 
-  defp handle_peroform(
+  defp handle_perform(
          %{
            "generator" => %{"module" => module},
            "credential" => credential_params
@@ -23,7 +23,7 @@ defmodule Uplink.Components.Instance.Modify do
            "component_id" => component_id,
            "component_instance_id" => component_instance_id,
            "variable_id" => variable_id
-         }
+         } = job_args
        ) do
     options =
       job_args

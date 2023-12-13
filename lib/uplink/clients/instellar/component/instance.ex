@@ -1,7 +1,7 @@
 defmodule Uplink.Clients.Instellar.Component.Instance do
   alias Uplink.Clients.Instellar
 
-  def get(component_instance_id) do
+  def get(component_id, component_instance_id) do
     [
       Instellar.endpoint(),
       "self",
