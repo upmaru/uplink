@@ -5,7 +5,7 @@ defmodule Uplink.Components.Router do
   alias Uplink.Secret
 
   alias Uplink.Members
-  alias Uplink.Components.Instance.Provision
+  alias Uplink.Components.Instance.Enqueue
 
   plug :match
 
@@ -19,32 +19,16 @@ defmodule Uplink.Components.Router do
   plug :dispatch
 
   post "/:component_id/instances" do
-    %{
-      "actor" => actor_params,
-      "arguments" => argument_params,
-      "variable_id" => variable_id
-    } = conn.body_params
-
-    job_params =
-      if component_instance_id =
-           Map.get(conn.body_params, "component_instance_id") do
-        Modify.new(%{
-          component_id: component_id,
-          variable_id: variable_id,
-          component_instance_id: component_instance_id,
-          arguments: argument_params
-        })
-      else
-        Provision.new(%{
-          component_id: component_id,
-          variable_id: variable_id,
-          arguments: argument_params
-        })
-      end
+    %{"actor" => actor_params} = conn.body_params
 
     with {:ok, %Members.Actor{}} <- Members.get_or_create_actor(actor_params),
-         {:ok, job} <- Oban.insert(job_params) do
+         {:ok, job} <- Enqueue.job(component_id, conn.body_params) do
       json(conn, :created, %{id: job.id})
+    else
+      {:error, :unprocessable_entity = error} ->
+        json(conn, error, %{
+          error: %{message: "invalid parameters for component instance job"}
+        })
     end
   end
 end
