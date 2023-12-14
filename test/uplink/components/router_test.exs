@@ -8,31 +8,53 @@ defmodule Uplink.Components.RouterTest do
 
   @opts Router.init([])
 
-  @valid_body Jason.encode!(%{
-                "actor" => %{
-                  "provider" => "instellar",
-                  "identifier" => "zacksiri",
-                  "id" => "1"
-                },
-                "variable_id" => "1",
-                "arguments" => %{}
-              })
+  @valid_provision_body Jason.encode!(%{
+                          "actor" => %{
+                            "provider" => "instellar",
+                            "identifier" => "zacksiri",
+                            "id" => "1"
+                          },
+                          "variable_id" => "1",
+                          "arguments" => %{}
+                        })
+
+  @valid_modify_body Jason.encode!(%{
+                       "actor" => %{
+                         "provider" => "instellar",
+                         "identifier" => "zacksiri",
+                         "id" => "1"
+                       },
+                       "component_instance_id" => "1",
+                       "variable_id" => "1",
+                       "arguments" => %{}
+                     })
+
+  @incomplete_body Jason.encode!(%{
+                     "actor" => %{
+                       "provider" => "instellar",
+                       "identifier" => "zacksiri",
+                       "id" => "1"
+                     },
+                     "arguments" => %{}
+                   })
 
   setup do
     :ok = Ecto.Adapters.SQL.Sandbox.checkout(Uplink.Repo)
-
-    signature =
-      :crypto.mac(:hmac, :sha256, Uplink.Secret.get(), @valid_body)
-      |> Base.encode16()
-      |> String.downcase()
-
-    {:ok, signature: signature}
   end
 
-  describe "create component instance provisioning job" do
-    test "successfully", %{signature: signature} do
+  describe "provision" do
+    setup do
+      signature =
+        :crypto.mac(:hmac, :sha256, Uplink.Secret.get(), @valid_provision_body)
+        |> Base.encode16()
+        |> String.downcase()
+
+      {:ok, signature: signature}
+    end
+
+    test "successfully enqueue provision job", %{signature: signature} do
       conn =
-        conn(:post, "/1/instances", @valid_body)
+        conn(:post, "/1/instances", @valid_provision_body)
         |> put_req_header("x-uplink-signature-256", "sha256=#{signature}")
         |> put_req_header("content-type", "application/json")
         |> Router.call(@opts)
@@ -45,6 +67,60 @@ defmodule Uplink.Components.RouterTest do
         worker: Instance.Provision,
         args: %{"variable_id" => "1", "component_id" => "1", "arguments" => %{}}
       )
+    end
+  end
+
+  describe "modify" do
+    setup do
+      signature =
+        :crypto.mac(:hmac, :sha256, Uplink.Secret.get(), @valid_modify_body)
+        |> Base.encode16()
+        |> String.downcase()
+
+      {:ok, signature: signature}
+    end
+
+    test "successfully enqueue modify job", %{signature: signature} do
+      conn =
+        conn(:post, "/1/instances", @valid_modify_body)
+        |> put_req_header("x-uplink-signature-256", "sha256=#{signature}")
+        |> put_req_header("content-type", "application/json")
+        |> Router.call(@opts)
+
+      assert conn.status == 201
+
+      assert %{"data" => %{"id" => _job_id}} = Jason.decode!(conn.resp_body)
+
+      assert_enqueued(
+        worker: Instance.Modify,
+        args: %{
+          "component_instance_id" => "1",
+          "variable_id" => "1",
+          "component_id" => "1",
+          "arguments" => %{}
+        }
+      )
+    end
+  end
+
+  describe "error" do
+    setup do
+      signature =
+        :crypto.mac(:hmac, :sha256, Uplink.Secret.get(), @incomplete_body)
+        |> Base.encode16()
+        |> String.downcase()
+
+      {:ok, signature: signature}
+    end
+
+    test "error message", %{signature: signature} do
+      conn =
+        conn(:post, "/1/instances", @incomplete_body)
+        |> put_req_header("x-uplink-signature-256", "sha256=#{signature}")
+        |> put_req_header("content-type", "application/json")
+        |> Router.call(@opts)
+
+      assert conn.status == 422
     end
   end
 end
