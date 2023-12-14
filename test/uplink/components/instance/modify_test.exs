@@ -41,6 +41,103 @@ defmodule Uplink.Components.Instance.ModifyTest do
     {:ok, bypass: bypass}
   end
 
+  describe "postgresql database" do
+    test "return the same credential as retrieved", %{bypass: bypass} do
+      component_credential = %{
+        "username" => "master",
+        "password" => "masterpassword",
+        "host" => "some.db.com",
+        "resource" => "instellardb"
+      }
+
+      Bypass.expect_once(
+        bypass,
+        "GET",
+        "/uplink/self/components/1",
+        fn conn ->
+          conn
+          |> Plug.Conn.put_resp_header("content-type", "application/json")
+          |> Plug.Conn.resp(
+            200,
+            Jason.encode!(%{
+              "data" => %{
+                "attributes" => %{
+                  "generator" => %{"module" => "database/postgresql"},
+                  "credential" => component_credential
+                }
+              }
+            })
+          )
+        end
+      )
+
+      postgresql_instance_attributes = %{
+        "id" => 1,
+        "current_state" => "active",
+        "credential" => %{
+          "username" => "postgresql",
+          "password" => "instancepassword",
+          "host" => "some.db.com",
+          "resource" => "some_db_1234"
+        }
+      }
+
+      Bypass.expect_once(
+        bypass,
+        "GET",
+        "/uplink/self/components/1/instances/1",
+        fn conn ->
+          conn
+          |> Plug.Conn.put_resp_header("content-type", "application/json")
+          |> Plug.Conn.resp(
+            200,
+            Jason.encode!(%{
+              "data" => %{
+                "attributes" => postgresql_instance_attributes
+              }
+            })
+          )
+        end
+      )
+
+      Bypass.expect_once(
+        bypass,
+        "PATCH",
+        "/uplink/self/components/1/instances/1",
+        fn conn ->
+          {:ok, body, _} = Plug.Conn.read_body(conn)
+
+          {:ok, data} = Jason.decode(body)
+
+          assert %{"instance" => %{"credential" => %{"username" => username}}} =
+                   data
+
+          assert username ==
+                   postgresql_instance_attributes["credential"]["username"]
+
+          conn
+          |> Plug.Conn.put_resp_header("content-type", "application/json")
+          |> Plug.Conn.resp(
+            200,
+            Jason.encode!(%{
+              "data" => %{
+                "attributes" => postgresql_instance_attributes
+              }
+            })
+          )
+        end
+      )
+
+      assert {:ok, _result} =
+               perform_job(Instance.Modify, %{
+                 component_id: "1",
+                 variable_id: "1",
+                 component_instance_id: "1",
+                 arguments: %{}
+               })
+    end
+  end
+
   describe "s3 bucket" do
     test "modify s3 bucket cors config", %{bypass: bypass} do
       Uplink.Drivers.Bucket.AwsMock
