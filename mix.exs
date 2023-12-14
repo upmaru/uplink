@@ -19,7 +19,9 @@ defmodule Uplink.MixProject do
   end
 
   # Specifies which paths to compile per environment.
-  defp elixirc_paths(:test), do: ["lib", "test/scenarios", "test/fixture"]
+  defp elixirc_paths(:test),
+    do: ["lib", "test/support", "test/scenarios", "test/fixtures"]
+
   defp elixirc_paths(_), do: ["lib"]
 
   # Run "mix help compile.app" to learn about applications.
