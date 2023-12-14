@@ -16,12 +16,14 @@ defmodule Uplink.Drivers.Database do
 
     def modify(
           %{
-            "credential" => credential_params,
-            "component_instance" => _component_instance_attributes
+            "credential" => _credential_params,
+            "component_instance" => %{
+              "credential" => existing_credential_params
+            }
           },
           _options \\ []
         ) do
-      Formation.Postgresql.Credential.create(credential_params)
+      Formation.Postgresql.Credential.create(existing_credential_params)
     end
   end
 end
