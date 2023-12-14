@@ -17,6 +17,18 @@ defmodule Uplink.Components.Instance.ModifyTest do
   ]
   """
 
+  @component_instance_attributes %{
+    "id" => 1,
+    "current_state" => "active",
+    "credential" => %{
+      "type" => "instance",
+      "username" => "someaccesskey",
+      "password" => "somesecretkey",
+      "host" => "s3.amazonaws.com",
+      "resource" => "us-east-1"
+    }
+  }
+
   setup do
     bypass = Bypass.open()
 
@@ -84,16 +96,7 @@ defmodule Uplink.Components.Instance.ModifyTest do
             200,
             Jason.encode!(%{
               "data" => %{
-                "attributes" => %{
-                  "generator" => %{"module" => "bucket/aws-s3"},
-                  "credential" => %{
-                    "type" => "instance",
-                    "username" => "someaccesskey",
-                    "password" => "somesecretkey",
-                    "host" => "s3.amazonaws.com",
-                    "resource" => "us-east-1"
-                  }
-                }
+                "attributes" => @component_instance_attributes
               }
             })
           )
@@ -111,10 +114,7 @@ defmodule Uplink.Components.Instance.ModifyTest do
             200,
             Jason.encode!(%{
               "data" => %{
-                "attributes" => %{
-                  "id" => 1,
-                  "current_state" => "active"
-                }
+                "attributes" => @component_instance_attributes
               }
             })
           )
