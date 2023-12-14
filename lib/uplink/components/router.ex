@@ -25,14 +25,25 @@ defmodule Uplink.Components.Router do
       "variable_id" => variable_id
     } = conn.body_params
 
+    job_params =
+      if component_instance_id =
+           Map.get(conn.body_params, "component_instance_id") do
+        Modify.new(%{
+          component_id: component_id,
+          variable_id: variable_id,
+          component_instance_id: component_instance_id,
+          arguments: argument_params
+        })
+      else
+        Provision.new(%{
+          component_id: component_id,
+          variable_id: variable_id,
+          arguments: argument_params
+        })
+      end
+
     with {:ok, %Members.Actor{}} <- Members.get_or_create_actor(actor_params),
-         {:ok, job} <-
-           Provision.new(%{
-             component_id: component_id,
-             variable_id: variable_id,
-             arguments: argument_params
-           })
-           |> Oban.insert() do
+         {:ok, job} <- Oban.insert(job_params) do
       json(conn, :created, %{id: job.id})
     end
   end
