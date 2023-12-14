@@ -42,4 +42,27 @@ defmodule Uplink.Clients.Instellar.Component.Instance do
         {:error, body}
     end
   end
+
+  def update(component_id, component_instance_id, params) do
+    [
+      Instellar.endpoint(),
+      "self",
+      "components",
+      "#{component_id}",
+      "instances",
+      "#{component_instance_id}"
+    ]
+    |> Path.join()
+    |> Req.patch!(
+      json: params,
+      headers: Instellar.Self.headers()
+    )
+    |> case do
+      %{status: 200, body: %{"data" => %{"attributes" => attributes}}} ->
+        {:ok, attributes}
+
+      %{status: _, body: body} ->
+        {:error, body}
+    end
+  end
 end
