@@ -41,6 +41,18 @@ defmodule Uplink.Clients.Instellar do
     to: Component,
     as: :show
 
+  defdelegate get_component_instance(component_id, component_instance_id),
+    to: Component.Instance,
+    as: :get
+
+  defdelegate update_component_instance(
+                component_id,
+                component_instance_id,
+                params
+              ),
+              to: Component.Instance,
+              as: :update
+
   defdelegate create_component_instance(component_id, params),
     to: Component.Instance,
     as: :create

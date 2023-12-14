@@ -77,7 +77,7 @@ defmodule Uplink.Components.Instance.ProvisionTest do
   describe "aws s3 bucket" do
     test "provision aws s3 bucket", %{bypass: bypass} do
       Uplink.Drivers.Bucket.AwsMock
-      |> expect(:perform, fn _params, options ->
+      |> expect(:provision, fn _params, options ->
         assert [acl: "private"] == options
 
         {:ok, %Formation.S3.Credential{}}

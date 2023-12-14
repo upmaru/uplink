@@ -1,4 +1,4 @@
-defmodule Uplink.Components.Instance.Provision do
+defmodule Uplink.Components.Instance.Modify do
   use Oban.Worker, queue: :components, max_attempts: 1
 
   alias Uplink.Drivers
@@ -19,40 +19,38 @@ defmodule Uplink.Components.Instance.Provision do
            "generator" => %{"module" => module},
            "credential" => credential_params
          },
-         %{"component_id" => component_id, "variable_id" => variable_id} =
-           job_args
+         %{
+           "component_id" => component_id,
+           "component_instance_id" => component_instance_id,
+           "variable_id" => variable_id
+         } = job_args
        ) do
-    uuid = Ecto.UUID.generate()
-
-    id =
-      uuid
-      |> String.split("-")
-      |> List.first()
-
-    [_, component_type] = String.split(module, "/")
-
-    name = "#{component_type}-#{id}"
-
     options =
       job_args
       |> Map.get("arguments", %{})
       |> Enum.map(fn {k, v} -> {String.to_atom(k), v} end)
 
-    with {:ok, credential} <-
+    with {:ok, component_instance_attributes} <-
+           Instellar.get_component_instance(component_id, component_instance_id),
+         {:ok, credential} <-
            Drivers.perform(
-             :provision,
+             :modify,
              module,
-             %{"credential" => credential_params},
+             %{
+               "credential" => credential_params,
+               "component_instance" => component_instance_attributes
+             },
              options
            ),
          {:ok, component_instance_attributes} <-
-           Instellar.create_component_instance(component_id, %{
-             "variable_id" => variable_id,
-             "instance" => %{
-               "name" => name,
-               "credential" => Map.from_struct(credential)
+           Instellar.update_component_instance(
+             component_id,
+             component_instance_id,
+             %{
+               "variable_id" => variable_id,
+               "instance" => %{"credential" => Map.from_struct(credential)}
              }
-           }) do
+           ) do
       {:ok, component_instance_attributes}
     end
   end
