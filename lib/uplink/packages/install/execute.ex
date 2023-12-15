@@ -72,7 +72,6 @@ defmodule Uplink.Packages.Install.Execute do
 
     jobs =
       instances
-      |> Enum.with_index(fn element, index -> {element, index} end)
       |> Enum.map(&choose_execution_path(&1, existing_instances, state))
 
     {:ok, jobs}
@@ -84,7 +83,7 @@ defmodule Uplink.Packages.Install.Execute do
     managed_by == "uplink"
   end
 
-  defp choose_execution_path({instance, index}, existing_instances, state) do
+  defp choose_execution_path(instance, existing_instances, state) do
     existing_instances_name = Enum.map(existing_instances, & &1.name)
 
     event_name =
@@ -129,20 +128,17 @@ defmodule Uplink.Packages.Install.Execute do
           "install_id" => state.install.id,
           "actor_id" => state.actor.id
         }
-        |> Upgrade.new(schedule_in: 5 * index)
+        |> Upgrade.new()
         |> Oban.insert()
 
       "boot" ->
-        Bootstrap.new(
-          %{
-            "instance" => %{
-              "slug" => instance.slug
-            },
-            "install_id" => state.install.id,
-            "actor_id" => state.actor.id
+        Bootstrap.new(%{
+          "instance" => %{
+            "slug" => instance.slug
           },
-          schedule_in: 5 * index
-        )
+          "install_id" => state.install.id,
+          "actor_id" => state.actor.id
+        })
         |> Oban.insert()
     end
   end
