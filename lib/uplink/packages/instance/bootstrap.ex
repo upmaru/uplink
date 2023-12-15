@@ -149,7 +149,7 @@ defmodule Uplink.Packages.Instance.Bootstrap do
             "install_id" => install.id,
             "actor_id" => actor_id
           }
-          |> Instance.Install.new(schedule_in: 5)
+          |> Instance.Install.new(schedule_in: 10)
           |> Oban.insert()
 
         {:error, error} ->
