@@ -10,7 +10,7 @@ defmodule Uplink.Packages.Instance.Install do
 
   alias Uplink.Packages
   alias Uplink.Packages.Install
-  alias Uplink.Packages.Instance
+  alias Uplink.Packages.Instance.Finalize
   alias Uplink.Packages.Instance.Cleanup
 
   alias Uplink.Members.Actor
@@ -114,7 +114,7 @@ defmodule Uplink.Packages.Instance.Install do
           "install_id" => install_id,
           "actor_id" => actor_id
         }
-        |> Instance.Finalize.new()
+        |> Finalize.new()
         |> Oban.insert()
 
       {:error, %{"error" => "Instance is not running"}} ->

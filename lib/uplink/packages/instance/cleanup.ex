@@ -93,7 +93,8 @@ defmodule Uplink.Packages.Instance.Cleanup do
         comment = Map.get(args, "comment", "no comment")
 
         Instellar.transition_instance(name, install, event_name,
-          comment: "[Uplink.Packages.Instance.Cleanup] #{inspect(comment)}"
+          comment:
+            "[Uplink.Packages.Instance.Cleanup] #{parse_comment(comment)}"
         )
       end,
       shutdown: 30_000
@@ -109,7 +110,8 @@ defmodule Uplink.Packages.Instance.Cleanup do
         comment = Map.get(args, "comment", "no comment")
 
         Instellar.transition_instance(name, install, "deactivate",
-          comment: "[Uplink.Packages.Instance.Cleanup] #{inspect(comment)}",
+          comment:
+            "[Uplink.Packages.Instance.Cleanup] #{parse_comment(comment)}",
           parameters: @transition_parameters
         )
       end,
@@ -120,4 +122,8 @@ defmodule Uplink.Packages.Instance.Cleanup do
     |> Bootstrap.new()
     |> Oban.insert()
   end
+
+  defp parse_comment(comment) when is_binary(comment), do: comment
+
+  defp parse_comment(comment), do: inspect(comment)
 end
