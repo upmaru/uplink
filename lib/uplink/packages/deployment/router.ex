@@ -94,9 +94,15 @@ defmodule Uplink.Packages.Deployment.Router do
         |> Install.by_hash_and_installation(instellar_installation_id)
         |> Repo.one()
         |> Repo.preload([:deployment])
-        |> Packages.build_install_state()
+        |> case do
+          %Install{} = install ->
+            Packages.build_install_state(install)
 
-        json(conn, :ok, %{})
+            json(conn, :ok, %{})
+
+          nil ->
+            json(conn, :not_found, %{})
+        end
 
       %{"event" => %{"name" => "delete"}} ->
         :ok =
