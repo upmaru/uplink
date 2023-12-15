@@ -62,16 +62,17 @@ defmodule Uplink.Packages.Install.Execute do
       LXD.list_instances(project)
       |> Enum.filter(&only_uplink_instance/1)
 
-    Cache.put({:install, state.install.id, "completed"}, [],
+    Cache.put_new({:install, state.install.id, "completed"}, [],
       ttl: :timer.hours(24)
     )
 
-    Cache.put({:install, state.install.id, "executing"}, [],
+    Cache.put_new({:install, state.install.id, "executing"}, [],
       ttl: :timer.hours(24)
     )
 
     jobs =
       instances
+      |> Enum.with_index(fn element, index -> {element, index} end)
       |> Enum.map(&choose_execution_path(&1, existing_instances, state))
 
     {:ok, jobs}
@@ -83,7 +84,7 @@ defmodule Uplink.Packages.Install.Execute do
     managed_by == "uplink"
   end
 
-  defp choose_execution_path(instance, existing_instances, state) do
+  defp choose_execution_path({instance, index}, existing_instances, state) do
     existing_instances_name = Enum.map(existing_instances, & &1.name)
 
     event_name =
@@ -128,17 +129,20 @@ defmodule Uplink.Packages.Install.Execute do
           "install_id" => state.install.id,
           "actor_id" => state.actor.id
         }
-        |> Upgrade.new()
+        |> Upgrade.new(schedule_in: 5 * index)
         |> Oban.insert()
 
       "boot" ->
-        Bootstrap.new(%{
-          "instance" => %{
-            "slug" => instance.slug
+        Bootstrap.new(
+          %{
+            "instance" => %{
+              "slug" => instance.slug
+            },
+            "install_id" => state.install.id,
+            "actor_id" => state.actor.id
           },
-          "install_id" => state.install.id,
-          "actor_id" => state.actor.id
-        })
+          schedule_in: 5 * index
+        )
         |> Oban.insert()
     end
   end
