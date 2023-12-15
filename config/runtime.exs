@@ -11,6 +11,24 @@ project_name =
     "default"
   end
 
+instance_concurrency =
+  System.schedulers_online()
+  |> div(2)
+  |> max(1)
+
+instance_operation_concurrency =
+  System.get_env("INSTANCE_OPERATION_CONCURRENCY", "#{instance_concurrency}")
+  |> String.to_integer()
+
+config :uplink, Oban,
+  queues: [
+    install: 1,
+    deployment: 1,
+    instance: instance_operation_concurrency,
+    caddy: 1,
+    components: 1
+  ]
+
 config :uplink, Uplink.Data,
   mode: uplink_mode,
   project: project_name

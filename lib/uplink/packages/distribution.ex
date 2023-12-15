@@ -52,8 +52,8 @@ defmodule Uplink.Packages.Distribution do
     end
   end
 
-  defp serve(conn, %Archive{node: node}) do
-    if Atom.to_string(Node.self()) == node do
+  defp serve(conn, %Archive{node: archive_node}) do
+    if Atom.to_string(Node.self()) == archive_node do
       static_options =
         Plug.Static.init(
           at: "/",
@@ -63,7 +63,7 @@ defmodule Uplink.Packages.Distribution do
       conn
       |> Plug.Static.call(static_options)
     else
-      [_app, node_host_name] = String.split(node, "@")
+      [_app, node_host_name] = String.split(archive_node, "@")
       internal_router_config = Application.get_env(:uplink, Uplink.Internal)
       port = Keyword.get(internal_router_config, :port, 4080)
 
