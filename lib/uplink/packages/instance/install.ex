@@ -11,6 +11,7 @@ defmodule Uplink.Packages.Instance.Install do
   alias Uplink.Packages
   alias Uplink.Packages.Install
   alias Uplink.Packages.Instance
+  alias Uplink.Packages.Instance.Cleanup
 
   alias Uplink.Members.Actor
 
@@ -121,6 +122,12 @@ defmodule Uplink.Packages.Instance.Install do
 
       {:error, error} ->
         if job.attempt == job.max_attempts do
+          error =
+            cond do
+              is_binary(error) -> error
+              true -> inspect(error)
+            end
+
           Uplink.TaskSupervisor
           |> @task_supervisor.async_nolink(
             fn ->
@@ -128,12 +135,21 @@ defmodule Uplink.Packages.Instance.Install do
                 formation_instance.slug,
                 install,
                 "fail",
-                comment: "[Uplink.Packages.Instance.Install] #{inspect(error)}",
+                comment: "[Uplink.Packages.Instance.Install] #{error}",
                 parameters: @transition_parameters
               )
             end,
             shutdown: 30_000
           )
+
+          %{
+            "instance" => instance_params,
+            "comment" => error,
+            "install_id" => install_id,
+            "actor_id" => actor_id
+          }
+          |> Cleanup.new()
+          |> Oban.insert()
         end
 
         {:error, error}
