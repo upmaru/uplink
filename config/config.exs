@@ -27,12 +27,12 @@ config :uplink, Oban,
   queues: [
     install: 1,
     deployment: 1,
-    instance: 2,
+    instance: 1,
     caddy: 1,
     components: 1
   ]
 
-config :formation, Formation.Lxd, timeout: 600
+config :formation, Formation.Lxd, timeout: 180
 
 config :logger,
   backends: [:console]
