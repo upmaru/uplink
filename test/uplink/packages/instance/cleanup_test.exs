@@ -175,7 +175,7 @@ defmodule Uplink.Packages.Instance.CleanupTest do
         "GET",
         "/1.0/operations/#{stop_instance_operation_id}/wait",
         fn conn ->
-          assert %{"timeout" => "120"} = conn.query_params
+          assert %{"timeout" => "600"} = conn.query_params
 
           conn
           |> Plug.Conn.put_resp_header("content-type", "application/json")
@@ -208,7 +208,7 @@ defmodule Uplink.Packages.Instance.CleanupTest do
         "GET",
         "/1.0/operations/#{delete_instance_operation_id}/wait",
         fn conn ->
-          assert %{"timeout" => "120"} = conn.query_params
+          assert %{"timeout" => "600"} = conn.query_params
 
           conn
           |> Plug.Conn.put_resp_header("content-type", "application/json")
