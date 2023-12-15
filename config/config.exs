@@ -32,6 +32,8 @@ config :uplink, Oban,
     components: 1
   ]
 
+config :formation, Formation.Lxd, timeout: 600
+
 config :logger,
   backends: [:console]
 
