@@ -27,7 +27,7 @@ config :uplink, Oban,
   queues: [
     install: 1,
     deployment: 1,
-    instance: 1,
+    instance: 2,
     caddy: 1,
     components: 1
   ]
