@@ -142,6 +142,8 @@ defmodule Uplink.Packages.Instance.Install do
             shutdown: 30_000
           )
 
+          instance_params = Map.put(instance_params, "current_state", "failing")
+
           %{
             "instance" => instance_params,
             "comment" => error,
