@@ -6,6 +6,10 @@ defmodule Uplink.Data.Provisioner do
   alias Uplink.Clients.LXD
   alias Uplink.Clients.Instellar
 
+  alias Uplink.Data.Pro
+
+  alias Formation.Postgresql.Credential
+
   defstruct [:mode, :project, :status]
 
   @type t :: %__MODULE__{
@@ -21,31 +25,79 @@ defmodule Uplink.Data.Provisioner do
   @impl true
   def init(_args) do
     config = Application.get_env(:uplink, Uplink.Data) || []
+    env = Application.get_env(:uplink, :environment)
     mode = Keyword.get(config, :mode, "pro")
     project = Keyword.get(config, :project, "default")
 
-    send(self(), {:bootstrap, mode})
+    send(self(), {:bootstrap, mode, env})
 
     {:ok, %__MODULE__{mode: mode, project: project}}
   end
 
   @impl true
-  def handle_info({:bootstrap, "pro"}, state) do
+  def handle_info({:bootstrap, "pro", :prod}, state) do
     if System.get_env("DATABASE_URL") do
       Uplink.Data.start_link([])
     else
       %{"components" => components} = Instellar.get_self()
 
-      matched_component =
-        Enum.find(components, fn component ->
-          component["generator"]["module"] == "database/postgresql"
-        end)
+      with {:ok, %{"credential" => credential}} <-
+             components
+             |> Enum.find(&Pro.match_postgresql_component/1)
+             |> Pro.maybe_provision_postgresql_instance(),
+           {:ok, credential} <- Credential.create(credential) do
+        uri = URI.parse("ecto:///")
+
+        %{
+          username: username,
+          password: password,
+          hostname: host,
+          port: port,
+          database: database
+        } = credential
+
+        url =
+          %{
+            uri
+            | host: host,
+              userinfo: "#{username}:#{password}",
+              authority: "#{host}:#{port}",
+              port: port,
+              path: "/#{database}"
+          }
+          |> to_string()
+
+        repo_options = [
+          url: url,
+          queue_target: 10_000,
+          ssl_opts: [
+            verify: :verify_peer,
+            server_name_indication: to_charlist(host),
+            customize_hostname_check: [
+              match_fun: :public_key.pkix_verify_hostname_match_fun(:https)
+            ]
+          ]
+        ]
+
+        Application.put_env(:uplink, Uplink.Repo, repo_options)
+        Uplink.Release.Tasks.migrate(force: true)
+        Uplink.Data.start_link([])
+
+        {:noreply, put_in(state.status, :ok)}
+      else
+        {:error, _error} ->
+          handle_info({:bootstrap, "lite"}, state)
+      end
     end
+  end
+
+  def handle_info({:bootstrap, "pro", _}, state) do
+    Uplink.Data.start_link([])
 
     {:noreply, put_in(state.status, :ok)}
   end
 
-  def handle_info({:bootstrap, "lite"}, state) do
+  def handle_info({:bootstrap, "lite", _env}, state) do
     db_url = Formation.Lxd.Alpine.postgresql_connection_url(scheme: "ecto")
     uri = URI.parse(db_url)
 
@@ -87,11 +139,5 @@ defmodule Uplink.Data.Provisioner do
 
   def handle_info(_message, state) do
     {:noreply, state}
-  end
-
-  defp match_postgresql_component(%{"generator" => %{"module" => module}}),
-    do: module == "database/postgresql"
-
-  defp maybe_provision_postgresql_instance(%{"id" => component_id}) do
   end
 end

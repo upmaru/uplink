@@ -9,6 +9,7 @@ defmodule Uplink.Clients.Instellar do
     Instance,
     Register,
     Component,
+    Variable,
     Self
   }
 
@@ -55,6 +56,10 @@ defmodule Uplink.Clients.Instellar do
 
   defdelegate create_component_instance(component_id, params),
     to: Component.Instance,
+    as: :create
+
+  defdelegate create_uplink_variable(params),
+    to: Variable,
     as: :create
 
   defdelegate transition_instance(instance, install, event_name, options \\ []),
