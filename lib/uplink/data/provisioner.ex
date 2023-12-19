@@ -4,6 +4,7 @@ defmodule Uplink.Data.Provisioner do
   require Logger
 
   alias Uplink.Clients.LXD
+  alias Uplink.Clients.Instellar
 
   defstruct [:mode, :project, :status]
 
@@ -33,6 +34,12 @@ defmodule Uplink.Data.Provisioner do
     if System.get_env("DATABASE_URL") do
       Uplink.Data.start_link([])
     else
+      %{"components" => components} = Instellar.get_self()
+
+      matched_component =
+        Enum.find(components, fn component ->
+          component["generator"]["module"] == "database/postgresql"
+        end)
     end
 
     {:noreply, put_in(state.status, :ok)}
@@ -80,5 +87,11 @@ defmodule Uplink.Data.Provisioner do
 
   def handle_info(_message, state) do
     {:noreply, state}
+  end
+
+  defp match_postgresql_component(%{"generator" => %{"module" => module}}),
+    do: module == "database/postgresql"
+
+  defp maybe_provision_postgresql_instance(%{"id" => component_id}) do
   end
 end
