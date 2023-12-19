@@ -30,7 +30,10 @@ defmodule Uplink.Data.Provisioner do
 
   @impl true
   def handle_info({:bootstrap, "pro"}, state) do
-    Uplink.Data.start_link([])
+    if System.get_env("DATABASE_URL") do
+      Uplink.Data.start_link([])
+    else
+    end
 
     {:noreply, put_in(state.status, :ok)}
   end

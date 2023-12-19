@@ -81,11 +81,10 @@ if config_env() == :prod and uplink_mode == "pro" do
   cacert_options =
     if cacert_pem do
       [
-        cacerts: [
+        cacerts:
           cacert_pem
-          |> X509.Certificate.from_pem!()
-          |> X509.Certificate.to_der()
-        ]
+          |> X509.from_pem()
+          |> Enum.map(&X509.Certificate.to_der/1)
       ]
     else
       [cacertfile: System.get_env("DATABASE_CERT_PATH") || "/etc/ssl/cert.pem"]
