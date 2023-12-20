@@ -66,7 +66,9 @@ defmodule Uplink.Clients.Instellar do
     to: Instance,
     as: :transition
 
-  def endpoint, do: config(:endpoint) || @endpoint
+  def endpoint do
+    config(:endpoint) || @endpoint
+  end
 
   def config(key) do
     Application.get_env(:uplink, __MODULE__)

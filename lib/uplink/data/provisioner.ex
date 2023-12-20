@@ -100,10 +100,12 @@ defmodule Uplink.Data.Provisioner do
 
         {:noreply, put_in(state.status, :ok)}
       else
-        {:error, _error} = result ->
+        {:error, _error} ->
           Logger.info("[Data.Provisioner] falling back to lite ...")
 
           send(self(), {:bootstrap, "lite", env})
+
+          if state.parent, do: send(state.parent, :fallback_to_lite)
 
           {:noreply, put_in(state.status, :provisioning)}
       end

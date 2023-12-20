@@ -1,11 +1,11 @@
 defmodule Uplink.Data.ProvisionerTest do
   use ExUnit.Case
 
+  alias Uplink.Cache
   alias Uplink.Data.Provisioner
 
   import Mox
 
-  setup :set_mox_from_context
   setup :verify_on_exit!
 
   setup do
@@ -17,31 +17,46 @@ defmodule Uplink.Data.ProvisionerTest do
       endpoint: "http://localhost:#{bypass.port}/uplink"
     )
 
+    Cache.put(:self, %{
+      "components" => [
+        %{
+          "id" => 1,
+          "generator" => %{"module" => "database/postgresql"}
+        }
+      ],
+      "credential" => %{
+        "endpoint" => "http://localhost:#{bypass.port}"
+      },
+      "organization" => %{
+        "slug" => "someorg",
+        "storage" => %{
+          "type" => "s3",
+          "host" => "some.host",
+          "bucket" => "some-bucket",
+          "region" => "sgp1",
+          "credential" => %{
+            "access_key_id" => "access-key",
+            "secret_access_key" => "secret"
+          }
+        }
+      },
+      "instances" => [
+        %{
+          "id" => 1,
+          "slug" => "uplink-01",
+          "node" => %{
+            "id" => 1,
+            "slug" => "some-node-01",
+            "public_ip" => "127.0.0.1"
+          }
+        }
+      ]
+    })
+
     {:ok, bypass: bypass}
   end
 
   test "sets up database in pro mode", %{bypass: bypass} do
-    Bypass.expect_once(bypass, "GET", "/uplink/self", fn conn ->
-      conn
-      |> Plug.Conn.put_resp_header("content-type", "application/json")
-      |> Plug.Conn.resp(
-        200,
-        Jason.encode!(%{
-          "data" => %{
-            "attributes" => %{
-              "credential" => %{},
-              "components" => [
-                %{
-                  "id" => 1,
-                  "generator" => %{"module" => "database/postgresql"}
-                }
-              ]
-            }
-          }
-        })
-      )
-    end)
-
     Bypass.expect_once(bypass, "GET", "/uplink/self/components/1", fn conn ->
       conn
       |> Plug.Conn.put_resp_header("content-type", "application/json")
@@ -112,7 +127,7 @@ defmodule Uplink.Data.ProvisionerTest do
     Uplink.Release.TasksMock
     |> expect(:migrate, fn _options -> :ok end)
 
-    assert {:ok, _pid} =
+    assert {:ok, pid} =
              start_supervised(
                {Provisioner,
                 [
@@ -122,6 +137,8 @@ defmodule Uplink.Data.ProvisionerTest do
                 ]}
              )
 
-    assert_receive :upgraded_to_pro, 1_000
+    allow(Uplink.Release.TasksMock, self(), pid)
+
+    assert_receive :upgraded_to_pro
   end
 end
