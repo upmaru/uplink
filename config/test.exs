@@ -21,6 +21,8 @@ config :uplink, Uplink.Clients.Caddy,
     prefix: "uplink"
   }
 
+config :uplink, :release_tasks, Uplink.Release.TasksMock
+
 config :uplink, :task_supervisor, Uplink.TaskSupervisorMock
 
 config :uplink, :environment, :test

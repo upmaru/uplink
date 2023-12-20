@@ -11,7 +11,7 @@ defmodule Uplink.Drivers do
     @callback modify(map(), Keyword.t()) :: {:ok, map()}
   end
 
-  def perform(call, module, params, options) do
+  def perform(call, module, params, options \\ []) do
     driver = Map.fetch!(@driver_mapping, module)
     apply(driver, call, [params, options])
   end
