@@ -10,7 +10,10 @@ defmodule Uplink.Data.Provisioner do
 
   alias Formation.Postgresql.Credential
 
-  defstruct [:mode, :project, :status]
+  @release_tasks Application.compile_env(:uplink, :release_tasks) ||
+                   Uplink.Release.Tasks
+
+  defstruct [:mode, :project, :status, :parent]
 
   @type t :: %__MODULE__{
           mode: String.t(),
@@ -18,24 +21,34 @@ defmodule Uplink.Data.Provisioner do
           status: :ok | :error | :provisioning | nil
         }
 
-  def start_link(_args) do
-    GenServer.start_link(__MODULE__, [], name: __MODULE__)
+  def start_link(options) do
+    name = Keyword.get(options, :name, __MODULE__)
+
+    GenServer.start_link(__MODULE__, options, name: name)
   end
 
   @impl true
-  def init(_args) do
+  def init(options) do
     config = Application.get_env(:uplink, Uplink.Data) || []
-    env = Application.get_env(:uplink, :environment)
+    parent = Keyword.get(options, :parent)
+
+    env =
+      Keyword.get(
+        options,
+        :environment,
+        Application.get_env(:uplink, :environment)
+      )
+
     mode = Keyword.get(config, :mode, "pro")
     project = Keyword.get(config, :project, "default")
 
     send(self(), {:bootstrap, mode, env})
 
-    {:ok, %__MODULE__{mode: mode, project: project}}
+    {:ok, %__MODULE__{mode: mode, project: project, parent: parent}}
   end
 
   @impl true
-  def handle_info({:bootstrap, "pro", :prod}, state) do
+  def handle_info({:bootstrap, "pro", :prod = env}, state) do
     if System.get_env("DATABASE_URL") do
       Uplink.Data.start_link([])
     else
@@ -80,13 +93,19 @@ defmodule Uplink.Data.Provisioner do
         ]
 
         Application.put_env(:uplink, Uplink.Repo, repo_options)
-        Uplink.Release.Tasks.migrate(force: true)
+        @release_tasks.migrate(force: true)
         Uplink.Data.start_link([])
+
+        if state.parent, do: send(state.parent, :upgraded_to_pro)
 
         {:noreply, put_in(state.status, :ok)}
       else
-        {:error, _error} ->
-          handle_info({:bootstrap, "lite"}, state)
+        {:error, _error} = result ->
+          Logger.info("[Data.Provisioner] falling back to lite ...")
+
+          send(self(), {:bootstrap, "lite", env})
+
+          {:noreply, put_in(state.status, :provisioning)}
       end
     end
   end
