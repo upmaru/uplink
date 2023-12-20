@@ -71,39 +71,6 @@ if config_env() == :prod do
   config :uplink, Uplink.Secret, System.get_env("UPLINK_SECRET")
 end
 
-if config_env() == :prod and uplink_mode == "pro" do
-  database_url = System.get_env("DATABASE_URL")
-
-  %URI{host: db_host} = URI.parse(database_url)
-
-  cacert_pem = System.get_env("DATABASE_CERT_PEM")
-
-  cacert_options =
-    if cacert_pem do
-      [
-        cacerts:
-          cacert_pem
-          |> X509.from_pem()
-          |> Enum.map(&X509.Certificate.to_der/1)
-      ]
-    else
-      [cacertfile: System.get_env("DATABASE_CERT_PATH") || "/etc/ssl/cert.pem"]
-    end
-
-  config :uplink, Uplink.Repo,
-    url: database_url,
-    queue_target: 10_000,
-    ssl_opts:
-      [
-        verify: :verify_peer,
-        server_name_indication: to_charlist(db_host),
-        customize_hostname_check: [
-          match_fun: :public_key.pkix_verify_hostname_match_fun(:https)
-        ]
-      ]
-      |> Keyword.merge(cacert_options)
-end
-
 if config_env() == :prod and uplink_mode == "lite" do
   database_url = Formation.Lxd.Alpine.postgresql_connection_url(scheme: "ecto")
 

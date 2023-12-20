@@ -49,8 +49,14 @@ defmodule Uplink.Data.Provisioner do
 
   @impl true
   def handle_info({:bootstrap, "pro", :prod = env}, state) do
-    if System.get_env("DATABASE_URL") do
+    if url = System.get_env("DATABASE_URL") do
+      repo_options = build_repo_options(url)
+
+      Application.put_env(:uplink, Uplink.Repo, repo_options)
+
       Uplink.Data.start_link([])
+
+      {:noreply, put_in(state.status, :ok)}
     else
       %{"components" => components} = Instellar.get_self()
 
@@ -80,17 +86,7 @@ defmodule Uplink.Data.Provisioner do
           }
           |> to_string()
 
-        repo_options = [
-          url: url,
-          queue_target: 10_000,
-          ssl_opts: [
-            verify: :verify_peer,
-            server_name_indication: to_charlist(host),
-            customize_hostname_check: [
-              match_fun: :public_key.pkix_verify_hostname_match_fun(:https)
-            ]
-          ]
-        ]
+        repo_options = build_repo_options(url)
 
         Application.put_env(:uplink, Uplink.Repo, repo_options)
         @release_tasks.migrate(force: true)
@@ -160,5 +156,40 @@ defmodule Uplink.Data.Provisioner do
 
   def handle_info(_message, state) do
     {:noreply, state}
+  end
+
+  defp build_repo_options(url) do
+    %URI{host: host} = URI.parse(url)
+
+    cacert_pem = System.get_env("DATABASE_CERT_PEM")
+
+    cacert_options =
+      if cacert_pem do
+        [
+          cacerts:
+            cacert_pem
+            |> X509.from_pem()
+            |> Enum.map(&X509.Certificate.to_der/1)
+        ]
+      else
+        [
+          cacertfile:
+            System.get_env("DATABASE_CERT_PATH") || "/etc/ssl/cert.pem"
+        ]
+      end
+
+    [
+      url: url,
+      queue_target: 10_000,
+      ssl_opts:
+        [
+          verify: :verify_peer,
+          server_name_indication: to_charlist(host),
+          customize_hostname_check: [
+            match_fun: :public_key.pkix_verify_hostname_match_fun(:https)
+          ]
+        ]
+        |> Keyword.merge(cacert_options)
+    ]
   end
 end
