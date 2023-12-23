@@ -45,7 +45,7 @@ defmodule Uplink.Data.Pro do
          {:ok, variable_attributes} <-
            Instellar.create_uplink_variable(%{
              "variable" => %{
-               "key" => "DATABASE_URL",
+               "key" => "DATABASE",
                "value" => "ecto:///"
              }
            }),

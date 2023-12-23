@@ -179,6 +179,7 @@ defmodule Uplink.Data.Provisioner do
       end
 
     [
+      ssl: true,
       url: url,
       queue_target: 10_000,
       ssl_opts:
