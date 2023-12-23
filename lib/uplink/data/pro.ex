@@ -36,19 +36,19 @@ defmodule Uplink.Data.Pro do
 
     name = "#{component_type}-#{id}"
 
-    with {:ok, credential} <-
-           Drivers.perform(
-             :provision,
-             module,
-             %{"credential" => credential_params}
-           ),
-         {:ok, variable_attributes} <-
+    with {:ok, variable_attributes} <-
            Instellar.create_uplink_variable(%{
              "variable" => %{
                "key" => "DATABASE",
                "value" => "ecto:///"
              }
            }),
+         {:ok, credential} <-
+           Drivers.perform(
+             :provision,
+             module,
+             %{"credential" => credential_params}
+           ),
          {:ok, component_instance_attributes} <-
            Instellar.create_component_instance(component_id, %{
              "variable_id" => variable_attributes["id"],

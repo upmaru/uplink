@@ -141,4 +141,59 @@ defmodule Uplink.Data.ProvisionerTest do
 
     assert_receive :upgraded_to_pro, 1_000
   end
+
+  test "when variable already exists", %{bypass: bypass} do
+    Bypass.expect_once(bypass, "GET", "/uplink/self/components/1", fn conn ->
+      conn
+      |> Plug.Conn.put_resp_header("content-type", "application/json")
+      |> Plug.Conn.resp(
+        200,
+        Jason.encode!(%{
+          "data" => %{
+            "attributes" => %{
+              "generator" => %{"module" => "database/postgresql"},
+              "credential" => %{
+                "username" => System.get_env("POSTGRES_USERNAME"),
+                "password" => System.get_env("POSTGRES_PASSWORD"),
+                "host" => System.get_env("POSTGRES_HOST"),
+                "port" => "5432",
+                "ssl" => false
+              }
+            }
+          }
+        })
+      )
+    end)
+
+    Bypass.expect_once(bypass, "POST", "/uplink/self/variables", fn conn ->
+      conn
+      |> Plug.Conn.put_resp_header("content-type", "application/json")
+      |> Plug.Conn.resp(
+        422,
+        Jason.encode!(%{
+          "errors" => [
+            %{
+              "detail" => ["has already been taken"],
+              "source" => %{"pointer" => "/data/attributes/key"},
+              "title" => "Invalid Attribute"
+            }
+          ]
+        })
+      )
+    end)
+
+    assert {:ok, pid} =
+             start_supervised(
+               {Provisioner,
+                [
+                  name: :provisioner_test,
+                  environment: :prod,
+                  parent: self()
+                ]}
+             )
+
+    allow(Uplink.Release.TasksMock, self(), pid)
+
+    assert_receive :fallback_to_lite, 1_000
+  end
 end
