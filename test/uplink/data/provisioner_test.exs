@@ -125,7 +125,7 @@ defmodule Uplink.Data.ProvisionerTest do
     )
 
     Uplink.Release.TasksMock
-    |> expect(:migrate, fn _options -> :ok end)
+    |> expect(:migrate, fn -> :ok end)
 
     assert {:ok, pid} =
              start_supervised(
@@ -139,6 +139,6 @@ defmodule Uplink.Data.ProvisionerTest do
 
     allow(Uplink.Release.TasksMock, self(), pid)
 
-    assert_receive :upgraded_to_pro
+    assert_receive :upgraded_to_pro, 1_000
   end
 end
