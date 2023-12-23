@@ -53,7 +53,7 @@ defmodule Uplink.Data.Provisioner do
       repo_options = build_repo_options(url)
 
       Application.put_env(:uplink, Uplink.Repo, repo_options)
-
+      @release_tasks.migrate()
       Uplink.Data.start_link([])
 
       {:noreply, put_in(state.status, :ok)}
@@ -89,7 +89,7 @@ defmodule Uplink.Data.Provisioner do
         repo_options = build_repo_options(url)
 
         Application.put_env(:uplink, Uplink.Repo, repo_options)
-        @release_tasks.migrate(force: true)
+        @release_tasks.migrate()
         Uplink.Data.start_link([])
 
         if state.parent, do: send(state.parent, :upgraded_to_pro)
