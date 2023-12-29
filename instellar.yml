@@ -81,5 +81,3 @@ kits:
         default_value: pro
       - key: UPLINK_SECRET
         driver: uplink/secret
-      - key: DATABASE_URL
-        default_value: "ecto:///"
