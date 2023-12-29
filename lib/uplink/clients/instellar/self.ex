@@ -8,7 +8,12 @@ defmodule Uplink.Clients.Instellar.Self do
   import Uplink.Secret.Signature,
     only: [compute_signature: 1]
 
-  @backup_path Path.join([:code.priv_dir(:uplink), "backup"])
+  @backup_path "backup"
+
+  @task_supervisor Application.compile_env(:uplink, :task_supervisor) ||
+                     Task.Supervisor
+
+  require Logger
 
   def show(options \\ [cache: true, backup: true]) do
     Cache.get(:self)
@@ -59,11 +64,18 @@ defmodule Uplink.Clients.Instellar.Self do
         end
 
         if backup do
-          File.mkdir_p!(@backup_path)
+          [Node.self() | Node.list()]
+          |> Enum.each(fn node ->
+            Logger.info("[Instellar.Self] backup on #{node}...")
 
-          @backup_path
-          |> Path.join("self.json")
-          |> File.write!(Jason.encode!(attributes))
+            @task_supervisor.async_nolink({Uplink.TaskSupervisor, node}, fn ->
+              File.mkdir_p!(@backup_path)
+
+              @backup_path
+              |> Path.join("self.json")
+              |> File.write!(Jason.encode!(attributes))
+            end)
+          end)
         end
 
         attributes
