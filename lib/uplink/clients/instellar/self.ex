@@ -8,7 +8,7 @@ defmodule Uplink.Clients.Instellar.Self do
   import Uplink.Secret.Signature,
     only: [compute_signature: 1]
 
-  @backup_path "backup"
+  @backup_path "backup/self.json"
 
   @task_supervisor Application.compile_env(:uplink, :task_supervisor) ||
                      Task.Supervisor
@@ -16,12 +16,18 @@ defmodule Uplink.Clients.Instellar.Self do
   require Logger
 
   def show(options \\ [cache: true, backup: true]) do
+    backup = Keyword.get(options, :backup)
+
     Cache.get(:self)
     |> case do
       nil ->
         fetch(options)
 
       %{"credential" => _credential} = response ->
+        if backup and not File.exists?(@backup_path) do
+          create_backup(response)
+        end
+
         response
     end
   end
@@ -64,18 +70,7 @@ defmodule Uplink.Clients.Instellar.Self do
         end
 
         if backup do
-          [Node.self() | Node.list()]
-          |> Enum.each(fn node ->
-            Logger.info("[Instellar.Self] backup on #{node}...")
-
-            @task_supervisor.async_nolink({Uplink.TaskSupervisor, node}, fn ->
-              File.mkdir_p!(@backup_path)
-
-              @backup_path
-              |> Path.join("self.json")
-              |> File.write!(Jason.encode!(attributes))
-            end)
-          end)
+          create_backup(attributes)
         end
 
         attributes
@@ -84,15 +79,26 @@ defmodule Uplink.Clients.Instellar.Self do
         {:error, body}
 
       {:error, error} ->
-        path = Path.join(@backup_path, "self.json")
-
-        if File.exists?(path) do
-          path
+        if File.exists?(@backup_path) do
+          @backup_path
           |> File.read!()
           |> Jason.decode!()
         else
           {:error, error}
         end
     end
+  end
+
+  defp create_backup(attributes) do
+    [Node.self() | Node.list()]
+    |> Enum.each(fn node ->
+      Logger.info("[Instellar.Self] backup on #{node}...")
+
+      @task_supervisor.async_nolink({Uplink.TaskSupervisor, node}, fn ->
+        File.mkdir_p!(Path.dirname(@backup_path))
+
+        File.write!(@backup_path, Jason.encode!(attributes))
+      end)
+    end)
   end
 end
