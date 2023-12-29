@@ -77,6 +77,8 @@ defmodule Uplink.Clients.Instellar.Self do
 
       {:error, error} ->
         if File.exists?(@backup_path) do
+          Logger.info("[Instellar.Self] fetching from backup...")
+
           @backup_path
           |> File.read!()
           |> Jason.decode!()
