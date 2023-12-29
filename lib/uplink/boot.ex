@@ -12,6 +12,9 @@ defmodule Uplink.Boot do
 
   require Logger
 
+  @task_supervisor Application.compile_env(:uplink, :task_supervisor) ||
+                     Task.Supervisor
+
   def start_link(args) do
     Task.start_link(__MODULE__, :run, [args])
   end
@@ -19,7 +22,13 @@ defmodule Uplink.Boot do
   def run(_args) do
     Logger.info("[Boot] Establishing uplink...")
 
-    Instellar.register()
+    Uplink.TaskSupervisor
+    |> @task_supervisor.async_nolink(
+      fn ->
+        Instellar.register()
+      end,
+      shutdown: 30_000
+    )
 
     from(
       i in Packages.Install,

@@ -2,16 +2,22 @@ defmodule Uplink.Data.Pro do
   alias Uplink.Drivers
   alias Uplink.Clients.Instellar
 
+  alias Formation.Postgresql.Credential
+
   def match_postgresql_component(%{"generator" => %{"module" => module}}),
     do: module == "database/postgresql"
 
   def maybe_provision_postgresql_instance(%{"id" => component_id}) do
-    case Instellar.get_component(component_id) do
-      {:ok, component_params} ->
-        provision_component_instance(component_params, component_id)
-
-      {:error, error} ->
-        {:error, error}
+    with {:ok, %{"credential" => component_credential} = component_params} <-
+           Instellar.get_component(component_id),
+         {:ok, %{"credential" => credential}} <-
+           provision_component_instance(
+             component_params,
+             component_id
+           ) do
+      credential
+      |> maybe_merge_certificate(component_credential)
+      |> Credential.create()
     end
   end
 
@@ -60,4 +66,10 @@ defmodule Uplink.Data.Pro do
       {:ok, component_instance_attributes}
     end
   end
+
+  defp maybe_merge_certificate(credential, %{"certificate" => certificate}) do
+    Map.put(credential, "certificate", certificate)
+  end
+
+  defp maybe_merge_certificate(credential, _), do: credential
 end

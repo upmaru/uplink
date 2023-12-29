@@ -60,42 +60,43 @@ defmodule Uplink.Data.Provisioner do
     else
       %{"components" => components} = Instellar.get_self()
 
-      with {:ok, %{"credential" => credential}} <-
-             components
-             |> Enum.find(&Pro.match_postgresql_component/1)
-             |> Pro.maybe_provision_postgresql_instance(),
-           {:ok, credential} <- Credential.create(credential) do
-        uri = URI.parse("ecto:///")
+      components
+      |> Enum.find(&Pro.match_postgresql_component/1)
+      |> Pro.maybe_provision_postgresql_instance()
+      |> case do
+        {:ok, %Credential{} = credential} ->
+          uri = URI.parse("ecto:///")
 
-        %{
-          username: username,
-          password: password,
-          hostname: host,
-          port: port,
-          database: database
-        } = credential
-
-        url =
           %{
-            uri
-            | host: host,
-              userinfo: "#{username}:#{password}",
-              authority: "#{host}:#{port}",
-              port: port,
-              path: "/#{database}"
-          }
-          |> to_string()
+            username: username,
+            password: password,
+            hostname: host,
+            port: port,
+            database: database
+          } = credential
 
-        repo_options = build_repo_options(url)
+          url =
+            %{
+              uri
+              | host: host,
+                userinfo: "#{username}:#{password}",
+                authority: "#{host}:#{port}",
+                port: port,
+                path: "/#{database}"
+            }
+            |> to_string()
 
-        Application.put_env(:uplink, Uplink.Repo, repo_options)
-        @release_tasks.migrate()
-        Uplink.Data.start_link([])
+          repo_options = build_repo_options(url, credential.certificate)
 
-        if state.parent, do: send(state.parent, :upgraded_to_pro)
+          Application.put_env(:uplink, Uplink.Repo, repo_options)
 
-        {:noreply, put_in(state.status, :ok)}
-      else
+          @release_tasks.migrate()
+          Uplink.Data.start_link([])
+
+          if state.parent, do: send(state.parent, :upgraded_to_pro)
+
+          {:noreply, put_in(state.status, :ok)}
+
         {:error, _error} ->
           Logger.info("[Data.Provisioner] falling back to lite ...")
 
@@ -158,10 +159,10 @@ defmodule Uplink.Data.Provisioner do
     {:noreply, state}
   end
 
-  defp build_repo_options(url) do
+  defp build_repo_options(url, certificate \\ nil) do
     %URI{host: host} = URI.parse(url)
 
-    cacert_pem = System.get_env("DATABASE_CERT_PEM")
+    cacert_pem = certificate || System.get_env("DATABASE_CERT_PEM")
 
     cacert_options =
       if cacert_pem do

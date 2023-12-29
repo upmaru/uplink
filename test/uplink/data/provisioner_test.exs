@@ -67,6 +67,8 @@ defmodule Uplink.Data.ProvisionerTest do
             "attributes" => %{
               "generator" => %{"module" => "database/postgresql"},
               "credential" => %{
+                "certificate" =>
+                  "https://truststore.pki.rds.amazonaws.com/us-east-1/us-east-1-bundle.pem",
                 "username" => System.get_env("POSTGRES_USERNAME"),
                 "password" => System.get_env("POSTGRES_PASSWORD"),
                 "host" => System.get_env("POSTGRES_HOST"),
@@ -139,7 +141,15 @@ defmodule Uplink.Data.ProvisionerTest do
 
     allow(Uplink.Release.TasksMock, self(), pid)
 
-    assert_receive :upgraded_to_pro, 1_000
+    assert_receive :upgraded_to_pro, 5_000
+
+    db_options = Application.get_env(:uplink, Uplink.Repo)
+
+    ssl_opts = Keyword.get(db_options, :ssl_opts)
+
+    cacerts = Keyword.get(ssl_opts, :cacerts) || []
+
+    assert Enum.count(cacerts) > 0
   end
 
   test "when variable already exists", %{bypass: bypass} do
