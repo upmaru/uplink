@@ -42,44 +42,6 @@ defmodule Uplink.BootTest do
     }
   }
 
-  @uplink_installation_state_response %{
-    "data" => %{
-      "attributes" => %{
-        "id" => 1,
-        "slug" => "uplink-web",
-        "main_port" => %{
-          "slug" => "web",
-          "source" => 49142,
-          "target" => 4000
-        },
-        "variables" => [
-          %{"key" => "SOMETHING", "value" => "somevalue"}
-        ],
-        "channel" => %{
-          "slug" => "develop",
-          "package" => %{
-            "slug" => "something-1640927800",
-            "credential" => %{
-              "public_key" => "public_key"
-            },
-            "organization" => %{
-              "slug" => "upmaru"
-            }
-          }
-        },
-        "instances" => [
-          %{
-            "id" => 1,
-            "slug" => "something-1",
-            "node" => %{
-              "slug" => "some-node"
-            }
-          }
-        ]
-      }
-    }
-  }
-
   describe "boot" do
     setup do
       :ok = Ecto.Adapters.SQL.Sandbox.checkout(Uplink.Repo)
@@ -175,21 +137,6 @@ defmodule Uplink.BootTest do
         conn
         |> Plug.Conn.put_resp_header("content-type", "application/json")
         |> Plug.Conn.resp(200, Jason.encode!(%{data: %{attributes: 1}}))
-      end)
-
-      Bypass.expect_once(bypass, "GET", "/uplink/installations/1", fn conn ->
-        conn
-        |> Plug.Conn.put_resp_header("content-type", "application/json")
-        |> Plug.Conn.resp(
-          200,
-          Jason.encode!(@uplink_installation_state_response)
-        )
-      end)
-
-      Bypass.expect(bypass, "POST", "/load", fn conn ->
-        conn
-        |> Plug.Conn.put_resp_header("content-type", "application/json")
-        |> Plug.Conn.resp(200, "")
       end)
 
       assert {:ok, _attributes} = Uplink.Boot.run([])
