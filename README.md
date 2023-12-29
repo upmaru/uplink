@@ -52,5 +52,3 @@ Here are some features we're planning to develop for uplink.
 - [ ] Vault - Provides ability to store secrets securely on the cluster. This means all storage of environment variables will be persisted inside a cluster marked as `trusted`. Applications will directly fetch variables from uplink on the cluster without relying on [instellar.app](https://instellar.app). This will only work for uplink in `pro` mode.
 
 - [ ] Service Discovery - Some applications need to be able to discover other instances running to be able to connect to one another. In the future uplink will provide this functionality. This will work with both `lite` and `pro` mode.
-
-
