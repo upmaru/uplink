@@ -8,7 +8,9 @@ defmodule Uplink.Clients.Instellar.Self do
   import Uplink.Secret.Signature,
     only: [compute_signature: 1]
 
-  def show(options \\ [cache: true]) do
+  @backup_path Path.join([:code.priv_dir(:uplink), "backup"])
+
+  def show(options \\ [cache: true, backup: true]) do
     Cache.get(:self)
     |> case do
       nil ->
@@ -45,20 +47,40 @@ defmodule Uplink.Clients.Instellar.Self do
 
   defp fetch(options) do
     cache = Keyword.get(options, :cache)
+    backup = Keyword.get(options, :backup)
 
     [Clients.Instellar.endpoint(), "self"]
     |> Path.join()
-    |> Req.get!(headers: headers())
+    |> Req.get(headers: headers())
     |> case do
-      %{status: 200, body: %{"data" => %{"attributes" => attributes}}} ->
+      {:ok, %{status: 200, body: %{"data" => %{"attributes" => attributes}}}} ->
         if cache do
           Cache.put(:self, attributes)
         end
 
+        if backup do
+          File.mkdir_p!(@backup_path)
+
+          @backup_path
+          |> Path.join("self.json")
+          |> File.write!(Jason.encode!(attributes))
+        end
+
         attributes
 
-      %{status: _, body: body} ->
+      {:ok, %{status: _, body: body}} ->
         {:error, body}
+
+      {:error, error} ->
+        path = Path.join(@backup_path, "self.json")
+
+        if File.exists?(path) do
+          path
+          |> File.read!()
+          |> Jason.decode!()
+        else
+          {:error, error}
+        end
     end
   end
 end
