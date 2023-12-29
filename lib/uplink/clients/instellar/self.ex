@@ -90,15 +90,10 @@ defmodule Uplink.Clients.Instellar.Self do
   end
 
   defp create_backup(attributes) do
-    [Node.self() | Node.list()]
-    |> Enum.each(fn node ->
-      Logger.info("[Instellar.Self] backup on #{node}...")
+    Logger.info("[Instellar.Self] backup on #{node}...")
 
-      @task_supervisor.async_nolink({Uplink.TaskSupervisor, node}, fn ->
-        File.mkdir_p!(Path.dirname(@backup_path))
+    File.mkdir_p!(Path.dirname(@backup_path))
 
-        File.write!(@backup_path, Jason.encode!(attributes))
-      end)
-    end)
+    File.write!(@backup_path, Jason.encode!(attributes))
   end
 end
