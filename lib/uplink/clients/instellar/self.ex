@@ -10,9 +10,6 @@ defmodule Uplink.Clients.Instellar.Self do
 
   @backup_path "backup/self.json"
 
-  @task_supervisor Application.compile_env(:uplink, :task_supervisor) ||
-                     Task.Supervisor
-
   require Logger
 
   def show(options \\ [cache: true, backup: true]) do
@@ -90,7 +87,7 @@ defmodule Uplink.Clients.Instellar.Self do
   end
 
   defp create_backup(attributes) do
-    Logger.info("[Instellar.Self] backup on #{node}...")
+    Logger.info("[Instellar.Self] creating backup...")
 
     File.mkdir_p!(Path.dirname(@backup_path))
 
