@@ -11,6 +11,10 @@ defmodule Uplink.Clients.Instellar.Self do
   @backup_url "http://x/1.0/config/user.INSTELLAR_UPLINK_SELF_DATA"
   @socket "/dev/lxd/sock"
 
+  defmodule Error do
+    defexception message: "self metadata retrieval failed"
+  end
+
   require Logger
 
   def show(options \\ [cache: true]) do
@@ -73,13 +77,17 @@ defmodule Uplink.Clients.Instellar.Self do
   defp fetch_from_backup! do
     Logger.info("[Instellar.Self] fetching from backup...")
 
-    %{"data" => %{"attributes" => attributes}} =
-      Req.get!(@backup_url, unix_socket: @socket)
-      |> Base.decode64!()
-      |> Jason.decode!()
+    with %{status: 200, body: response} <-
+           Req.get!(@backup_url, unix_socket: @socket),
+         %{"data" => %{"attributes" => attributes}} <-
+           response
+           |> Base.decode64!(body)
+           |> Jason.decode!() do
+      Cache.put_new(:self, attributes)
 
-    Cache.put_new(:self, attributes)
-
-    attributes
+      attributes
+    else
+      _ -> raise Error
+    end
   end
 end
