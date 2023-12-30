@@ -73,24 +73,32 @@ defmodule Uplink.Clients.Instellar.Self do
         attributes
 
       {:ok, %{status: _, body: body}} ->
-        {:error, body}
+        if File.exists?(@backup_path) do
+          fetch_backup()
+        else
+          {:error, body}
+        end
 
       {:error, error} ->
         if File.exists?(@backup_path) do
-          Logger.info("[Instellar.Self] fetching from backup...")
-
-          attributes =
-            @backup_path
-            |> File.read!()
-            |> Jason.decode!()
-
-          Cache.put_new(:self, attributes)
-
-          attributes
+          fetch_backup()
         else
           {:error, error}
         end
     end
+  end
+
+  defp fetch_backup do
+    Logger.info("[Instellar.Self] fetching from backup...")
+
+    attributes =
+      @backup_path
+      |> File.read!()
+      |> Jason.decode!()
+
+    Cache.put_new(:self, attributes)
+
+    attributes
   end
 
   defp create_backup(attributes) do
