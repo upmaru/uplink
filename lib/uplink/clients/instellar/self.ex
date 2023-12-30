@@ -8,23 +8,18 @@ defmodule Uplink.Clients.Instellar.Self do
   import Uplink.Secret.Signature,
     only: [compute_signature: 1]
 
-  @backup_path "backup/self.json"
+  @backup_url "http://x/1.0/config/user.INSTELLAR_UPLINK_SELF_DATA"
+  @socket "/dev/lxd/sock"
 
   require Logger
 
-  def show(options \\ [cache: true, backup: true]) do
-    backup = Keyword.get(options, :backup)
-
+  def show(options \\ [cache: true]) do
     Cache.get(:self)
     |> case do
       nil ->
         fetch(options)
 
       %{"credential" => _credential} = response ->
-        if backup and not File.exists?(@backup_path) do
-          create_backup(response)
-        end
-
         response
     end
   end
@@ -55,7 +50,6 @@ defmodule Uplink.Clients.Instellar.Self do
 
   defp fetch(options) do
     cache = Keyword.get(options, :cache)
-    backup = Keyword.get(options, :backup)
 
     [Clients.Instellar.endpoint(), "self"]
     |> Path.join()
@@ -66,46 +60,26 @@ defmodule Uplink.Clients.Instellar.Self do
           Cache.put(:self, attributes)
         end
 
-        if backup do
-          create_backup(attributes)
-        end
-
         attributes
 
-      {:ok, %{status: _, body: body}} ->
-        if File.exists?(@backup_path) do
-          fetch_backup()
-        else
-          {:error, body}
-        end
+      {:ok, %{status: _}} ->
+        fetch_from_backup!()
 
-      {:error, error} ->
-        if File.exists?(@backup_path) do
-          fetch_backup()
-        else
-          {:error, error}
-        end
+      {:error, _error} ->
+        fetch_from_backup!()
     end
   end
 
-  defp fetch_backup do
+  defp fetch_from_backup! do
     Logger.info("[Instellar.Self] fetching from backup...")
 
-    attributes =
-      @backup_path
-      |> File.read!()
+    %{"data" => %{"attributes" => attributes}} =
+      Req.get!(@backup_url, unix_socket: @socket)
+      |> Base.decode64!()
       |> Jason.decode!()
 
     Cache.put_new(:self, attributes)
 
     attributes
-  end
-
-  defp create_backup(attributes) do
-    Logger.info("[Instellar.Self] creating backup...")
-
-    File.mkdir_p!(Path.dirname(@backup_path))
-
-    File.write!(@backup_path, Jason.encode!(attributes))
   end
 end
