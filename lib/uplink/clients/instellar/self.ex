@@ -81,7 +81,7 @@ defmodule Uplink.Clients.Instellar.Self do
            Req.get!(@backup_url, unix_socket: @socket),
          %{"data" => %{"attributes" => attributes}} <-
            response
-           |> Base.decode64!(body)
+           |> Base.decode64!()
            |> Jason.decode!() do
       Cache.put_new(:self, attributes)
 
