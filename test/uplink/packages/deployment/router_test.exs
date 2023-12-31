@@ -76,27 +76,47 @@ defmodule Uplink.Packages.Deployment.RouterTest do
     :ok
   end
 
-  describe "valid body" do
+  describe "create deployment" do
     test "returns 201 for deployment creation" do
-      signature =
-        :crypto.mac(:hmac, :sha256, Uplink.Secret.get(), @valid_body)
-        |> Base.encode16()
-        |> String.downcase()
+      tasks =
+        1..2
+        |> Enum.to_list()
+        |> Enum.map(fn n ->
+          Task.async(fn ->
+            body =
+              Jason.decode!(@valid_body)
+              |> Map.merge(%{"installation_id" => n})
+              |> Jason.encode!()
 
-      conn =
-        conn(:post, "/", @valid_body)
-        |> put_req_header("x-uplink-signature-256", "sha256=#{signature}")
-        |> put_req_header("content-type", "application/json")
-        |> Router.call(@opts)
+            signature =
+              :crypto.mac(:hmac, :sha256, Uplink.Secret.get(), body)
+              |> Base.encode16()
+              |> String.downcase()
 
-      assert conn.status == 201
+            conn =
+              conn(:post, "/", body)
+              |> put_req_header("x-uplink-signature-256", "sha256=#{signature}")
+              |> put_req_header("content-type", "application/json")
+              |> Router.call(@opts)
 
-      assert %{"data" => %{"id" => deployment_id}} =
-               Jason.decode!(conn.resp_body)
+            %{conn: conn, index: n}
+          end)
+        end)
 
-      deployment = Uplink.Repo.get(Uplink.Packages.Deployment, deployment_id)
+      tasks_with_results = Task.yield_many(tasks)
 
-      assert deployment.current_state == "preparing"
+      Enum.each(tasks_with_results, fn {_task, result} ->
+        {:ok, %{conn: conn, index: _index}} = result
+
+        assert conn.status == 201
+
+        assert %{"data" => %{"id" => deployment_id}} =
+                 Jason.decode!(conn.resp_body)
+
+        deployment = Uplink.Repo.get(Uplink.Packages.Deployment, deployment_id)
+
+        assert deployment.current_state == "preparing"
+      end)
     end
   end
 
@@ -311,7 +331,7 @@ defmodule Uplink.Packages.Deployment.RouterTest do
     test "when install doesn't exist", %{
       body: body,
       deployment: deployment,
-      signature: signature,
+      signature: signature
     } do
       conn =
         conn(:post, "/#{deployment.hash}/installs/234/events", body)
