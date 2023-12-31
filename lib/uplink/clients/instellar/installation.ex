@@ -20,7 +20,7 @@ defmodule Uplink.Clients.Instellar.Installation do
       "#{instellar_installation_id}"
     ]
     |> Path.join()
-    |> Req.get(headers: Instellar.headers(deployment.hash))
+    |> Req.get(headers: Instellar.headers(deployment.hash), max_retries: 1)
     |> case do
       {:ok, %{status: 200, body: %{"data" => %{"attributes" => attributes}}}} ->
         {:ok, attributes}

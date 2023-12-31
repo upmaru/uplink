@@ -57,7 +57,7 @@ defmodule Uplink.Clients.Instellar.Self do
 
     [Clients.Instellar.endpoint(), "self"]
     |> Path.join()
-    |> Req.get(headers: headers())
+    |> Req.get(headers: headers(), max_retries: 1)
     |> case do
       {:ok, %{status: 200, body: %{"data" => %{"attributes" => attributes}}}} ->
         if cache do
