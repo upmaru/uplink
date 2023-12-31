@@ -81,7 +81,11 @@ defmodule Uplink.Packages.Instance.FinalizeTest do
     {:ok, deployment} =
       Packages.get_or_create_deployment(app, @deployment_params)
 
-    {:ok, install} = Packages.create_install(deployment, 1)
+    {:ok, install} =
+      Packages.create_install(deployment, %{
+        "installation_id" => 1,
+        "deployment" => @deployment_params
+      })
 
     {:ok, bypass: bypass, install: install, actor: actor}
   end

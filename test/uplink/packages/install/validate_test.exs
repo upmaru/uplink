@@ -86,7 +86,11 @@ defmodule Uplink.Packages.Install.ValidateTest do
     {:ok, deployment} =
       Packages.get_or_create_deployment(app, @deployment_params)
 
-    {:ok, install} = Packages.create_install(deployment, 1)
+    {:ok, install} =
+      Packages.create_install(deployment, %{
+        "installation_id" => 1,
+        "deployment" => @deployment_params
+      })
 
     signature = compute_signature(deployment.hash)
 

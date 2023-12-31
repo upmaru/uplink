@@ -34,37 +34,31 @@ defmodule Uplink.Packages.Instance.RouterTest do
     "stack" => "alpine/3.14",
     "channel" => "develop",
     "metadata" => %{
-      "installation" => %{
-        "id" => 1,
-        "slug" => "uplink-web",
-        "service_port" => 4000,
-        "exposed_port" => 49152,
-        "instances" => [
-          %{
-            "installation_instance_id" => 1,
-            "slug" => "something-1"
+      "id" => 1,
+      "slug" => "uplink-web",
+      "service_port" => 4000,
+      "exposed_port" => 49152,
+      "channel" => %{
+        "slug" => "develop",
+        "package" => %{
+          "slug" => "something-1640927800",
+          "credential" => %{
+            "public_key" => "public_key"
+          },
+          "organization" => %{
+            "slug" => "upmaru"
           }
-        ]
-      },
-      "cluster" => %{
-        "credential" => %{
-          "certificate" => "cert",
-          "endpoint" => "https://127.0.0.1:8443",
-          "password" => "somepassword",
-          "password_confirmation" => "somepassword",
-          "private_key" => "key"
-        },
-        "organization" => %{
-          "slug" => "upmaru"
         }
       },
-      "id" => 8000,
-      "package" => %{
-        "slug" => "something-1640927800",
-        "organization" => %{
-          "slug" => "upmaru"
+      "instances" => [
+        %{
+          "id" => 1,
+          "slug" => "something-1",
+          "node" => %{
+            "slug" => "some-node"
+          }
         }
-      }
+      ]
     }
   }
 
@@ -89,7 +83,11 @@ defmodule Uplink.Packages.Instance.RouterTest do
     {:ok, _transition} =
       Packages.transition_deployment_with(deployment, actor, "complete")
 
-    {:ok, _install} = Packages.create_install(deployment, 1)
+    {:ok, _install} =
+      Packages.create_install(deployment, %{
+        "installation_id" => 1,
+        "deployment" => @deployment_params
+      })
 
     :ok
   end

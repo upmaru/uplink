@@ -6,6 +6,14 @@ config :uplink, Uplink.Cache,
     backend: :shards
   ]
 
+config :uplink, Uplink.MultilevelCache,
+  primary: [
+    repo: Uplink.Repo,
+    table: "multilevel_cache",
+    max_amount: 1000,
+    gc_timeout: :timer.hours(2)
+  ]
+
 config :uplink, Uplink.Internal, port: 4080
 
 config :uplink, Uplink.Router, port: 4040

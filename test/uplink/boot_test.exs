@@ -131,7 +131,11 @@ defmodule Uplink.BootTest do
       bypass: bypass,
       deployment: deployment
     } do
-      {:ok, _install} = Packages.create_install(deployment, 1)
+      {:ok, _install} =
+        Packages.create_install(deployment, %{
+          "installation_id" => 1,
+          "deployment" => @deployment_params
+        })
 
       Bypass.expect_once(bypass, "POST", "/uplink/self/registration", fn conn ->
         conn

@@ -5,6 +5,7 @@ defmodule Uplink.Packages.Install do
   import Ecto.Query, only: [from: 2]
 
   alias Uplink.Packages.Deployment
+  alias Uplink.Packages.Metadata
 
   use Eventful.Transitable,
     transitions_module: __MODULE__.Transitions
@@ -15,6 +16,8 @@ defmodule Uplink.Packages.Install do
 
     belongs_to :deployment, Deployment
 
+    embeds_one :metadata_snapshot, Metadata
+
     timestamps(type: :utc_datetime_usec)
   end
 
@@ -22,6 +25,7 @@ defmodule Uplink.Packages.Install do
     install
     |> cast(params, [:instellar_installation_id])
     |> validate_required([:instellar_installation_id])
+    |> cast_embed(:metadata_snapshot)
     |> unique_constraint(:deployment_id,
       name: :installs_deployment_id_instellar_installation_id_index
     )
