@@ -16,7 +16,7 @@ defmodule Uplink.Packages.Install do
 
     belongs_to :deployment, Deployment
 
-    embeds_one :metadata_snapshot, Metadata
+    embeds_one :metadata_snapshot, Metadata, on_replace: :delete
 
     timestamps(type: :utc_datetime_usec)
   end

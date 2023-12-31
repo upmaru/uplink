@@ -107,7 +107,11 @@ defmodule Uplink.Packages.Install.Manager do
     with {:ok, metadata_params} <-
            Instellar.deployment_metadata(install),
          {:ok, %Metadata{} = metadata} <-
-           Packages.parse_metadata(metadata_params) do
+           Packages.parse_metadata(metadata_params),
+         {:ok, install} <-
+           install
+           |> Install.changeset(%{metadata_snapshot: metadata_params})
+           |> Repo.update() do
       install
       |> cache_key()
       |> Cache.put(metadata)
