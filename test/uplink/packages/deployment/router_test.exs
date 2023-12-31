@@ -308,6 +308,20 @@ defmodule Uplink.Packages.Deployment.RouterTest do
        metadata: metadata}
     end
 
+    test "when install doesn't exist", %{
+      body: body,
+      deployment: deployment,
+      signature: signature,
+    } do
+      conn =
+        conn(:post, "/#{deployment.hash}/installs/234/events", body)
+        |> put_req_header("x-uplink-signature-256", "sha256=#{signature}")
+        |> put_req_header("content-type", "application/json")
+        |> Router.call(@opts)
+
+      assert conn.status == 404
+    end
+
     test "can mark install complete", %{
       body: body,
       actor: actor,
