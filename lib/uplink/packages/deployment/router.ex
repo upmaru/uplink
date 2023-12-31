@@ -53,7 +53,7 @@ defmodule Uplink.Packages.Deployment.Router do
          {:ok, %Members.Actor{} = actor} <-
            Members.get_or_create_actor(actor_params),
          {:ok, %Install{} = install} <-
-           Packages.create_install(deployment, instellar_installation_id),
+           Packages.create_install(deployment, conn.body_params),
          :ok <-
            Cache.put(
              {:deployment, compute_signature(deployment.hash),

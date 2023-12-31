@@ -29,7 +29,7 @@ defmodule Uplink.Packages do
     to: Install.Manager,
     as: :latest
 
-  defdelegate create_install(deployment, instellar_installation_id),
+  defdelegate create_install(deployment, params),
     to: Install.Manager,
     as: :create
 

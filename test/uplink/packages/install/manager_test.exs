@@ -72,7 +72,11 @@ defmodule Uplink.Packages.Install.ManagerTest do
     alias Install.Manager
 
     test "return installation", %{deployment: deployment} do
-      assert {:ok, %Install{}} = Manager.create(deployment, 1)
+      assert {:ok, %Install{}} =
+               Manager.create(deployment, %{
+                 "installation_id" => 1,
+                 "deployment" => @deployment_params
+               })
     end
   end
 
@@ -80,7 +84,11 @@ defmodule Uplink.Packages.Install.ManagerTest do
     alias Install.Manager
 
     setup %{deployment: deployment} do
-      {:ok, %Install{} = install} = Manager.create(deployment, 1)
+      {:ok, %Install{} = install} =
+        Manager.create(deployment, %{
+          "installation_id" => 1,
+          "deployment" => @deployment_params
+        })
 
       {:ok, actor} =
         Members.get_or_create_actor(%{
@@ -167,7 +175,11 @@ defmodule Uplink.Packages.Install.ManagerTest do
     alias Install.Manager
 
     setup %{deployment: deployment} do
-      {:ok, %Install{} = install} = Manager.create(deployment, 1)
+      {:ok, %Install{} = install} =
+        Manager.create(deployment, %{
+          "installation_id" => 1,
+          "deployment" => @deployment_params
+        })
 
       {:ok, actor} =
         Members.get_or_create_actor(%{

@@ -287,15 +287,20 @@ defmodule Uplink.Packages.Deployment.RouterTest do
 
       {:ok, actor} = Members.get_or_create_actor(Map.get(params, "actor"))
 
-      deployment = Map.get(params, "deployment")
+      deployment_params = Map.get(params, "deployment")
 
-      {:ok, metadata} = Packages.parse_metadata(deployment["metadata"])
+      {:ok, metadata} = Packages.parse_metadata(deployment_params["metadata"])
 
       app = Packages.get_or_create_app(@app_slug)
 
-      {:ok, deployment} = Packages.get_or_create_deployment(app, deployment)
+      {:ok, deployment} =
+        Packages.get_or_create_deployment(app, deployment_params)
 
-      {:ok, install} = Packages.create_install(deployment, metadata.id)
+      {:ok, install} =
+        Packages.create_install(deployment, %{
+          "installation_id" => metadata.id,
+          "deployment" => deployment_params
+        })
 
       {:ok, %{resource: validating_install}} =
         Packages.transition_install_with(install, actor, "validate")

@@ -31,12 +31,18 @@ defmodule Uplink.Packages.Install.Manager do
     {:deployment, signature, install.instellar_installation_id}
   end
 
-  @spec create(%Deployment{}, integer | binary) ::
+  @spec create(%Deployment{}, map()) ::
           {:ok, %Install{}} | {:error, Ecto.Changeset.t()}
-  def create(%Deployment{id: deployment_id}, instellar_installation_id) do
+  def create(%Deployment{id: deployment_id}, %{
+        "installation_id" => instellar_installation_id,
+        "deployment" => %{
+          "metadata" => metadata_params
+        }
+      }) do
     %Install{deployment_id: deployment_id}
     |> Install.changeset(%{
-      instellar_installation_id: instellar_installation_id
+      instellar_installation_id: instellar_installation_id,
+      metadata_snapshot: metadata_params
     })
     |> Repo.insert()
   end
@@ -95,11 +101,17 @@ defmodule Uplink.Packages.Install.Manager do
     })
   end
 
-  defp fetch_deployment_metadata(%Install{} = install) do
+  defp fetch_deployment_metadata(
+         %Install{metadata_snapshot: metadata_snapshot} = install
+       ) do
     with {:ok, metadata_params} <-
            Instellar.deployment_metadata(install),
          {:ok, %Metadata{} = metadata} <-
-           Packages.parse_metadata(metadata_params) do
+           Packages.parse_metadata(metadata_params),
+         {:ok, install} <-
+           install
+           |> Install.changeset(%{metadata_snapshot: metadata_params})
+           |> Repo.update() do
       install
       |> cache_key()
       |> Cache.put(metadata)
@@ -107,13 +119,7 @@ defmodule Uplink.Packages.Install.Manager do
       %{metadata: metadata}
     else
       {:error, _} ->
-        metadata = %Metadata{}
-
-        install
-        |> cache_key()
-        |> Cache.put(metadata)
-
-        %{metadata: metadata}
+        %{metadata: metadata_snapshot}
     end
   end
 end
