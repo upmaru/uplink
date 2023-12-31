@@ -140,6 +140,9 @@ defmodule Uplink.Packages.Deployment.Router do
            ) do
       json(conn, :created, %{id: event.id, name: event.name})
     else
+      nil ->
+        json(conn, :not_found, %{})
+
       {:error, error} ->
         json(conn, :unprocessable_entity, %{error: %{message: error}})
 
