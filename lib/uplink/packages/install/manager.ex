@@ -31,7 +31,7 @@ defmodule Uplink.Packages.Install.Manager do
     {:deployment, signature, install.instellar_installation_id}
   end
 
-  @spec create(%Deployment{}, integer | binary) ::
+  @spec create(%Deployment{}, map()) ::
           {:ok, %Install{}} | {:error, Ecto.Changeset.t()}
   def create(%Deployment{id: deployment_id}, %{
         "installation_id" => instellar_installation_id,
