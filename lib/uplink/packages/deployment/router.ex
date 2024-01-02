@@ -53,7 +53,7 @@ defmodule Uplink.Packages.Deployment.Router do
          {:ok, %Members.Actor{} = actor} <-
            Members.get_or_create_actor(actor_params),
          {:ok, %Install{} = install} <-
-           Packages.create_install(deployment, instellar_installation_id),
+           Packages.create_install(deployment, conn.body_params),
          :ok <-
            Cache.put(
              {:deployment, compute_signature(deployment.hash),
@@ -94,9 +94,15 @@ defmodule Uplink.Packages.Deployment.Router do
         |> Install.by_hash_and_installation(instellar_installation_id)
         |> Repo.one()
         |> Repo.preload([:deployment])
-        |> Packages.build_install_state()
+        |> case do
+          %Install{} = install ->
+            Packages.build_install_state(install)
 
-        json(conn, :ok, %{})
+            json(conn, :ok, %{})
+
+          nil ->
+            json(conn, :not_found, %{})
+        end
 
       %{"event" => %{"name" => "delete"}} ->
         :ok =
@@ -134,6 +140,9 @@ defmodule Uplink.Packages.Deployment.Router do
            ) do
       json(conn, :created, %{id: event.id, name: event.name})
     else
+      nil ->
+        json(conn, :not_found, %{})
+
       {:error, error} ->
         json(conn, :unprocessable_entity, %{error: %{message: error}})
 

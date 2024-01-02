@@ -16,16 +16,40 @@ defmodule Uplink.Members.Actor.Manager do
           {:ok, actor}
 
         nil ->
-          %Actor{}
-          |> Actor.changeset(%{
+          create(%{
             identifier: identifier,
             provider: provider,
             reference: id
           })
-          |> Repo.insert()
       end
     else
       error -> error
+    end
+  end
+
+  def create(%{reference: reference, provider: provider} = params) do
+    %Actor{}
+    |> Actor.changeset(params)
+    |> Repo.insert()
+    |> case do
+      {:ok, actor} ->
+        {:ok, actor}
+
+      {:error,
+       %Ecto.Changeset{
+         errors: [
+           reference:
+             {_,
+              [
+                constraint: :unique,
+                constraint_name: "actors_provider_reference_index"
+              ]}
+         ]
+       }} ->
+        {:ok, Repo.get_by!(Actor, reference: reference, provider: provider)}
+
+      error ->
+        error
     end
   end
 

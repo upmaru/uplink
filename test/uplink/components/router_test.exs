@@ -8,16 +8,6 @@ defmodule Uplink.Components.RouterTest do
 
   @opts Router.init([])
 
-  @valid_provision_body Jason.encode!(%{
-                          "actor" => %{
-                            "provider" => "instellar",
-                            "identifier" => "zacksiri",
-                            "id" => "1"
-                          },
-                          "variable_id" => "1",
-                          "arguments" => %{}
-                        })
-
   @valid_modify_body Jason.encode!(%{
                        "actor" => %{
                          "provider" => "instellar",
@@ -43,30 +33,56 @@ defmodule Uplink.Components.RouterTest do
   end
 
   describe "provision" do
-    setup do
-      signature =
-        :crypto.mac(:hmac, :sha256, Uplink.Secret.get(), @valid_provision_body)
-        |> Base.encode16()
-        |> String.downcase()
+    test "successfully enqueue provision job" do
+      tasks =
+        1..2
+        |> Enum.to_list()
+        |> Enum.map(fn n ->
+          Task.async(fn ->
+            provision_body =
+              Jason.encode!(%{
+                "actor" => %{
+                  "provider" => "instellar",
+                  "identifier" => "zacksiri",
+                  "id" => "1"
+                },
+                "variable_id" => "#{n}",
+                "arguments" => %{}
+              })
 
-      {:ok, signature: signature}
-    end
+            signature =
+              :crypto.mac(:hmac, :sha256, Uplink.Secret.get(), provision_body)
+              |> Base.encode16()
+              |> String.downcase()
 
-    test "successfully enqueue provision job", %{signature: signature} do
-      conn =
-        conn(:post, "/1/instances", @valid_provision_body)
-        |> put_req_header("x-uplink-signature-256", "sha256=#{signature}")
-        |> put_req_header("content-type", "application/json")
-        |> Router.call(@opts)
+            conn =
+              conn(:post, "/#{n}/instances", provision_body)
+              |> put_req_header("x-uplink-signature-256", "sha256=#{signature}")
+              |> put_req_header("content-type", "application/json")
+              |> Router.call(@opts)
 
-      assert conn.status == 201
+            %{conn: conn, index: n}
+          end)
+        end)
 
-      assert %{"data" => %{"id" => _job_id}} = Jason.decode!(conn.resp_body)
+      tasks_with_results = Task.yield_many(tasks)
 
-      assert_enqueued(
-        worker: Instance.Provision,
-        args: %{"variable_id" => "1", "component_id" => "1", "arguments" => %{}}
-      )
+      Enum.each(tasks_with_results, fn {_task, result} ->
+        {:ok, %{conn: conn, index: index}} = result
+
+        assert conn.status == 201
+
+        assert %{"data" => %{"id" => _job_id}} = Jason.decode!(conn.resp_body)
+
+        assert_enqueued(
+          worker: Instance.Provision,
+          args: %{
+            "variable_id" => "#{index}",
+            "component_id" => "#{index}",
+            "arguments" => %{}
+          }
+        )
+      end)
     end
   end
 

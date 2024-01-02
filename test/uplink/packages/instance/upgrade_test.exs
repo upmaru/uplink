@@ -103,13 +103,21 @@ defmodule Uplink.Packages.Instance.UpgradeTest do
 
       exec_instance = File.read!("test/fixtures/lxd/instances/exec.json")
 
-      {:ok, first_install} = Packages.create_install(first_deployment, 1)
+      {:ok, first_install} =
+        Packages.create_install(first_deployment, %{
+          "installation_id" => 1,
+          "deployment" => @first_deployment
+        })
 
       first_install
       |> Ecto.Changeset.cast(%{current_state: "completed"}, [:current_state])
       |> Repo.update()
 
-      {:ok, second_install} = Packages.create_install(second_deployment, 1)
+      {:ok, second_install} =
+        Packages.create_install(second_deployment, %{
+          "installation_id" => 1,
+          "deployment" => @second_deployment
+        })
 
       second_install
       |> Ecto.Changeset.cast(%{current_state: "completed"}, [:current_state])

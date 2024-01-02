@@ -47,13 +47,11 @@ run:
 hook:
   post-install: |
     rc-update add uplink
-    rc-service uplink migrate
 
   pre-upgrade: |
     rc-service uplink stop
 
   post-upgrade: |
-    rc-service uplink migrate
     rc-service uplink start
 
   post-deinstall: |
@@ -83,5 +81,3 @@ kits:
         default_value: pro
       - key: UPLINK_SECRET
         driver: uplink/secret
-      - key: DATABASE_URL
-        default_value: "ecto:///"

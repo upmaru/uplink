@@ -43,25 +43,34 @@ defmodule Uplink.Packages.DistributionTest do
         "archive_url" =>
           "archives/7a363fba-8ca7-4ea4-8e84-f3785ac97102/packages.zip",
         "metadata" => %{
-          "cluster" => %{
-            "credential" => %{
-              "certificate" => "cert",
-              "endpoint" => "http://localhost:#{bypass.port}",
-              "password" => "somepassword",
-              "password_confirmation" => "somepassword",
-              "private_key" => "key"
-            },
-            "organization" => %{
-              "slug" => "upmaru"
+          "id" => 1,
+          "slug" => "uplink-web",
+          "service_port" => 4000,
+          "exposed_port" => 49152,
+          "variables" => [
+            %{"key" => "SOMETHING", "value" => "blah"}
+          ],
+          "channel" => %{
+            "slug" => "develop",
+            "package" => %{
+              "slug" => "something-1640927800",
+              "credential" => %{
+                "public_key" => "public_key"
+              },
+              "organization" => %{
+                "slug" => "upmaru"
+              }
             }
           },
-          "id" => 8000,
-          "package" => %{
-            "slug" => "something-1640927800",
-            "organization" => %{
-              "slug" => "upmaru"
+          "instances" => [
+            %{
+              "id" => 1,
+              "slug" => "something-1",
+              "node" => %{
+                "slug" => "some-node"
+              }
             }
-          }
+          ]
         }
       }
     }
@@ -80,7 +89,11 @@ defmodule Uplink.Packages.DistributionTest do
     {:ok, deployment} =
       Packages.get_or_create_deployment(app, deployment_params)
 
-    {:ok, _installation} = Packages.create_install(deployment, 1)
+    {:ok, _installation} =
+      Packages.create_install(deployment, %{
+        "installation_id" => 1,
+        "deployment" => deployment_params
+      })
 
     {:ok, %{resource: preparing_deployment}} =
       Packages.transition_deployment_with(deployment, actor, "prepare")

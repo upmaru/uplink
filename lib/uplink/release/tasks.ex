@@ -3,6 +3,9 @@ defmodule Uplink.Release.Tasks do
 
   require Logger
 
+  @callback migrate() :: :ok
+  @callback migrate(Keyword.t()) :: :ok
+
   def migrate(options \\ []) do
     config = Application.get_env(:uplink, Uplink.Data) || []
     mode = Keyword.get(config, :mode, "pro")

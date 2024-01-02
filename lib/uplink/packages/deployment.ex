@@ -12,7 +12,6 @@ defmodule Uplink.Packages.Deployment do
     hash
     channel
     archive_url
-    metadata
     stack
   )a
 
@@ -20,7 +19,6 @@ defmodule Uplink.Packages.Deployment do
     hash
     channel
     archive_url
-    metadata
     stack
   )a
 
@@ -33,8 +31,6 @@ defmodule Uplink.Packages.Deployment do
     field :channel, :string
     field :stack, :string
     field :current_state, :string, default: "created"
-
-    field :metadata, :map, virtual: true
 
     belongs_to :app, App
 

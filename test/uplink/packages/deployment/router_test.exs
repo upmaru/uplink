@@ -76,27 +76,47 @@ defmodule Uplink.Packages.Deployment.RouterTest do
     :ok
   end
 
-  describe "valid body" do
+  describe "create deployment" do
     test "returns 201 for deployment creation" do
-      signature =
-        :crypto.mac(:hmac, :sha256, Uplink.Secret.get(), @valid_body)
-        |> Base.encode16()
-        |> String.downcase()
+      tasks =
+        1..2
+        |> Enum.to_list()
+        |> Enum.map(fn n ->
+          Task.async(fn ->
+            body =
+              Jason.decode!(@valid_body)
+              |> Map.merge(%{"installation_id" => n})
+              |> Jason.encode!()
 
-      conn =
-        conn(:post, "/", @valid_body)
-        |> put_req_header("x-uplink-signature-256", "sha256=#{signature}")
-        |> put_req_header("content-type", "application/json")
-        |> Router.call(@opts)
+            signature =
+              :crypto.mac(:hmac, :sha256, Uplink.Secret.get(), body)
+              |> Base.encode16()
+              |> String.downcase()
 
-      assert conn.status == 201
+            conn =
+              conn(:post, "/", body)
+              |> put_req_header("x-uplink-signature-256", "sha256=#{signature}")
+              |> put_req_header("content-type", "application/json")
+              |> Router.call(@opts)
 
-      assert %{"data" => %{"id" => deployment_id}} =
-               Jason.decode!(conn.resp_body)
+            %{conn: conn, index: n}
+          end)
+        end)
 
-      deployment = Uplink.Repo.get(Uplink.Packages.Deployment, deployment_id)
+      tasks_with_results = Task.yield_many(tasks)
 
-      assert deployment.current_state == "preparing"
+      Enum.each(tasks_with_results, fn {_task, result} ->
+        {:ok, %{conn: conn, index: _index}} = result
+
+        assert conn.status == 201
+
+        assert %{"data" => %{"id" => deployment_id}} =
+                 Jason.decode!(conn.resp_body)
+
+        deployment = Uplink.Repo.get(Uplink.Packages.Deployment, deployment_id)
+
+        assert deployment.current_state == "preparing"
+      end)
     end
   end
 
@@ -267,15 +287,20 @@ defmodule Uplink.Packages.Deployment.RouterTest do
 
       {:ok, actor} = Members.get_or_create_actor(Map.get(params, "actor"))
 
-      deployment = Map.get(params, "deployment")
+      deployment_params = Map.get(params, "deployment")
 
-      {:ok, metadata} = Packages.parse_metadata(deployment["metadata"])
+      {:ok, metadata} = Packages.parse_metadata(deployment_params["metadata"])
 
       app = Packages.get_or_create_app(@app_slug)
 
-      {:ok, deployment} = Packages.get_or_create_deployment(app, deployment)
+      {:ok, deployment} =
+        Packages.get_or_create_deployment(app, deployment_params)
 
-      {:ok, install} = Packages.create_install(deployment, metadata.id)
+      {:ok, install} =
+        Packages.create_install(deployment, %{
+          "installation_id" => metadata.id,
+          "deployment" => deployment_params
+        })
 
       {:ok, %{resource: validating_install}} =
         Packages.transition_install_with(install, actor, "validate")
@@ -306,6 +331,20 @@ defmodule Uplink.Packages.Deployment.RouterTest do
        deployment: deployment,
        bypass: bypass,
        metadata: metadata}
+    end
+
+    test "when install doesn't exist", %{
+      body: body,
+      deployment: deployment,
+      signature: signature
+    } do
+      conn =
+        conn(:post, "/#{deployment.hash}/installs/234/events", body)
+        |> put_req_header("x-uplink-signature-256", "sha256=#{signature}")
+        |> put_req_header("content-type", "application/json")
+        |> Router.call(@opts)
+
+      assert conn.status == 404
     end
 
     test "can mark install complete", %{
@@ -367,6 +406,35 @@ defmodule Uplink.Packages.Deployment.RouterTest do
         |> Router.call(@opts)
 
       assert conn.status == 200
+    end
+
+    test "can refresh metadata for given deployment when install doesn't exist",
+         %{
+           deployment: deployment
+         } do
+      body =
+        Jason.encode!(%{
+          "event" => %{
+            "name" => "refresh"
+          }
+        })
+
+      signature =
+        :crypto.mac(:hmac, :sha256, Uplink.Secret.get(), body)
+        |> Base.encode16()
+        |> String.downcase()
+
+      conn =
+        conn(
+          :post,
+          "/#{deployment.hash}/installs/36/metadata/events",
+          body
+        )
+        |> put_req_header("x-uplink-signature-256", "sha256=#{signature}")
+        |> put_req_header("content-type", "application/json")
+        |> Router.call(@opts)
+
+      assert conn.status == 404
     end
 
     test "can delete metadata for a given deployment", %{

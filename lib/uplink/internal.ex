@@ -18,11 +18,24 @@ defmodule Uplink.Internal do
   forward "/installs", to: Install.Router
 
   get "/caddy" do
-    config = Uplink.Clients.Caddy.build_new_config()
+    case Ecto.Repo.all_running() do
+      [Uplink.Repo] ->
+        config = Uplink.Clients.Caddy.build_new_config()
 
-    conn
-    |> put_resp_header("content-type", "application/json")
-    |> send_resp(:ok, Jason.encode!(config))
+        conn
+        |> put_resp_header("content-type", "application/json")
+        |> send_resp(:ok, Jason.encode!(config))
+
+      _ ->
+        :timer.sleep(2_000)
+
+        conn
+        |> put_resp_header("content-type", "application/json")
+        |> send_resp(
+          :not_found,
+          Jason.encode!(%{error: "uplink is booting try again later"})
+        )
+    end
   end
 
   match _ do

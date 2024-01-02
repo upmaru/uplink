@@ -9,6 +9,7 @@ defmodule Uplink.Clients.Instellar do
     Instance,
     Register,
     Component,
+    Variable,
     Self
   }
 
@@ -57,11 +58,17 @@ defmodule Uplink.Clients.Instellar do
     to: Component.Instance,
     as: :create
 
+  defdelegate create_uplink_variable(params),
+    to: Variable,
+    as: :create
+
   defdelegate transition_instance(instance, install, event_name, options \\ []),
     to: Instance,
     as: :transition
 
-  def endpoint, do: config(:endpoint) || @endpoint
+  def endpoint do
+    config(:endpoint) || @endpoint
+  end
 
   def config(key) do
     Application.get_env(:uplink, __MODULE__)

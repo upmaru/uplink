@@ -63,7 +63,7 @@ defmodule Uplink.Packages.Instance.Router do
         })
 
       nil ->
-        json(conn, :unprocessable_entity, %{
+        json(conn, :not_found, %{
           error: %{message: "install not available, create a deployment first"}
         })
     end
