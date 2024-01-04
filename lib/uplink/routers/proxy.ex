@@ -1,8 +1,9 @@
 defmodule Uplink.Routers.Proxy do
-  use Ecto.Schmea
+  use Ecto.Schema
   import Ecto.Changeset
 
   @valid_attrs ~w(
+    id
     hosts
     paths
     target

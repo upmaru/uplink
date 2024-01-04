@@ -28,7 +28,7 @@ defmodule Uplink.Routers.Proxy.Manager do
 
         proxies
 
-      {:error, error} ->
+      {:error, _error} ->
         []
     end
   end
