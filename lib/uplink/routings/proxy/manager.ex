@@ -1,8 +1,8 @@
-defmodule Uplink.Routers.Proxy.Manager do
+defmodule Uplink.Routings.Proxy.Manager do
   alias Uplink.Cache
   alias Uplink.Clients.Instellar
 
-  alias Uplink.Routers.Proxy
+  alias Uplink.Routings.Proxy
 
   @spec list(integer()) :: list(%Proxy{})
   def list(router_id) do

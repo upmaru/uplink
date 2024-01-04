@@ -1,4 +1,4 @@
-defmodule Uplink.Routers.Proxy do
+defmodule Uplink.Routings.Proxy do
   use Ecto.Schema
   import Ecto.Changeset
 

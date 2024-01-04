@@ -3,7 +3,7 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
   alias Uplink.Cache
 
   alias Uplink.Packages
-  alias Uplink.Routers
+  alias Uplink.Routings
 
   alias Uplink.Clients.Caddy.Admin
   alias Uplink.Clients.Caddy.Apps
@@ -116,7 +116,7 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
 
     proxies =
       if main_routing do
-        Routers.list_proxies(main_routing.router_id)
+        Routings.list_proxies(main_routing.router_id)
       else
         []
       end
