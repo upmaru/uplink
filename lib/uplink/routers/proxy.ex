@@ -13,6 +13,8 @@ defmodule Uplink.Routers.Proxy do
 
   @primary_key false
   embedded_schema do
+    field :id, :integer
+
     field :hosts, {:array, :string}, default: []
     field :paths, {:array, :string}, default: []
     field :target, :string
@@ -26,5 +28,11 @@ defmodule Uplink.Routers.Proxy do
     proxy
     |> cast(params, @valid_attrs)
     |> validate_required(@valid_attrs)
+  end
+
+  def create!(params) do
+    %__MODULE__{}
+    |> changeset(params)
+    |> apply_action!(:insert)
   end
 end
