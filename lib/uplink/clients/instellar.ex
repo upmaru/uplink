@@ -10,6 +10,7 @@ defmodule Uplink.Clients.Instellar do
     Register,
     Component,
     Variable,
+    Proxy,
     Self
   }
 
@@ -29,6 +30,10 @@ defmodule Uplink.Clients.Instellar do
   defdelegate restore,
     to: Self,
     as: :restore
+
+  defdelegate list_proxies(router_id),
+    to: Proxy,
+    as: :list
 
   defdelegate deployment_metadata(install),
     to: Installation,
