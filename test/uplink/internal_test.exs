@@ -21,7 +21,35 @@ defmodule Uplink.InternalTest do
   end
 
   describe "caddy" do
-    test "get caddy config" do
+    test "get caddy config", %{bypass: bypass} do
+      Bypass.expect_once(
+        bypass,
+        "GET",
+        "/uplink/self/routers/1/proxies",
+        fn conn ->
+          conn
+          |> Plug.Conn.put_resp_header("content-type", "application/json")
+          |> Plug.Conn.send_resp(
+            200,
+            Jason.encode!(%{
+              "data" => [
+                %{
+                  "attributes" => %{
+                    "id" => 1,
+                    "router_id" => 1,
+                    "hosts" => ["opsmaru.com", "www.opsmaru.com"],
+                    "paths" => ["/how-to*"],
+                    "tls" => false,
+                    "target" => "proxy.webflow.com",
+                    "port" => 80
+                  }
+                }
+              ]
+            })
+          )
+        end
+      )
+
       conn =
         conn(:get, "/caddy")
         |> put_req_header("content-type", "applcation/json")

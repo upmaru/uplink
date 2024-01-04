@@ -4,7 +4,7 @@ defmodule Uplink.Clients.Instellar.Proxy do
   def list(router_id) do
     headers = Instellar.Self.headers()
 
-    [Instellar.endpoint(), "self", "routers", router_id, "proxies"]
+    [Instellar.endpoint(), "self", "routers", "#{router_id}", "proxies"]
     |> Path.join()
     |> Req.get(headers: headers, max_retries: 1)
     |> case do

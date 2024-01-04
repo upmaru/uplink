@@ -3,6 +3,7 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
   alias Uplink.Cache
 
   alias Uplink.Packages
+  alias Uplink.Routers
 
   alias Uplink.Clients.Caddy.Admin
   alias Uplink.Clients.Caddy.Apps
@@ -113,7 +114,36 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
         "installation_#{metadata.id}"
       end
 
+    proxies =
+      if main_routing do
+        Routers.list_proxies(main_routing.router_id)
+      else
+        []
+      end
+
     valid_instances = find_valid_instances(metadata.instances, install_id)
+
+    proxy_routes =
+      proxies
+      |> Enum.map(fn proxy ->
+        %{
+          group: main_group,
+          match: [
+            %{host: proxy.hosts, path: proxy.paths}
+          ],
+          handle: [
+            %{
+              handler: "reverse_proxy",
+              load_balancing: %{
+                selection_policy: %{policy: "least_conn"}
+              },
+              upstreams: [
+                %{dial: "#{proxy.target}:#{proxy.port}"}
+              ]
+            }
+          ]
+        }
+      end)
 
     main_route = %{
       group: main_group,
@@ -210,7 +240,9 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
         }
       end)
 
-    [main_route | sub_routes]
+    sub_routes_and_proxies = Enum.concat(sub_routes, proxy_routes)
+
+    [main_route | sub_routes_and_proxies]
   end
 
   defp find_valid_instances(instances, install_id) do

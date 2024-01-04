@@ -4,6 +4,7 @@ defmodule Uplink.Routers.Proxy.Manager do
 
   alias Uplink.Routers.Proxy
 
+  @spec list(integer()) :: list(%Proxy{})
   def list(router_id) do
     Cache.get({:proxies, router_id})
     |> case do
@@ -20,7 +21,7 @@ defmodule Uplink.Routers.Proxy.Manager do
       {:ok, proxies_params} ->
         proxies =
           proxies_params
-          |> Enum.map(fn params ->
+          |> Enum.map(fn %{"attributes" => params} ->
             Proxy.create!(params)
           end)
 
