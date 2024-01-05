@@ -244,6 +244,11 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
     sub_routes_and_proxies = Enum.concat(sub_routes, proxy_routes)
 
     [main_route | sub_routes_and_proxies]
+    |> Enum.sort_by(fn route ->
+      paths = Enum.flat_map(route.match, fn m -> m.path end)
+
+      if Enum.any?(paths, &(&1 == "*")), do: 1, else: 0
+    end)
   end
 
   defp find_valid_instances(instances, install_id) do

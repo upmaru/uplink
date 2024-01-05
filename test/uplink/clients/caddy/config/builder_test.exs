@@ -58,24 +58,24 @@ defmodule Uplink.Clients.Caddy.Config.BuilderTest do
 
     assert match.path == ["/configure*"]
 
-    assert second_match.path == ["*"]
+    assert third_match.path == ["*"]
 
-    assert third_match.path == ["/how-to*"]
+    assert second_match.path == ["/how-to*"]
 
-    assert "grpc.something.com" in second_match.host
+    assert "grpc.something.com" in third_match.host
 
-    [second_upstream] = second_handle.upstreams
+    [third_upstream] = third_handle.upstreams
 
-    assert second_upstream.dial =~ "6000"
+    assert third_upstream.dial =~ "6000"
 
     assert %{handler: "reverse_proxy"} = handle
     assert %{host: _hosts} = match
 
-    [third_upstream] = third_handle.upstreams
+    [second_upstream] = second_handle.upstreams
 
-    assert %{protocol: "http", tls: %{}} = third_handle.transport
+    assert %{protocol: "http", tls: %{}} = second_handle.transport
 
-    assert third_upstream.dial == "proxy.webflow.com:80"
+    assert second_upstream.dial == "proxy.webflow.com:80"
 
     assert %{identity: identity} = admin
     assert %{issuers: [], identifiers: ["127.0.0.1"]} = identity
