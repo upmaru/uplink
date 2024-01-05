@@ -137,8 +137,20 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
               load_balancing: %{
                 selection_policy: %{policy: "least_conn"}
               },
+              health_checks: %{
+                passive: %{
+                  fail_duration: "10s",
+                  max_fails: 3,
+                  unhealthy_request_count: 80,
+                  unhealthy_status: [500, 501, 502, 503, 504],
+                  unhealthy_latency: "30s"
+                }
+              },
               upstreams: [
-                %{dial: "#{proxy.target}:#{proxy.port}"}
+                %{
+                  dial: "#{proxy.target}:#{proxy.port}",
+                  max_requests: 100
+                }
               ]
             }
             |> maybe_merge_tls(proxy)
