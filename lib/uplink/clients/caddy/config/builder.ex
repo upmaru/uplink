@@ -141,6 +141,7 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
                 %{dial: "#{proxy.target}:#{proxy.port}"}
               ]
             }
+            |> maybe_merge_tls(proxy)
           ]
         }
       end)
@@ -257,4 +258,13 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
       instances
     end
   end
+
+  defp maybe_merge_tls(params, %{tls: true}) do
+    Map.put(params, :transport, %{
+      protocol: "http",
+      tls: %{}
+    })
+  end
+
+  defp maybe_merge_tls(params, _), do: params
 end

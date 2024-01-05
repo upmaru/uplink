@@ -35,7 +35,7 @@ defmodule Uplink.Clients.Caddy.Config.BuilderTest do
                   "router_id" => 1,
                   "hosts" => ["opsmaru.com", "www.opsmaru.com"],
                   "paths" => ["/how-to*"],
-                  "tls" => false,
+                  "tls" => true,
                   "target" => "proxy.webflow.com",
                   "port" => 80
                 }
@@ -72,6 +72,8 @@ defmodule Uplink.Clients.Caddy.Config.BuilderTest do
     assert %{host: _hosts} = match
 
     [third_upstream] = third_handle.upstreams
+
+    assert %{protocol: "http", tls: %{}} = third_handle.transport
 
     assert third_upstream.dial == "proxy.webflow.com:80"
 
