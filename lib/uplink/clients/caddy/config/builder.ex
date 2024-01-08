@@ -3,6 +3,7 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
   alias Uplink.Cache
 
   alias Uplink.Packages
+  alias Uplink.Routings
 
   alias Uplink.Clients.Caddy.Admin
   alias Uplink.Clients.Caddy.Apps
@@ -113,7 +114,49 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
         "installation_#{metadata.id}"
       end
 
+    proxies =
+      if main_routing do
+        Routings.list_proxies(main_routing.router_id)
+      else
+        []
+      end
+
     valid_instances = find_valid_instances(metadata.instances, install_id)
+
+    proxy_routes =
+      proxies
+      |> Enum.map(fn proxy ->
+        %{
+          group: main_group,
+          match: [
+            %{host: proxy.hosts, path: proxy.paths}
+          ],
+          handle: [
+            %{
+              handler: "reverse_proxy",
+              load_balancing: %{
+                selection_policy: %{policy: "least_conn"}
+              },
+              health_checks: %{
+                passive: %{
+                  fail_duration: "10s",
+                  max_fails: 3,
+                  unhealthy_request_count: 80,
+                  unhealthy_status: [500, 501, 502, 503, 504],
+                  unhealthy_latency: "30s"
+                }
+              },
+              upstreams: [
+                %{
+                  dial: "#{proxy.target}:#{proxy.port}",
+                  max_requests: 100
+                }
+              ]
+            }
+            |> maybe_merge_tls(proxy)
+          ]
+        }
+      end)
 
     main_route = %{
       group: main_group,
@@ -210,7 +253,14 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
         }
       end)
 
-    [main_route | sub_routes]
+    sub_routes_and_proxies = Enum.concat(sub_routes, proxy_routes)
+
+    [main_route | sub_routes_and_proxies]
+    |> Enum.sort_by(fn route ->
+      paths = Enum.flat_map(route.match, fn m -> m.path end)
+
+      if Enum.any?(paths, &(&1 == "*")), do: 1, else: 0
+    end)
   end
 
   defp find_valid_instances(instances, install_id) do
@@ -225,4 +275,13 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
       instances
     end
   end
+
+  defp maybe_merge_tls(params, %{tls: true}) do
+    Map.put(params, :transport, %{
+      protocol: "http",
+      tls: %{}
+    })
+  end
+
+  defp maybe_merge_tls(params, _), do: params
 end

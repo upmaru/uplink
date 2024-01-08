@@ -15,28 +15,67 @@ defmodule Uplink.Clients.Caddy.Config.BuilderTest do
     :ok
   end
 
-  test "generate caddy config" do
+  test "generate caddy config", %{bypass: bypass} do
+    Uplink.Cache.delete({:proxies, 1})
+
+    Bypass.expect_once(
+      bypass,
+      "GET",
+      "/uplink/self/routers/1/proxies",
+      fn conn ->
+        conn
+        |> Plug.Conn.put_resp_header("content-type", "application/json")
+        |> Plug.Conn.send_resp(
+          200,
+          Jason.encode!(%{
+            "data" => [
+              %{
+                "attributes" => %{
+                  "id" => 1,
+                  "router_id" => 1,
+                  "hosts" => ["opsmaru.com", "www.opsmaru.com"],
+                  "paths" => ["/how-to*"],
+                  "tls" => true,
+                  "target" => "proxy.webflow.com",
+                  "port" => 80
+                }
+              }
+            ]
+          })
+        )
+      end
+    )
+
     assert %{admin: admin, apps: apps, storage: storage} =
              Uplink.Clients.Caddy.build_new_config()
 
     assert %{http: %{servers: %{"uplink" => server}}} = apps
-    assert %{routes: [first_route, second_route]} = server
+    assert %{routes: [first_route, second_route, third_route]} = server
 
     assert %{handle: [handle], match: [match]} = first_route
     assert %{handle: [second_handle], match: [second_match]} = second_route
+    assert %{handle: [third_handle], match: [third_match]} = third_route
 
     assert match.path == ["/configure*"]
 
-    assert second_match.path == ["*"]
+    assert third_match.path == ["*"]
 
-    assert "grpc.something.com" in second_match.host
+    assert second_match.path == ["/how-to*"]
 
-    [second_upstream] = second_handle.upstreams
+    assert "grpc.something.com" in third_match.host
 
-    assert second_upstream.dial =~ "6000"
+    [third_upstream] = third_handle.upstreams
+
+    assert third_upstream.dial =~ "6000"
 
     assert %{handler: "reverse_proxy"} = handle
     assert %{host: _hosts} = match
+
+    [second_upstream] = second_handle.upstreams
+
+    assert %{protocol: "http", tls: %{}} = second_handle.transport
+
+    assert second_upstream.dial == "proxy.webflow.com:80"
 
     assert %{identity: identity} = admin
     assert %{issuers: [], identifiers: ["127.0.0.1"]} = identity
