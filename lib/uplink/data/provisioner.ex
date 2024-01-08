@@ -13,12 +13,13 @@ defmodule Uplink.Data.Provisioner do
   @release_tasks Application.compile_env(:uplink, :release_tasks) ||
                    Uplink.Release.Tasks
 
-  defstruct [:mode, :project, :status, :parent]
+  defstruct [:mode, :project, :status, :parent, :env]
 
   @type t :: %__MODULE__{
           mode: String.t(),
           project: String.t(),
-          status: :ok | :error | :provisioning | nil
+          status: :ok | :error | :provisioning | nil,
+          env: atom()
         }
 
   def start_link(options) do
@@ -44,7 +45,7 @@ defmodule Uplink.Data.Provisioner do
 
     send(self(), {:bootstrap, mode, env})
 
-    {:ok, %__MODULE__{mode: mode, project: project, parent: parent}}
+    {:ok, %__MODULE__{mode: mode, project: project, parent: parent, env: env}}
   end
 
   @impl true
@@ -135,11 +136,6 @@ defmodule Uplink.Data.Provisioner do
         Application.put_env(:uplink, Uplink.Repo, url: db_url)
         GenServer.stop(conn)
 
-        Application.put_env(:uplink, Uplink.Repo,
-          url: db_url,
-          pool_size: 2
-        )
-
         Uplink.Release.Tasks.migrate(force: true)
         Uplink.Data.start_link([])
 
@@ -154,7 +150,7 @@ defmodule Uplink.Data.Provisioner do
 
         Formation.Lxd.Alpine.provision_postgresql(client, project: state.project)
 
-        Process.send_after(self(), {:bootstrap, state.mode}, 5_000)
+        Process.send_after(self(), {:bootstrap, state.mode, state.env}, 5_000)
 
         {:noreply, put_in(state.status, :provisioning)}
     end
