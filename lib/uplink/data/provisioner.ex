@@ -135,6 +135,14 @@ defmodule Uplink.Data.Provisioner do
         Application.put_env(:uplink, Uplink.Repo, url: db_url)
         GenServer.stop(conn)
 
+        database_url =
+          Formation.Lxd.Alpine.postgresql_connection_url(scheme: "ecto")
+
+        Application.put_env(:uplink, Uplink.Repo,
+          url: database_url,
+          pool_size: 2
+        )
+
         Uplink.Release.Tasks.migrate(force: true)
         Uplink.Data.start_link([])
 
