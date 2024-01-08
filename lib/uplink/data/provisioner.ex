@@ -116,7 +116,7 @@ defmodule Uplink.Data.Provisioner do
     {:noreply, put_in(state.status, :ok)}
   end
 
-  def handle_info({:bootstrap, "lite", _env}, state) do
+  def handle_info({:bootstrap, "lite", env}, state) do
     db_url = Formation.Lxd.Alpine.postgresql_connection_url(scheme: "ecto")
     uri = URI.parse(db_url)
 
@@ -150,7 +150,7 @@ defmodule Uplink.Data.Provisioner do
 
         Formation.Lxd.Alpine.provision_postgresql(client, project: state.project)
 
-        Process.send_after(self(), {:bootstrap, state.mode, state.env}, 5_000)
+        Process.send_after(self(), {:bootstrap, state.mode, env}, 5_000)
 
         {:noreply, put_in(state.status, :provisioning)}
     end
