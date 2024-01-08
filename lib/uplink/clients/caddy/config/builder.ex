@@ -83,8 +83,20 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
           %{wrapper: "tls"}
         ],
         routes:
-          Enum.map(installs, &build_route/1)
-          |> List.flatten(),
+          Enum.flat_map(installs, &build_route/1)
+          |> Enum.uniq_by(fn route ->
+            path =
+              Enum.map(route.match, fn m -> m.path end)
+              |> Enum.sort()
+              |> Enum.join(":")
+
+            host =
+              Enum.map(route.match, fn m -> m.host end)
+              |> Enum.sort()
+              |> Enum.join(":")
+
+            "#{route.group}_#{host}_#{path}"
+          end),
         logs: %{
           default_logger_name: "default"
         }
