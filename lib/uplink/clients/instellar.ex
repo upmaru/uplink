@@ -14,7 +14,7 @@ defmodule Uplink.Clients.Instellar do
     Self
   }
 
-  @endpoint "https://web.instellar.app/uplink"
+  @endpoint "https://opsmaru.com/uplink"
 
   import Uplink.Secret.Signature,
     only: [compute_signature: 1]
