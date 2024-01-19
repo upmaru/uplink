@@ -71,7 +71,13 @@ defmodule Uplink.Packages.Distribution do
         ["#{conn.scheme}://", "#{node_host_name}:#{port}", conn.request_path]
         |> Path.join()
 
-      reverse_proxy_options = ReverseProxyPlug.init(upstream: upstream)
+      client = Tesla.client([Tesla.Middleware.Logger], Tesla.Adapter.Mint)
+
+      reverse_proxy_options =
+        ReverseProxyPlug.init(
+          upstream: upstream,
+          client_options: [tesla_client: client]
+        )
 
       conn
       |> Map.put(:path_info, [])
