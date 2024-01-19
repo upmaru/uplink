@@ -53,6 +53,7 @@ defmodule Uplink.MixProject do
 
       # HTTP Client
       {:req, "~> 0.4"},
+      {:httpoison, "~> 2.2"},
 
       # Clustering
       {:libcluster, "~> 3.0"},
