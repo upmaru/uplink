@@ -51,14 +51,11 @@ defmodule Uplink.MixProject do
       # Worker
       {:oban, "~> 2.14"},
 
-      # Rest Client
+      # HTTP Client
       {:req, "~> 0.4"},
 
       # Clustering
       {:libcluster, "~> 3.0"},
-
-      # Downstream
-      {:downstream, "~> 1.1.0"},
 
       # One time password
       {:pot, "~> 1.0.2"},
