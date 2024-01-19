@@ -4,7 +4,7 @@ defmodule Uplink.MixProject do
   def project do
     [
       app: :uplink,
-      version: "0.12.3",
+      version: "0.12.4",
       elixir: "~> 1.13",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
