@@ -53,13 +53,10 @@ defmodule Uplink.Packages.Deployment.Prepare do
 
     Logger.info("#{@logger_prefix} Downloading archive - #{identifier}")
 
-    file = File.open!(archive_file_path, [:write])
-
     archive_url
-    |> Downstream.get(file)
+    |> Req.get(into: File.stream!(archive_file_path))
     |> case do
-      {:ok, %{status_code: 200}} ->
-        :ok = File.close(file)
+      {:ok, %{status: 200}} ->
         decompress_archive(archive_file_path, extraction_path, state)
 
       _ ->

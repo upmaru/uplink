@@ -4,7 +4,7 @@ defmodule Uplink.MixProject do
   def project do
     [
       app: :uplink,
-      version: "0.12.3",
+      version: "0.12.4",
       elixir: "~> 1.13",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
@@ -51,14 +51,12 @@ defmodule Uplink.MixProject do
       # Worker
       {:oban, "~> 2.14"},
 
-      # Rest Client
+      # HTTP Client
       {:req, "~> 0.4"},
+      {:httpoison, "~> 2.2"},
 
       # Clustering
       {:libcluster, "~> 3.0"},
-
-      # Downstream
-      {:downstream, "~> 1.1.0"},
 
       # One time password
       {:pot, "~> 1.0.2"},
