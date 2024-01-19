@@ -32,6 +32,12 @@ config :uplink, Oban,
     components: 1
   ]
 
+config :tesla, :adapter, Tesla.Adapter.Mint
+
+config :reverse_proxy_plug,
+       :http_client,
+       ReverseProxyPlug.HTTPClient.Adapters.Tesla
+
 config :formation, Formation.Lxd, timeout: 180
 
 config :logger,

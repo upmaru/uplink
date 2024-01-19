@@ -53,6 +53,9 @@ defmodule Uplink.MixProject do
 
       # HTTP Client
       {:req, "~> 0.4"},
+      {:tesla, "~> 1.7"},
+      {:mint, "~> 1.0"},
+      {:castore, "~> 0.1"},
 
       # Clustering
       {:libcluster, "~> 3.0"},
