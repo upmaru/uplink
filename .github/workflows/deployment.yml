@@ -1,26 +1,25 @@
 name: 'Deployment'
 
 on:
-  workflow_run: 
-    workflows: ["CI"]
-    branches: [master, develop]
-    types: 
-      - completed
+  push:
+    branches:
+      - main
+      - master
+      - develop
 
 jobs:
   build:
     name: Build
-    runs-on: warp-ubuntu-latest-x64-2x
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
     steps:
       - name: 'Checkout'
         uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.workflow_run.head_branch }}
+          ref: ${{ github.ref }}
           fetch-depth: 0
 
       - name: Setup Pakman
-        uses: upmaru/pakman@develop
+        uses: upmaru/pakman@v8
         with:
           alpine: v3.18
 
@@ -49,20 +48,17 @@ jobs:
   deploy:
     name: Deploy
     needs: build
-    runs-on: warp-ubuntu-latest-x64-2x
+    runs-on: ubuntu-latest
     steps: 
       - name: Checkout
         uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.workflow_run.head_branch }}
-          fetch-depth: 0
 
       - uses: actions/download-artifact@v3
         with: 
           path: /home/runner/artifacts
 
       - name: Setup Pakman
-        uses: upmaru/pakman@develop
+        uses: upmaru/pakman@v8
         with:
           alpine: v3.18
 
@@ -76,8 +72,8 @@ jobs:
         run: pakman push
         shell: alpine.sh {0}
         env:
-          WORKFLOW_REF: ${{ github.event.workflow_run.head_branch }}
-          WORKFLOW_SHA: ${{ github.event.workflow_run.head_sha }}
-          INSTELLAR_ENDPOINT: ${{vars.INSTELLAR_ENDPOINT}}
+          WORKFLOW_REF: ${{ github.ref }}
+          WORKFLOW_SHA: ${{ github.sha }}
+          INSTELLAR_ENDPOINT: https://opsmaru.com
           INSTELLAR_PACKAGE_TOKEN: ${{secrets.INSTELLAR_PACKAGE_TOKEN}}
           INSTELLAR_AUTH_TOKEN: ${{secrets.INSTELLAR_AUTH_TOKEN}}

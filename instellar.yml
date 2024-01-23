@@ -1,21 +1,19 @@
 dependencies:
-  trace: true
   build:
     - elixir
+    - npm
   runtime:
     - bash
     - curl
+    - s6
     - jq
     - ca-certificates
-    - inotify-tools
-    - s6
     - uplink-openrc
-    
+  trace: true
+
 stack: alpine/3.18
 
 build:
-  destinations: 
-    - '_build/prod/rel/uplink/*'
   command: |
     export MIX_ENV=prod
 
@@ -23,61 +21,59 @@ build:
     mix local.rebar --force
     mix do deps.get --only prod
 
-    mix release
+    # npm --prefix ./assets install ./assets
 
-run: 
-  name: uplink
+    # Comment out mix assets.deploy for non phoenix apps
+    mix assets.deploy
+
+    mix release
+  destination:
+    - _build/prod/rel/uplink/*
+
+run:
   commands:
-  - name: migrate
-    binary: uplink
-    call: 'eval Uplink.Release.Tasks.migrate'
-  - name: console
-    binary: uplink
-    call: remote
-  - name: logs
-    binary: tail
-    path: /usr/bin
-    call: -f -n 100 /var/log/uplink/current
+    - binary: uplink
+      call: eval 'Uplink.Release.Tasks.migrate'
+      name: migrate
+    - binary: uplink
+      call: remote
+      name: console
+    - binary: tail
+      call: -f -n 100 /var/log/uplink/current
+      name: logs
+      path: /usr/bin
+  name: uplink
   services:
-  - name: web
-    binary: uplink
-    start:
-      call: 'start'
+    - binary: uplink
+      name: web
+      start:
+        call: start
 
 hook:
-  post-install: |
-    rc-update add uplink
-
-  pre-upgrade: |
-    rc-service uplink stop
-
-  post-upgrade: |
-    rc-service uplink start
-
   post-deinstall: |
     rc-service uplink stop
     rc-update del uplink
+  post-install: |
+    rc-update add uplink
+    rc-service uplink migrate
+  post-upgrade: |
+    rc-service uplink migrate
+    rc-service uplink start
+  pre-upgrade: |
+    rc-service uplink stop
 
 kits:
-  - description: Limited to single node, good for simple setups
+  - description: Web service
     main: true
-    name: lite
-    max_instances_count: 1
-    ports: 
-      - name: web
-        target: 4040
-    variables:
-      - key: UPLINK_MODE
-        default_value: lite
-      - key: UPLINK_SECRET
-        driver: uplink/secret
-  - description: Can run on multiple nodes, requires postgresql database
-    name: pro
+    name: web
     ports:
-      - name: web
-        target: 4040
+      - main: true
+        name: web
+        target: 4000
     variables:
-      - key: UPLINK_MODE
-        default_value: pro
-      - key: UPLINK_SECRET
-        driver: uplink/secret
+      - default_value: 'true'
+        key: PHX_SERVER
+      - driver: generic/secret
+        driver_options:
+          length: 128
+        key: SECRET_KEY_BASE
