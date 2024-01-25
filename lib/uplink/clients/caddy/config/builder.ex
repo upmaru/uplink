@@ -83,7 +83,8 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
           %{wrapper: "tls"}
         ],
         routes:
-          Enum.flat_map(installs, &build_route/1)
+          installs
+          |> Enum.flat_map(&build_route/1)
           |> Enum.uniq_by(fn route ->
             path =
               Enum.map(route.match, fn m -> m.path end)
@@ -96,6 +97,11 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
               |> Enum.join(":")
 
             "#{route.group}_#{host}_#{path}"
+          end)
+          |> Enum.sort_by(fn route ->
+            paths = Enum.flat_map(route.match, fn m -> m.path end)
+
+            if Enum.any?(paths, &(&1 == "*")), do: 1, else: 0
           end),
         logs: %{
           default_logger_name: "default"
@@ -268,11 +274,6 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
     sub_routes_and_proxies = Enum.concat(sub_routes, proxy_routes)
 
     [main_route | sub_routes_and_proxies]
-    |> Enum.sort_by(fn route ->
-      paths = Enum.flat_map(route.match, fn m -> m.path end)
-
-      if Enum.any?(paths, &(&1 == "*")), do: 1, else: 0
-    end)
   end
 
   defp find_valid_instances(instances, install_id) do
