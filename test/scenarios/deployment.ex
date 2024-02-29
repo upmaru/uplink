@@ -71,6 +71,9 @@ defmodule Uplink.Scenarios.Deployment do
       "credential" => %{
         "endpoint" => "http://localhost:#{bypass.port}"
       },
+      "uplink" => %{
+        "image_server" => "https://localhost/spaces/test"
+      },
       "organization" => %{
         "slug" => "someorg",
         "storage" => %{

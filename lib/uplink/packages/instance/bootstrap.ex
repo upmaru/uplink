@@ -78,6 +78,8 @@ defmodule Uplink.Packages.Instance.Bootstrap do
       shutdown: 30_000
     )
 
+    image_server = get_image_server()
+
     with %{metadata: %{channel: channel} = metadata} <-
            Packages.build_install_state(install, actor),
          members when is_list(members) <- LXD.list_cluster_members(),
@@ -101,7 +103,7 @@ defmodule Uplink.Packages.Instance.Bootstrap do
             "type" => "image",
             "mode" => "pull",
             "protocol" => "simplestreams",
-            "server" => "https://images.linuxcontainers.org",
+            "server" => image_server,
             "alias" => install.deployment.stack
           }
         })
@@ -185,6 +187,17 @@ defmodule Uplink.Packages.Instance.Bootstrap do
         Packages.transition_install_with(install, actor, "fail",
           comment: "cluster member not found"
         )
+    end
+  end
+
+  def get_image_server do
+    case Uplink.Clients.Instellar.get_self() do
+      %{"uplink" => %{"image_server" => image_server}} ->
+        image_server
+
+      _ ->
+        polar_config = Application.get_env(:uplink, :polar)
+        Keyword.fetch!(polar_config, :endpoint)
     end
   end
 end

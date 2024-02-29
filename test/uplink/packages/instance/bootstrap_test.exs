@@ -112,8 +112,18 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
       )
 
       Bypass.expect_once(bypass, "POST", "/1.0/instances", fn conn ->
-        assert %{"target" => "ubuntu-s-1vcpu-1gb-sgp1-01", "project" => project} =
-                 conn.query_params
+        assert %{
+                 "target" => "ubuntu-s-1vcpu-1gb-sgp1-01",
+                 "project" => project
+               } = conn.query_params
+
+        {:ok, body, conn} = Plug.Conn.read_body(conn)
+
+        assert %{"source" => source} = Jason.decode!(body)
+
+        assert %{"server" => server} = source
+
+        assert server == "https://localhost/spaces/test"
 
         assert project == project_name
 
