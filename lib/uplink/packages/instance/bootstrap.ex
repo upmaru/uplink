@@ -197,7 +197,7 @@ defmodule Uplink.Packages.Instance.Bootstrap do
 
       _ ->
         polar_config = Application.get_env(:uplink, :polar)
-        Keyword.get(polar_config, :endpoint)
+        Keyword.fetch!(polar_config, :endpoint)
     end
   end
 end
