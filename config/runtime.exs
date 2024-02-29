@@ -33,6 +33,8 @@ config :uplink, Uplink.Data,
   mode: uplink_mode,
   project: project_name
 
+config :uplink, :polar, endpoint: System.get_env("POLAR_ENDPOINT")
+
 if config_env() == :prod do
   config :uplink, Uplink.Clients.Instellar,
     endpoint:
