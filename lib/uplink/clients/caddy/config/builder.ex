@@ -5,6 +5,8 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
   alias Uplink.Packages
   alias Uplink.Routings
 
+  alias Uplink.Clients.Caddy
+
   alias Uplink.Clients.Caddy.Admin
   alias Uplink.Clients.Caddy.Apps
   alias Uplink.Clients.Caddy.Storage
@@ -59,7 +61,8 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
 
     %{
       identity: %{
-        identifiers: identifiers
+        identifiers: identifiers,
+        issuers: build_issuers()
       }
     }
     |> Admin.parse()
@@ -276,6 +279,20 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
     [main_route | sub_routes_and_proxies]
   end
 
+  defp build_issuers do
+    [
+      Caddy.Issuers.ACME.create!(%{
+        extenal_account: %{},
+        challenges:
+          maybe_merge_dns(%{
+            http: %{},
+            tls_alpn: %{}
+          }),
+        preferred_chains: %{}
+      })
+    ]
+  end
+
   defp find_valid_instances(instances, install_id) do
     completed_instances = Cache.get({:install, install_id, "completed"})
 
@@ -297,4 +314,15 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
   end
 
   defp maybe_merge_tls(params, _), do: params
+
+  defp maybe_merge_dns(params) do
+    if cloudflare_token = System.get_env("CLOUDFLARE_DNS_TOKEN") do
+      Map.put(params, :dns, %{
+        provider:
+          Caddy.Issuers.DNS.Cloudflare.create!(%{api_token: cloudflare_token})
+      })
+    else
+      params
+    end
+  end
 end
