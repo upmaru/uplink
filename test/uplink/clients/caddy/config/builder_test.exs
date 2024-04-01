@@ -80,9 +80,9 @@ defmodule Uplink.Clients.Caddy.Config.BuilderTest do
     assert second_upstream.dial == "proxy.webflow.com:80"
 
     assert %{identity: identity} = admin
-    assert %{issuers: issuers, identifiers: ["127.0.0.1"]} = identity
+    assert %{issuers: [issuer], identifiers: ["127.0.0.1"]} = identity
 
-    IO.inspect(issuers)
+    assert %Uplink.Clients.Caddy.Issuers.ACME{} = issuer
 
     assert %{module: "s3"} = storage
   end
