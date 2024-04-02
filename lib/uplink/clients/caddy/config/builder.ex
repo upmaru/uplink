@@ -282,15 +282,13 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
   defp build_issuers do
     [
       Caddy.Issuers.ACME.create!(%{
-        extenal_account: %{},
         challenges:
           maybe_merge_dns(%{
             http: %{},
             tls_alpn: %{}
-          }),
-        preferred_chains: %{}
+          })
       })
-      |> clean_challenge_params()
+      |> clean_acme_params()
     ]
   end
 
@@ -327,19 +325,27 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
     end
   end
 
-  defp clean_challenge_params(
-         %Caddy.Issuers.ACME{challenges: challenges} = acme
-       ) do
-    challenges = %{
-      "http" => challenges.http,
-      "tls-alpn" => challenges.tls_alpn,
-      "dns" => challenges.dns,
-      "bind_host" => challenges.bind_host
-    }
+  defp clean_acme_params(%Caddy.Issuers.ACME{challenges: challenges} = acme) do
+    challenges =
+      %{
+        "http" => challenges.http,
+        "tls-alpn" => challenges.tls_alpn,
+        "dns" =>
+          challenges.dns
+          |> Jason.encode!()
+          |> Jason.decode!()
+          |> Enum.reject(fn {_, v} -> v in ["", [""], nil, 0] end)
+          |> Enum.into(%{}),
+        "bind_host" => challenges.bind_host
+      }
+      |> Enum.reject(fn {_, v} -> v in ["", [""], nil, 0] end)
+      |> Enum.into(%{})
 
     acme
     |> Jason.encode!()
     |> Jason.decode!()
     |> Map.put("challenges", challenges)
+    |> Enum.reject(fn {_, v} -> v in ["", [""], nil, 0] end)
+    |> Enum.into(%{})
   end
 end

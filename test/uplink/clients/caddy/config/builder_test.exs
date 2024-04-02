@@ -87,8 +87,7 @@ defmodule Uplink.Clients.Caddy.Config.BuilderTest do
     assert %{
              "http" => _http,
              "tls-alpn" => _tls_alpn,
-             "dns" => _dns,
-             "bind_host" => _bind_host
+             "dns" => _dns
            } = challenges
 
     assert %{module: "s3"} = storage
