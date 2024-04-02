@@ -82,7 +82,14 @@ defmodule Uplink.Clients.Caddy.Config.BuilderTest do
     assert %{identity: identity} = admin
     assert %{issuers: [issuer], identifiers: ["127.0.0.1"]} = identity
 
-    assert %{"challenges" => _challenges} = issuer
+    assert %{"challenges" => challenges} = issuer
+
+    assert %{
+             "http" => _http,
+             "tls-alpn" => _tls_alpn,
+             "dns" => _dns,
+             "bind_host" => _bind_host
+           } = challenges
 
     assert %{module: "s3"} = storage
   end
