@@ -1,4 +1,19 @@
 {
+  "admin": {
+    "identity": {
+      "identifiers": ["127.0.0.1"],
+      "issuers": [
+        {
+          "challenges": {
+            "dns": {},
+            "http": {"alternate_port": 0, "disabled": false},
+            "tls-alpn": {"alternate_port": 0, "disabled": false}
+          },
+          "module": "acme"
+        }
+      ]
+    }
+  },
   "apps": {
     "http": {
       "servers": {
