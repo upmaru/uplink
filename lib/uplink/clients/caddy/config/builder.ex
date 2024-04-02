@@ -61,8 +61,7 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
 
     %{
       identity: %{
-        identifiers: identifiers,
-        issuers: build_issuers()
+        identifiers: identifiers
       }
     }
     |> Admin.parse()
@@ -72,6 +71,15 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
     %{
       http: %{
         servers: servers(install_states)
+      },
+      tls: %{
+        automation: %{
+          policies: [
+            %{
+              issuers: build_issuers()
+            }
+          ]
+        }
       }
     }
     |> Apps.parse()
