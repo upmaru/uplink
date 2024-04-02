@@ -290,6 +290,7 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
           }),
         preferred_chains: %{}
       })
+      |> clean_challenge_params()
     ]
   end
 
@@ -324,5 +325,21 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
     else
       params
     end
+  end
+
+  defp clean_challenge_params(
+         %Caddy.Issuers.ACME{challenges: challenges} = acme
+       ) do
+    challenges = %{
+      "http" => challenges.http,
+      "tls-alpn" => challenges.tls_alpn,
+      "dns" => challenges.dns,
+      "bind_host" => challenges.bind_host
+    }
+
+    acme
+    |> Jason.encode!()
+    |> Jason.decode!()
+    |> Map.put("challenges", challenges)
   end
 end
