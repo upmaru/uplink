@@ -326,12 +326,14 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
   end
 
   defp clean_acme_params(%Caddy.Issuers.ACME{challenges: challenges} = acme) do
+    dns = challenges.dns || %{}
+
     challenges =
       %{
         "http" => challenges.http,
         "tls-alpn" => challenges.tls_alpn,
         "dns" =>
-          challenges.dns
+          dns
           |> Jason.encode!()
           |> Jason.decode!()
           |> Enum.reject(fn {_, v} -> v in ["", [""], nil, 0] end)
