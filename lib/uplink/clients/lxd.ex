@@ -71,8 +71,6 @@ defmodule Uplink.Clients.LXD do
       "credential" => credential
     } = params = Instellar.get_self()
 
-    balancer = Map.get(params, "balancer")
-
     endpoint =
       case Map.get(params, "balancer") do
         %{"address" => address, "current_state" => "active"} ->
