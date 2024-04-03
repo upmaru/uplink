@@ -10,7 +10,6 @@ defmodule Uplink.Clients.Caddy.Admin do
       @derive Jason.Encoder
 
       field :identifiers, {:array, :string}
-
       field :issuers, {:array, :map}, default: []
     end
   end

@@ -5,6 +5,8 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
   alias Uplink.Packages
   alias Uplink.Routings
 
+  alias Uplink.Clients.Caddy
+
   alias Uplink.Clients.Caddy.Admin
   alias Uplink.Clients.Caddy.Apps
   alias Uplink.Clients.Caddy.Storage
@@ -69,6 +71,15 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
     %{
       http: %{
         servers: servers(install_states)
+      },
+      tls: %{
+        automation: %{
+          policies: [
+            %{
+              issuers: build_issuers()
+            }
+          ]
+        }
       }
     }
     |> Apps.parse()
@@ -276,6 +287,19 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
     [main_route | sub_routes_and_proxies]
   end
 
+  defp build_issuers do
+    [
+      Caddy.Issuers.ACME.create!(%{
+        challenges:
+          maybe_merge_dns(%{
+            http: %{},
+            tls_alpn: %{}
+          })
+      })
+      |> clean_acme_params()
+    ]
+  end
+
   defp find_valid_instances(instances, install_id) do
     completed_instances = Cache.get({:install, install_id, "completed"})
 
@@ -297,4 +321,41 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
   end
 
   defp maybe_merge_tls(params, _), do: params
+
+  defp maybe_merge_dns(params) do
+    if cloudflare_token = System.get_env("CLOUDFLARE_DNS_TOKEN") do
+      Map.put(params, :dns, %{
+        provider:
+          Caddy.Issuers.DNS.Cloudflare.create!(%{api_token: cloudflare_token})
+      })
+    else
+      params
+    end
+  end
+
+  defp clean_acme_params(%Caddy.Issuers.ACME{challenges: challenges} = acme) do
+    dns = challenges.dns || %{}
+
+    challenges =
+      %{
+        "http" => challenges.http,
+        "tls-alpn" => challenges.tls_alpn,
+        "dns" =>
+          dns
+          |> Jason.encode!()
+          |> Jason.decode!()
+          |> Enum.reject(fn {_, v} -> v in ["", [""], nil, 0] end)
+          |> Enum.into(%{}),
+        "bind_host" => challenges.bind_host
+      }
+      |> Enum.reject(fn {_, v} -> v in ["", [""], nil, 0] end)
+      |> Enum.into(%{})
+
+    acme
+    |> Jason.encode!()
+    |> Jason.decode!()
+    |> Map.put("challenges", challenges)
+    |> Enum.reject(fn {_, v} -> v in ["", [""], nil, 0] end)
+    |> Enum.into(%{})
+  end
 end

@@ -18,6 +18,8 @@ defmodule Uplink.Clients.Caddy.Config.BuilderTest do
   test "generate caddy config", %{bypass: bypass} do
     Uplink.Cache.delete({:proxies, 1})
 
+    System.put_env("CLOUDFLARE_DNS_TOKEN", "something")
+
     Bypass.expect_once(
       bypass,
       "GET",
@@ -49,7 +51,21 @@ defmodule Uplink.Clients.Caddy.Config.BuilderTest do
     assert %{admin: admin, apps: apps, storage: storage} =
              Uplink.Clients.Caddy.build_new_config()
 
-    assert %{http: %{servers: %{"uplink" => server}}} = apps
+    assert %{http: %{servers: %{"uplink" => server}}, tls: tls} = apps
+
+    assert %{automation: %{policies: [policy]}} = tls
+
+    assert %{issuers: [issuer]} = policy
+
+    assert %{"challenges" => challenges} = issuer
+
+    assert %{"dns" => dns, "tls-alpn" => _tls_alpn, "http" => _http} =
+             challenges
+
+    assert %{
+             "provider" => %{"api_token" => "something", "name" => "cloudflare"}
+           } = dns
+
     assert %{routes: [first_route, second_route, third_route]} = server
 
     assert %{handle: [handle], match: [match]} = first_route
@@ -78,7 +94,7 @@ defmodule Uplink.Clients.Caddy.Config.BuilderTest do
     assert second_upstream.dial == "proxy.webflow.com:80"
 
     assert %{identity: identity} = admin
-    assert %{issuers: [], identifiers: ["127.0.0.1"]} = identity
+    assert %{identifiers: ["127.0.0.1"]} = identity
 
     assert %{module: "s3"} = storage
   end

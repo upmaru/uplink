@@ -69,10 +69,23 @@ defmodule Uplink.Clients.LXD do
   def client do
     %{
       "credential" => credential
-    } = Instellar.get_self()
+    } = params = Instellar.get_self()
+
+    endpoint =
+      case Map.get(params, "balancer") do
+        %{"address" => address, "current_state" => "active"} ->
+          uri = URI.parse(credential["endpoint"])
+
+          uri = %{uri | host: address}
+
+          to_string(uri)
+
+        nil ->
+          credential["endpoint"]
+      end
 
     Lexdee.create_client(
-      credential["endpoint"],
+      endpoint,
       credential["certificate"],
       credential["private_key"]
     )

@@ -13,18 +13,30 @@ defmodule Uplink.Clients.Caddy.Apps do
 
       field :servers, :map
     end
+
+    embeds_one :tls, TLS, primary_key: false do
+      @derive Jason.Encoder
+
+      field :automation, :map
+    end
   end
 
   def changeset(apps, params) do
     apps
     |> cast(params, [])
     |> cast_embed(:http, with: &http_changeset/2)
+    |> cast_embed(:tls, with: &tls_changeset/2)
   end
 
   defp http_changeset(http, params) do
     http
     |> cast(params, [:servers])
     |> maybe_cast_servers()
+  end
+
+  defp tls_changeset(tls, params) do
+    tls
+    |> cast(params, [:automation])
   end
 
   def parse(params) do
