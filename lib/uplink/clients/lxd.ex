@@ -71,6 +71,12 @@ defmodule Uplink.Clients.LXD do
       "credential" => credential
     } = params = Instellar.get_self()
 
+    options = Application.get_env(:uplink, :lxd)
+
+    timeout =
+      Keyword.get(options, :timeout, "30")
+      |> String.to_integer()
+
     endpoint =
       case Map.get(params, "balancer") do
         %{"address" => address, "current_state" => "active"} ->
@@ -87,7 +93,8 @@ defmodule Uplink.Clients.LXD do
     Lexdee.create_client(
       endpoint,
       credential["certificate"],
-      credential["private_key"]
+      credential["private_key"],
+      timeout: :timer.seconds(timeout)
     )
   end
 end

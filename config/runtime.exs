@@ -33,6 +33,8 @@ config :uplink, Uplink.Data,
   mode: uplink_mode,
   project: project_name
 
+config :uplink, :lxd, timeout: System.get_env("LXD_CLIENT_TIMEOUT", "30")
+
 config :uplink, :polar, endpoint: System.get_env("POLAR_ENDPOINT")
 
 if config_env() == :prod do
