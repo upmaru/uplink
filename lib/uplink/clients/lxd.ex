@@ -74,7 +74,8 @@ defmodule Uplink.Clients.LXD do
     options = Application.get_env(:uplink, :lxd)
 
     timeout =
-      Keyword.get(options, :timeout, "30")
+      options
+      |> Keyword.get(:timeout, "30")
       |> String.to_integer()
 
     endpoint =
