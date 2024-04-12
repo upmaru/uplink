@@ -39,8 +39,7 @@ config :uplink, :polar, endpoint: System.get_env("POLAR_ENDPOINT")
 
 if config_env() == :prod do
   config :uplink, Uplink.Clients.Instellar,
-    endpoint:
-      System.get_env("INSTELLAR_ENDPOINT", "https://web.instellar.app/uplink")
+    endpoint: System.get_env("INSTELLAR_ENDPOINT", "https://opsmaru.com/uplink")
 
   installation_id =
     System.get_env("INSTELLAR_INSTALLATION_ID") ||
