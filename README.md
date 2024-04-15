@@ -2,8 +2,6 @@
 
 ![build](https://github.com/upmaru/uplink/actions/workflows/ci.yml/badge.svg)
 
-![Uplink](cover.png)
-
 ## Why?
 
 Uplink is designed to work with [instellar](https://github.com/upmaru/instellar). It provides protocols that enable instellar to push changes and events that propagate into dynamic configuration changes.
