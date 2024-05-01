@@ -1,8 +1,9 @@
 defmodule Uplink.Cache.Router do
-  use Plug.Router
+  use Plug.Router, async: true
   use Uplink.Web
 
   alias Uplink.Secret
+  alias Uplink.Cache
 
   plug :match
 
@@ -16,7 +17,9 @@ defmodule Uplink.Cache.Router do
   plug :dispatch
 
   delete "/self" do
-    Uplink.Cache.delete(:self)
+    Cache.transaction([keys: [:self]], fn ->
+      Cache.delete(:self)
+    end)
 
     json(conn, :ok, %{message: "cache key :self deleted."})
   end

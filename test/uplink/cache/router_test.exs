@@ -1,5 +1,5 @@
 defmodule Uplink.Cache.RouterTest do
-  use ExUnit.Case
+  use ExUnit.Case, async: true
   use Plug.Test
 
   alias Uplink.Cache.Router
@@ -13,12 +13,6 @@ defmodule Uplink.Cache.RouterTest do
                          "id" => "1"
                        }
                      })
-
-  setup do
-    Uplink.Cache.put(:self, "something")
-
-    :ok
-  end
 
   describe "delete self" do
     setup do
