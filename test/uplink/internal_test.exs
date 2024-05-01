@@ -2,6 +2,7 @@ defmodule Uplink.InternalTest do
   use ExUnit.Case
   use Plug.Test
 
+  alias Uplink.Cache
   alias Uplink.Internal
 
   @opts Internal.init([])
@@ -22,6 +23,8 @@ defmodule Uplink.InternalTest do
 
   describe "caddy" do
     test "get caddy config", %{bypass: bypass} do
+      Cache.delete({:proxies, 1})
+
       Bypass.expect_once(
         bypass,
         "GET",
@@ -52,7 +55,7 @@ defmodule Uplink.InternalTest do
 
       conn =
         conn(:get, "/caddy")
-        |> put_req_header("content-type", "applcation/json")
+        |> put_req_header("content-type", "application/json")
         |> Internal.call(@opts)
 
       assert conn.status == 200

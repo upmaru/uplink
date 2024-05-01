@@ -19,6 +19,7 @@ defmodule Uplink.Router do
   forward "/deployments", to: Deployment.Router
   forward "/instances", to: Instance.Router
   forward "/components", to: Components.Router
+  forward "/cache", to: Uplink.Cache.Router
 
   match _ do
     send_resp(conn, 404, "not found")
