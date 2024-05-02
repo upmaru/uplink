@@ -2,11 +2,8 @@ defmodule Uplink.Installations.Router do
   use Plug.Router
   use Uplink.Web
 
-  alias Uplink.Repo
   alias Uplink.Secret
   alias Uplink.Installations
-
-  alias Uplink.Packages.Install
 
   plug :match
 
@@ -22,7 +19,7 @@ defmodule Uplink.Installations.Router do
   post "/:instellar_installation_id/events" do
     case conn.body_params do
       %{"event" => %{"name" => "delete"}} ->
-        job = 
+        {:ok, job} =
           %{instellar_installation_id: instellar_installation_id}
           |> Installations.Delete.new()
           |> Oban.insert()

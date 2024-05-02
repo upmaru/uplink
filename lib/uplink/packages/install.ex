@@ -50,7 +50,7 @@ defmodule Uplink.Packages.Install do
           id: i.id,
           row_number: over(row_number(), :installations_partition)
         },
-        where: i.instellar_installation_state not in ["deleted"],
+        where: i.instellar_installation_state not in ["inactive"],
         windows: [
           installations_partition: [
             partition_by: :instellar_installation_id,

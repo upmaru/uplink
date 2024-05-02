@@ -2,6 +2,7 @@ defmodule Uplink.Installations.Delete do
   use Oban.Worker, queue: :installations, max_attempts: 1
 
   alias Uplink.Repo
+  alias Uplink.Clients.Caddy
   alias Uplink.Packages.Install
 
   import Ecto.Query, only: [where: 3]
@@ -11,13 +12,17 @@ defmodule Uplink.Installations.Delete do
   @task_supervisor Application.compile_env(:uplink, :task_supervisor) ||
                      Task.Supervisor
 
-  def perform(%Job{args: %{"instellar_installation_id" => instellar_installation_id}}) do
+  def perform(%Job{
+        args: %{"instellar_installation_id" => instellar_installation_id}
+      }) do
     Install
     |> where([i], i.instellar_installation_id == ^instellar_installation_id)
-    |> Repo.update_all(set: [
-      instellar_installation_state: "deleted", 
-      updated_at: DateTime.utc_now()
-    ])
+    |> Repo.update_all(
+      set: [
+        instellar_installation_state: "inactive",
+        updated_at: DateTime.utc_now()
+      ]
+    )
 
     [Node.self() | Node.list()]
     |> Enum.each(fn node ->
