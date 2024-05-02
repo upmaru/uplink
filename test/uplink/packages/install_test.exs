@@ -16,19 +16,23 @@ defmodule Uplink.Packages.InstallTest do
 
   setup [:setup_base]
 
-  test "filter out install with inactive instellar_installation_state", %{install: install} do
-    installs = 
+  test "filter out install with inactive instellar_installation_state", %{
+    install: install
+  } do
+    installs =
       Packages.Install.latest_by_installation_id(1)
       |> Repo.all()
 
     assert Enum.count(installs) == 1
 
-
     Packages.Install
-    |> where([i], i.instellar_installation_id == ^install.instellar_installation_id)
+    |> where(
+      [i],
+      i.instellar_installation_id == ^install.instellar_installation_id
+    )
     |> Repo.update_all(set: [instellar_installation_state: "inactive"])
 
-    installs = 
+    installs =
       Packages.Install.latest_by_installation_id(1)
       |> Repo.all()
 
