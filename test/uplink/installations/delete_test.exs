@@ -1,18 +1,14 @@
-defmodule Uplink.Clients.Caddy.Config.ReloadTest do
+defmodule Uplink.Installations.DeleteTest do
   use ExUnit.Case
   use Oban.Testing, repo: Uplink.Repo
 
-  alias Uplink.{
-    Cache,
-    Members,
-    Packages
-  }
+  alias Uplink.Repo
+  alias Uplink.Cache
+  alias Uplink.Members
+  alias Uplink.Packages
 
-  alias Packages.{
-    Metadata
-  }
-
-  alias Uplink.Clients.Caddy.Config
+  alias Uplink.Packages.Metadata
+  alias Uplink.Installations.Delete
 
   import Uplink.Secret.Signature,
     only: [compute_signature: 1]
@@ -51,44 +47,6 @@ defmodule Uplink.Clients.Caddy.Config.ReloadTest do
           }
         }
       ]
-    }
-  }
-
-  @uplink_installation_state_response %{
-    "data" => %{
-      "attributes" => %{
-        "id" => 1,
-        "slug" => "uplink-web",
-        "main_port" => %{
-          "slug" => "web",
-          "source" => 49142,
-          "target" => 4000
-        },
-        "variables" => [
-          %{"key" => "SOMETHING", "value" => "somevalue"}
-        ],
-        "channel" => %{
-          "slug" => "develop",
-          "package" => %{
-            "slug" => "something-1640927800",
-            "credential" => %{
-              "public_key" => "public_key"
-            },
-            "organization" => %{
-              "slug" => "upmaru"
-            }
-          }
-        },
-        "instances" => [
-          %{
-            "id" => 1,
-            "slug" => "something-1",
-            "node" => %{
-              "slug" => "some-node"
-            }
-          }
-        ]
-      }
     }
   }
 
@@ -176,24 +134,22 @@ defmodule Uplink.Clients.Caddy.Config.ReloadTest do
   end
 
   describe "perform" do
-    test "reload config", %{bypass: bypass, install: install} do
+    test "deactivates all installs", %{install: install, bypass: bypass} do
       Bypass.expect(bypass, "POST", "/load", fn conn ->
         conn
         |> Plug.Conn.put_resp_header("content-type", "application/json")
         |> Plug.Conn.resp(200, "")
       end)
 
-      Bypass.expect_once(bypass, "GET", "/uplink/installations/1", fn conn ->
-        conn
-        |> Plug.Conn.put_resp_header("content-type", "application/json")
-        |> Plug.Conn.resp(
-          200,
-          Jason.encode!(@uplink_installation_state_response)
-        )
-      end)
+      assert install.instellar_installation_state == "active"
 
-      assert {:ok, :reloaded} ==
-               perform_job(Config.Reload, %{install_id: install.id})
+      perform_job(Delete, %{
+        "instellar_installation_id" => install.instellar_installation_id
+      })
+
+      install = Repo.reload(install)
+
+      assert install.instellar_installation_state == "inactive"
     end
   end
 end

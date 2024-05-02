@@ -3,6 +3,8 @@ defmodule Uplink.Router do
   use Uplink.Web
 
   alias Uplink.Components
+  alias Uplink.Installations
+  alias Uplink.Cache
 
   alias Uplink.Packages.{
     Instance,
@@ -16,10 +18,11 @@ defmodule Uplink.Router do
     json(conn, :ok, %{message: "Live long and prosper."})
   end
 
+  forward "/installations", to: Installations.Router
   forward "/deployments", to: Deployment.Router
   forward "/instances", to: Instance.Router
   forward "/components", to: Components.Router
-  forward "/cache", to: Uplink.Cache.Router
+  forward "/cache", to: Cache.Router
 
   match _ do
     send_resp(conn, 404, "not found")

@@ -1,5 +1,5 @@
 defmodule Uplink.Cache.Router do
-  use Plug.Router, async: true
+  use Plug.Router
   use Uplink.Web
 
   alias Uplink.Secret
