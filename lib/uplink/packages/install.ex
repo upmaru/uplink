@@ -12,6 +12,7 @@ defmodule Uplink.Packages.Install do
 
   schema "installs" do
     field :instellar_installation_id, :integer
+    field :instellar_installation_state, :string, default: "active"
     field :current_state, :string, default: "created"
 
     belongs_to :deployment, Deployment
@@ -49,6 +50,7 @@ defmodule Uplink.Packages.Install do
           id: i.id,
           row_number: over(row_number(), :installations_partition)
         },
+        where: i.instellar_installation_state not in ["deleted"],
         windows: [
           installations_partition: [
             partition_by: :instellar_installation_id,
