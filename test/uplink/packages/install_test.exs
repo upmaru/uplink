@@ -16,7 +16,7 @@ defmodule Uplink.Packages.InstallTest do
 
   setup [:setup_base]
 
-  test "install state is created by default", %{install: install} do
+  test "filter out install with inactive instellar_installation_state", %{install: install} do
     installs = 
       Packages.Install.latest_by_installation_id(1)
       |> Repo.all()
