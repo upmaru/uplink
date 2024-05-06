@@ -67,38 +67,40 @@ defmodule Uplink.Scenarios.Deployment do
 
     bypass = Bypass.open()
 
-    Cache.put(:self, %{
-      "credential" => %{
-        "endpoint" => "http://localhost:#{bypass.port}"
-      },
-      "uplink" => %{
-        "image_server" => "https://localhost/spaces/test"
-      },
-      "organization" => %{
-        "slug" => "someorg",
-        "storage" => %{
-          "type" => "s3",
-          "host" => "some.host",
-          "bucket" => "some-bucket",
-          "region" => "sgp1",
-          "credential" => %{
-            "access_key_id" => "access-key",
-            "secret_access_key" => "secret"
+    Cache.transaction([keys: [:self]], fn ->
+      Cache.put(:self, %{
+        "credential" => %{
+          "endpoint" => "http://localhost:#{bypass.port}"
+        },
+        "uplink" => %{
+          "image_server" => "https://localhost/spaces/test"
+        },
+        "organization" => %{
+          "slug" => "someorg",
+          "storage" => %{
+            "type" => "s3",
+            "host" => "some.host",
+            "bucket" => "some-bucket",
+            "region" => "sgp1",
+            "credential" => %{
+              "access_key_id" => "access-key",
+              "secret_access_key" => "secret"
+            }
           }
-        }
-      },
-      "instances" => [
-        %{
-          "id" => 1,
-          "slug" => "uplink-01",
-          "node" => %{
+        },
+        "instances" => [
+          %{
             "id" => 1,
-            "slug" => "some-node-01",
-            "public_ip" => "127.0.0.1"
+            "slug" => "uplink-01",
+            "node" => %{
+              "id" => 1,
+              "slug" => "some-node-01",
+              "public_ip" => "127.0.0.1"
+            }
           }
-        }
-      ]
-    })
+        ]
+      })
+    end)
 
     Application.put_env(
       :uplink,

@@ -41,6 +41,6 @@ defmodule Uplink.Clients.Caddy.Config.Reload do
       end)
     end)
 
-    :ok
+    {:ok, :reloaded}
   end
 end
