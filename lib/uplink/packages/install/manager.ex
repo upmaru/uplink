@@ -104,6 +104,13 @@ defmodule Uplink.Packages.Install.Manager do
   defp fetch_deployment_metadata(
          %Install{metadata_snapshot: metadata_snapshot} = install
        ) do
+    fallback_metadata =
+      if metadata_snapshot.orchestration do
+        metadata_snapshot
+      else
+        %{metadata_snapshot | orchestration: %Metadata.Orchestration{}}
+      end
+
     with {:ok, metadata_params} <-
            Instellar.deployment_metadata(install),
          {:ok, %Metadata{} = metadata} <-
@@ -119,7 +126,7 @@ defmodule Uplink.Packages.Install.Manager do
       %{metadata: metadata}
     else
       {:error, _} ->
-        %{metadata: metadata_snapshot}
+        %{metadata: fallback_metadata}
     end
   end
 end
