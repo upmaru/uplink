@@ -11,20 +11,6 @@ defmodule Uplink.Packages.Instance.Placement do
     |> Enum.join("-")
   end
 
-  def find(_name, "auto") do
-    frequency =
-      LXD.list_instances()
-      |> Enum.frequencies_by(fn instance ->
-        instance.location
-      end)
-
-    selected_member =
-      LXD.list_cluster_members()
-      |> Enum.min_by(fn m -> frequency[m.server_name] || 0 end)
-
-    {:ok, %__MODULE__{node: selected_member.server_name}}
-  end
-
   def find(node_name, "spread") do
     placement_name = name(node_name)
 
@@ -59,5 +45,19 @@ defmodule Uplink.Packages.Instance.Placement do
       nil ->
         {:error, :no_available_node}
     end
+  end
+
+  def find(_name, _) do
+    frequency =
+      LXD.list_instances()
+      |> Enum.frequencies_by(fn instance ->
+        instance.location
+      end)
+
+    selected_member =
+      LXD.list_cluster_members()
+      |> Enum.min_by(fn m -> frequency[m.server_name] || 0 end)
+
+    {:ok, %__MODULE__{node: selected_member.server_name}}
   end
 end
