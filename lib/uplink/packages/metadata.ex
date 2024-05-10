@@ -2,18 +2,15 @@ defmodule Uplink.Packages.Metadata do
   use Ecto.Schema
   import Ecto.Changeset
 
+  alias __MODULE__.Orchestration
+
   @primary_key false
   embedded_schema do
     field :id, :integer
     field :slug, :string
     field :hosts, {:array, :string}, default: []
 
-    embeds_one :orchestration, Orchestration, primary_key: false do
-      field :placement, :string, default: "auto"
-      field :on_fail, :string, default: "cleanup"
-      field :delivery, :string, default: "continuous"
-      field :upgrade, :string, default: "patch"
-    end
+    embeds_one :orchestration, Orchestration
 
     embeds_one :main_port, __MODULE__.Port
 
@@ -54,7 +51,7 @@ defmodule Uplink.Packages.Metadata do
     metadata
     |> cast(params, [:id, :slug, :hosts])
     |> validate_required([:id, :slug])
-    |> cast_embed(:orchestration, with: &orchestration_changeset/2)
+    |> cast_embed(:orchestration)
     |> cast_embed(:channel, required: true, with: &channel_changeset/2)
     |> cast_embed(:instances, required: true, with: &instance_changeset/2)
     |> cast_embed(:main_port)
@@ -91,11 +88,6 @@ defmodule Uplink.Packages.Metadata do
     |> validate_required([:public_key])
   end
 
-  defp orchestration_changeset(orchestration, params) do
-    orchestration
-    |> cast(params, [:placement, :on_fail, :delivery, :upgrade])
-  end
-
   defp channel_changeset(channel, params) do
     channel
     |> cast(params, [:slug])
@@ -125,6 +117,18 @@ defmodule Uplink.Packages.Metadata do
   end
 
   def parse(params) do
+    params =
+      if Map.get(params, "orchestration") do
+        params
+      else
+        Map.put(params, "orchestration", %{
+          "placement" => "auto",
+          "upgrade" => "patch",
+          "delivery" => "continuous",
+          "on_fail" => "cleanup"
+        })
+      end
+
     %__MODULE__{}
     |> changeset(params)
     |> apply_action(:insert)

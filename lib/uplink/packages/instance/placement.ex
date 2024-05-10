@@ -57,7 +57,7 @@ defmodule Uplink.Packages.Instance.Placement do
         {:ok, %__MODULE__{node: node}}
 
       nil ->
-        {:error, :not_found}
+        {:error, :no_available_node}
     end
   end
 end

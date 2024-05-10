@@ -52,10 +52,17 @@ defmodule Uplink.Packages.Instance.Bootstrap do
       |> preload([:deployment])
       |> Repo.get(install_id)
 
-    install
-    |> Packages.build_install_state(actor)
+    state = Packages.build_install_state(install, actor)
+
+    state
     |> handle_placement(instance_params)
-    |> handle_provisioning(instance_params)
+    |> case do
+      %{client: _, lxd_project_name: _, placement: _} = updated_state ->
+        handle_provisioning(updated_state, instance_params)
+
+      error ->
+        handle_error(state, error, instance_params)
+    end
   end
 
   defp handle_placement(
@@ -155,7 +162,7 @@ defmodule Uplink.Packages.Instance.Bootstrap do
            lxd_project_name: lxd_project_name,
            placement: placement
          },
-         %{"slug" => instance_name}
+         %{"slug" => instance_name} = instance_params
        ) do
     package_distribution_url = Packages.distribution_url(metadata)
     package = channel.package
@@ -198,10 +205,17 @@ defmodule Uplink.Packages.Instance.Bootstrap do
         |> Oban.insert()
 
       {:error, error} ->
+        transition_parameters =
+          Map.put(
+            @transition_parameters,
+            "node",
+            placement.node
+          )
+
         Uplink.TaskSupervisor
         |> @task_supervisor.async_nolink(
           fn ->
-            Instellar.transition_instance(name, install, "fail",
+            Instellar.transition_instance(instance_name, install, "fail",
               comment: "[Uplink.Packages.Instance.Bootstrap] #{inspect(error)}",
               parameters: transition_parameters
             )
@@ -213,7 +227,7 @@ defmodule Uplink.Packages.Instance.Bootstrap do
 
         %{
           "instance" => instance_params,
-          "install_id" => install_id,
+          "install_id" => install.id,
           "actor_id" => actor.id
         }
         |> Cleanup.new()
@@ -221,13 +235,9 @@ defmodule Uplink.Packages.Instance.Bootstrap do
     end
   end
 
-  defp handle_provisioning({:error, error}, %{"slug" => instance_name}) do
-    Packages.transition_install_with(install, actor, "fail",
-      comment: "#{instance_name} #{inspect(error)}"
-    )
-  end
-
-  defp handle_provisioning(error, %{"slug" => instance_name}) do
+  defp handle_error(%{install: install, actor: actor}, error, %{
+         "slug" => instance_name
+       }) do
     Packages.transition_install_with(install, actor, "fail",
       comment: "#{instance_name} #{inspect(error)}"
     )
