@@ -8,6 +8,13 @@ defmodule Uplink.Packages.Metadata do
     field :slug, :string
     field :hosts, {:array, :string}, default: []
 
+    embeds_one :orchestration, Orchestration, primary_key: false do
+      field :placement, :string, default: "auto"
+      field :on_fail, :string, default: "cleanup"
+      field :delivery, :string, default: "continuous"
+      field :upgrade, :string, default: "patch"
+    end
+
     embeds_one :main_port, __MODULE__.Port
 
     embeds_many :ports, __MODULE__.Port
@@ -47,6 +54,7 @@ defmodule Uplink.Packages.Metadata do
     metadata
     |> cast(params, [:id, :slug, :hosts])
     |> validate_required([:id, :slug])
+    |> cast_embed(:orchestration, with: &orchestration_changeset/2)
     |> cast_embed(:channel, required: true, with: &channel_changeset/2)
     |> cast_embed(:instances, required: true, with: &instance_changeset/2)
     |> cast_embed(:main_port)
@@ -81,6 +89,11 @@ defmodule Uplink.Packages.Metadata do
     package_credential
     |> cast(params, [:public_key])
     |> validate_required([:public_key])
+  end
+
+  defp orchestration_changeset(orchestration, params) do
+    orchestration
+    |> cast(params, [:placement, :on_fail, :delivery, :upgrade])
   end
 
   defp channel_changeset(channel, params) do

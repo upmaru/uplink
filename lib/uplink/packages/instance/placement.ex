@@ -2,6 +2,15 @@ defmodule Uplink.Packages.Instance.Placement do
   alias Uplink.Cache
   alias Uplink.Clients.LXD
 
+  defstruct [:node]
+
+  def name(node_name) do
+    node_name
+    |> String.split("-")
+    |> List.delete_at(-1)
+    |> Enum.join("-")
+  end
+
   def find(_name, "auto") do
     frequency =
       LXD.list_instances()
@@ -9,15 +18,15 @@ defmodule Uplink.Packages.Instance.Placement do
         instance.location
       end)
 
-    LXD.list_cluster_members()
-    |> Enum.min_by(fn m -> frequency[m.server_name] || 0 end)
+    selected_member =
+      LXD.list_cluster_members()
+      |> Enum.min_by(fn m -> frequency[m.server_name] || 0 end)
+
+    {:ok, %__MODULE__{node: selected_member.server_name}}
   end
 
-  def find(name, "spread") do
-    placement_name =
-      String.split(name, "-")
-      |> List.delete_at(-1)
-      |> Enum.join("-")
+  def find(node_name, "spread") do
+    placement_name = name(node_name)
 
     Cache.get({:available_nodes, placement_name})
     |> case do
@@ -33,7 +42,7 @@ defmodule Uplink.Packages.Instance.Placement do
             end)
           end)
           |> Enum.map(fn {k, _} -> k end)
-          |> Enum.map(fn n -> %{server_name: n} end)
+          |> Enum.map(fn n -> n end)
 
         Cache.put({:available_nodes, placement_name}, available_nodes)
 
@@ -41,6 +50,14 @@ defmodule Uplink.Packages.Instance.Placement do
 
       available_nodes ->
         available_nodes
+    end
+    |> List.first()
+    |> case do
+      node when is_binary(node) ->
+        {:ok, %__MODULE__{node: node}}
+
+      nil ->
+        {:error, :not_found}
     end
   end
 end
