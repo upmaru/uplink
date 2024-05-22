@@ -174,6 +174,7 @@ defmodule Uplink.Packages.Instance.Upgrade do
         {:ok, :reverted}
 
       {:error, error} ->
+        # TODO: here we need to load the on_fail strategy setting
         handle_error(error, job)
     end
   end
