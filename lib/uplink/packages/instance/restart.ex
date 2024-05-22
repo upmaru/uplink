@@ -39,7 +39,8 @@ defmodule Uplink.Packages.Instance.Restart do
 
     project_name = Packages.get_project_name(client, metadata)
 
-    with {:ok, _} <- Formation.lxd_stop(client, name, project: project_name),
+    with {:ok, %{"status_code" => 200}} <-
+           Formation.lxd_stop(client, name, project: project_name),
          %Tesla.Client{} <-
            Formation.lxd_start(client, name, project: project_name) do
       Uplink.TaskSupervisor
