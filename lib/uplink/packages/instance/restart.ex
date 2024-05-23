@@ -39,6 +39,24 @@ defmodule Uplink.Packages.Instance.Restart do
 
     project_name = Packages.get_project_name(client, metadata)
 
+    comment =
+      if message = Map.get(args, "comment") do
+        "[Uplink.Packages.Instance.Restart] #{message}"
+      else
+        "[Uplink.Packages.Instance.Restart] Instance #{name} restarted."
+      end
+
+    Uplink.TaskSupervisor
+    |> @task_supervisor.async_nolink(
+      fn ->
+        Instellar.transition_instance(name, install, "restart",
+          comment: comment,
+          parameters: @transition_parameters
+        )
+      end,
+      shutdown: 30_000
+    )
+
     with {:ok, %{"status_code" => 200}} <-
            Formation.lxd_stop(client, name, project: project_name),
          %Tesla.Client{} <-
