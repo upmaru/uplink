@@ -19,11 +19,12 @@ defmodule Uplink.Packages.Instance.Restart do
                      Task.Supervisor
 
   def perform(%Job{
-        args: %{
-          "instance" => %{"slug" => name},
-          "install_id" => install_id,
-          "actor_id" => actor_id
-        }
+        args:
+          %{
+            "instance" => %{"slug" => name},
+            "install_id" => install_id,
+            "actor_id" => actor_id
+          } = args
       }) do
     %Actor{} = actor = Repo.get(Actor, actor_id)
 
@@ -65,8 +66,7 @@ defmodule Uplink.Packages.Instance.Restart do
       |> @task_supervisor.async_nolink(
         fn ->
           Instellar.transition_instance(name, install, "complete",
-            comment:
-              "[Uplink.Packages.Instance.Restart] Instance #{name} restarted.",
+            comment: comment,
             parameters: @transition_parameters
           )
         end,
