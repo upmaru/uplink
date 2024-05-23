@@ -44,7 +44,7 @@ defmodule Uplink.Packages.Instance.Restart do
       if message = Map.get(args, "comment") do
         "[Uplink.Packages.Instance.Restart] #{message}"
       else
-        "[Uplink.Packages.Instance.Restart] Instance #{name} restarted."
+        "[Uplink.Packages.Instance.Restart] Instance #{name} restarting."
       end
 
     Uplink.TaskSupervisor
@@ -66,7 +66,8 @@ defmodule Uplink.Packages.Instance.Restart do
       |> @task_supervisor.async_nolink(
         fn ->
           Instellar.transition_instance(name, install, "complete",
-            comment: comment,
+            comment:
+              "[Uplink.Packages.Instance.Restart] Instance #{name} restarted.",
             parameters: @transition_parameters
           )
         end,

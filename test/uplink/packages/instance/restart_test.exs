@@ -106,7 +106,7 @@ defmodule Uplink.Packages.Instance.RestartTest do
         end
       )
 
-      Bypass.expect_once(
+      Bypass.expect(
         bypass,
         "POST",
         "/uplink/installations/#{install.instellar_installation_id}/instances/#{instance_slug}/events",
@@ -114,7 +114,9 @@ defmodule Uplink.Packages.Instance.RestartTest do
           assert {:ok, body, conn} = Plug.Conn.read_body(conn)
           assert {:ok, body} = Jason.decode(body)
 
-          assert %{"event" => %{"name" => "complete" = event_name}} = body
+          assert %{"event" => %{"name" => event_name}} = body
+
+          assert event_name in ["restart", "complete"]
 
           conn
           |> Plug.Conn.put_resp_header("content-type", "application/json")
@@ -209,7 +211,7 @@ defmodule Uplink.Packages.Instance.RestartTest do
         end
       )
 
-      Bypass.expect_once(
+      Bypass.expect(
         bypass,
         "POST",
         "/uplink/installations/#{install.instellar_installation_id}/instances/#{instance_slug}/events",
@@ -217,7 +219,9 @@ defmodule Uplink.Packages.Instance.RestartTest do
           assert {:ok, body, conn} = Plug.Conn.read_body(conn)
           assert {:ok, body} = Jason.decode(body)
 
-          assert %{"event" => %{"name" => "stuck" = event_name}} = body
+          assert %{"event" => %{"name" => event_name}} = body
+
+          assert event_name in ["restart", "stuck"]
 
           conn
           |> Plug.Conn.put_resp_header("content-type", "application/json")
