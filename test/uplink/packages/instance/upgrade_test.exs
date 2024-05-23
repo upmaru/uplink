@@ -721,7 +721,14 @@ defmodule Uplink.Packages.Instance.UpgradeTest do
                  actor_id: actor.id
                })
 
-      assert %Oban.Job{worker: worker} = job
+      assert %Oban.Job{worker: worker, args: args} = job
+
+      assert %{
+               "instance" => %{"slug" => _slug},
+               "install_id" => _install_id,
+               "actor_id" => _actor_id
+             } = args
+
       assert worker == "Uplink.Packages.Instance.Restart"
     end
   end
