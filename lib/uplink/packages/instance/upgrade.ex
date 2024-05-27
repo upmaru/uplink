@@ -1,4 +1,6 @@
 defmodule Uplink.Packages.Instance.Upgrade do
+  alias Ecto.Schema.Metadata
+
   use Oban.Worker,
     queue: :instance,
     max_attempts: 1
@@ -9,6 +11,7 @@ defmodule Uplink.Packages.Instance.Upgrade do
   alias Uplink.Packages
   alias Uplink.Packages.Install
   alias Uplink.Packages.Instance
+  alias Uplink.Packages.Metadata
 
   alias Uplink.Members.Actor
 
@@ -79,7 +82,7 @@ defmodule Uplink.Packages.Instance.Upgrade do
         }
       ]
     })
-    |> validate_stack(install)
+    |> validate_stack(install, metadata)
     |> handle_upgrade(job, actor)
   end
 
@@ -89,7 +92,8 @@ defmodule Uplink.Packages.Instance.Upgrade do
            id: install_id,
            instellar_installation_id: instellar_installation_id,
            deployment: incoming_deployment
-         } = install
+         } = install,
+         metadata
        ) do
     Install
     |> where(
@@ -104,18 +108,18 @@ defmodule Uplink.Packages.Instance.Upgrade do
     |> case do
       %Install{deployment: %{stack: previous_stack}} ->
         if previous_stack == incoming_deployment.stack do
-          {:upgrade, formation_instance, install}
+          {:upgrade, formation_instance, install, metadata}
         else
-          {:deactivate_and_bootstrap, formation_instance, install}
+          {:deactivate_and_bootstrap, formation_instance, install, metadata}
         end
 
       nil ->
-        {:upgrade, formation_instance, install}
+        {:upgrade, formation_instance, install, metadata}
     end
   end
 
   defp handle_upgrade(
-         {:upgrade, formation_instance, install},
+         {:upgrade, formation_instance, install, metadata},
          %Job{args: %{"instance" => instance_params}} = job,
          actor
        ) do
@@ -174,12 +178,12 @@ defmodule Uplink.Packages.Instance.Upgrade do
         {:ok, :reverted}
 
       {:error, error} ->
-        handle_error(error, job)
+        handle_error(error, job, metadata)
     end
   end
 
   defp handle_upgrade(
-         {:deactivate_and_bootstrap, _formation_instance, _install},
+         {:deactivate_and_bootstrap, _formation_instance, _install, _metadata},
          %Job{args: args},
          _actor
        ),
@@ -188,8 +192,24 @@ defmodule Uplink.Packages.Instance.Upgrade do
            comment: "stack changed deactivating and bootstrapping"
          )
 
-  defp handle_error(comment, %Job{attempt: _attempt, args: args}),
-    do: deactivate_and_boot(args, comment: comment)
+  defp handle_error(comment, %Job{attempt: _attempt, args: args}, metadata) do
+    case metadata.orchestration do
+      %Metadata.Orchestration{on_fail: "restart"} ->
+        restart(args, comment: comment)
+
+      %Metadata.Orchestration{on_fail: "cleanup"} ->
+        deactivate_and_boot(args, comment: comment)
+    end
+  end
+
+  defp restart(args, options) do
+    args
+    |> Map.merge(%{
+      "comment" => Keyword.get(options, :comment)
+    })
+    |> Instance.Restart.new()
+    |> Oban.insert()
+  end
 
   defp deactivate_and_boot(args, options) do
     args

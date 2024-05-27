@@ -9,6 +9,7 @@ Uplink is designed to work with [instellar](https://github.com/upmaru/instellar)
 ## Installation
 
 You can install uplink either by using the instellar UI or Infrastructure as Code. See instructions below.
+
 ### Click Ops
 
 You can install uplink via [instellar.app](https://instellar.app). On the cluster page. When you add a new empty cluster you can simply click on the `Setup` button.

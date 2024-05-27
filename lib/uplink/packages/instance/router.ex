@@ -26,7 +26,8 @@ defmodule Uplink.Packages.Instance.Router do
   @action_mappings %{
     "bootstrap" => Instance.Bootstrap,
     "cleanup" => Instance.Cleanup,
-    "upgrade" => Instance.Upgrade
+    "upgrade" => Instance.Upgrade,
+    "restart" => Instance.Restart
   }
 
   post "/:action" do

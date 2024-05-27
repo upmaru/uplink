@@ -4,7 +4,7 @@ defmodule Uplink.MixProject do
   def project do
     [
       app: :uplink,
-      version: "0.13.3",
+      version: "0.14.0",
       elixir: "~> 1.13",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
@@ -65,7 +65,7 @@ defmodule Uplink.MixProject do
       {:x509, "~> 0.8.4"},
 
       # Infrastructure
-      {:formation, "~> 0.13"},
+      {:formation, "~> 0.15"},
       {:lexdee, "~> 2.3"},
       {:plug_cowboy, "~> 2.0"},
       {:reverse_proxy_plug, "~> 2.1"},
