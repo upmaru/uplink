@@ -83,17 +83,34 @@ defmodule Uplink.Packages.Metadata.Manager do
        ) do
     profile_name = size_profile_name(metadata)
 
+    config = %{
+      "limits.cpu.allowance" => package_size.allocation.cpu_allowance,
+      "limits.cpu.priority" => package_size.allocation.cpu_priority,
+      "limits.memory.swap" => package_size.allocation.memory_swap,
+      "limits.memory.enforce" => "#{package_size.allocation.memory_enforce}"
+    }
+
+    config =
+      if package_size.allocation.cpu do
+        Map.put(config, "limits.cpu", package_size.allocation.cpu)
+      else
+        config
+      end
+
+    config =
+      if package_size.allocation.memory do
+        Map.put(
+          config,
+          "limits.memory",
+          "#{package_size.allocation.memory}#{package_size.allocation.memory_unit}"
+        )
+      else
+        config
+      end
+
     params = %{
       "name" => profile_name,
-      "config" => %{
-        "limits.cpu" => package_size.allocation.cpu,
-        "limits.cpu.allowance" => package_size.allocation.cpu_allowance,
-        "limits.cpu.priority" => package_size.allocation.cpu_priority,
-        "limits.memory" =>
-          "#{package_size.allocation.memory}#{package_size.allocation.memory_unit}",
-        "limits.memory.swap" => package_size.allocation.memory_swap,
-        "limits.memory.enforce" => "#{package_size.allocation.memory_enforce}"
-      },
+      "config" => config,
       "description" =>
         "Size profile for #{metadata.channel.package.organization.slug}/#{metadata.channel.package.slug}"
     }
