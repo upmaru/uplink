@@ -83,17 +83,31 @@ defmodule Uplink.Packages.Instance.Bootstrap do
              |> Enum.find(fn member ->
                member.server_name == node
              end) do
+        client = LXD.client()
+
         profile_name = Packages.profile_name(metadata)
+
+        size_profile_name =
+          Packages.get_or_create_size_profile(client, metadata)
+
+        lxd_project_name = Packages.get_or_create_project_name(client, metadata)
+
         image_server = get_image_server()
+
+        profiles = [profile_name, "default"]
+
+        profiles =
+          if size_profile_name do
+            [size_profile_name | profiles]
+          else
+            profiles
+          end
 
         lxd_instance =
           Map.merge(@default_params, %{
             "name" => instance_name,
             "architecture" => architecture,
-            "profiles" => [
-              profile_name,
-              "default"
-            ],
+            "profiles" => profiles,
             "source" => %{
               "type" => "image",
               "mode" => "pull",
@@ -102,10 +116,6 @@ defmodule Uplink.Packages.Instance.Bootstrap do
               "alias" => install.deployment.stack
             }
           })
-
-        client = LXD.client()
-
-        lxd_project_name = Packages.get_or_create_project_name(client, metadata)
 
         client
         |> Formation.lxd_create(node, lxd_instance, project: lxd_project_name)
