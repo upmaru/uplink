@@ -783,6 +783,8 @@ defmodule Uplink.Packages.Instance.UpgradeTest do
   }
 
   describe "upgrade instance with size profile" do
+    setup [:setup_base_with_package_size]
+
     setup %{app: app, metadata: metadata} do
       {:ok, first_deployment} =
         Packages.get_or_create_deployment(app, @first_deployment)
@@ -868,6 +870,19 @@ defmodule Uplink.Packages.Instance.UpgradeTest do
           conn
           |> Plug.Conn.put_resp_header("content-type", "application/json")
           |> Plug.Conn.resp(200, create_size_profile)
+        end
+      )
+
+      update_instance = File.read!("test/fixtures/lxd/instances/update.json")
+
+      Bypass.expect_once(
+        bypass,
+        "PATCH",
+        "/1.0/instances/#{instance_slug}",
+        fn conn ->
+          conn
+          |> Plug.Conn.put_resp_header("content-type", "application/json")
+          |> Plug.Conn.resp(200, update_instance)
         end
       )
 
