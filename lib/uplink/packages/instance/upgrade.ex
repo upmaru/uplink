@@ -222,9 +222,6 @@ defmodule Uplink.Packages.Instance.Upgrade do
     |> Oban.insert()
   end
 
-  defp handle_update_config(client, _instance, %Metadata{package_size: nil}),
-    do: client
-
   defp handle_update_config(client, instance, metadata) do
     profile_name = Packages.profile_name(metadata)
     size_profile_name = Packages.get_size_profile(metadata)

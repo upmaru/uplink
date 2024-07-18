@@ -217,6 +217,25 @@ defmodule Uplink.Packages.Instance.UpgradeTest do
         end
       )
 
+      update_instance = File.read!("test/fixtures/lxd/instances/update.json")
+
+      Bypass.expect_once(
+        bypass,
+        "PATCH",
+        "/1.0/instances/#{instance_slug}",
+        fn conn ->
+          {:ok, body, conn} = Plug.Conn.read_body(conn)
+
+          assert %{"profiles" => profiles} = Jason.decode!(body)
+
+          assert Enum.count(profiles) == 2
+
+          conn
+          |> Plug.Conn.put_resp_header("content-type", "application/json")
+          |> Plug.Conn.resp(200, update_instance)
+        end
+      )
+
       Bypass.expect_once(
         bypass,
         "POST",
@@ -349,6 +368,25 @@ defmodule Uplink.Packages.Instance.UpgradeTest do
         end
       )
 
+      update_instance = File.read!("test/fixtures/lxd/instances/update.json")
+
+      Bypass.expect_once(
+        bypass,
+        "PATCH",
+        "/1.0/instances/#{instance_slug}",
+        fn conn ->
+          {:ok, body, conn} = Plug.Conn.read_body(conn)
+
+          assert %{"profiles" => profiles} = Jason.decode!(body)
+
+          assert Enum.count(profiles) == 2
+
+          conn
+          |> Plug.Conn.put_resp_header("content-type", "application/json")
+          |> Plug.Conn.resp(200, update_instance)
+        end
+      )
+
       Bypass.expect_once(
         bypass,
         "POST",
@@ -476,6 +514,25 @@ defmodule Uplink.Packages.Instance.UpgradeTest do
           conn
           |> Plug.Conn.put_resp_header("content-type", "application/json")
           |> Plug.Conn.resp(200, project_found)
+        end
+      )
+
+      update_instance = File.read!("test/fixtures/lxd/instances/update.json")
+
+      Bypass.expect_once(
+        bypass,
+        "PATCH",
+        "/1.0/instances/#{instance_slug}",
+        fn conn ->
+          {:ok, body, conn} = Plug.Conn.read_body(conn)
+
+          assert %{"profiles" => profiles} = Jason.decode!(body)
+
+          assert Enum.count(profiles) == 2
+
+          conn
+          |> Plug.Conn.put_resp_header("content-type", "application/json")
+          |> Plug.Conn.resp(200, update_instance)
         end
       )
 
@@ -615,6 +672,25 @@ defmodule Uplink.Packages.Instance.UpgradeTest do
           conn
           |> Plug.Conn.put_resp_header("content-type", "application/json")
           |> Plug.Conn.resp(200, project_found)
+        end
+      )
+
+      update_instance = File.read!("test/fixtures/lxd/instances/update.json")
+
+      Bypass.expect_once(
+        bypass,
+        "PATCH",
+        "/1.0/instances/#{instance_slug}",
+        fn conn ->
+          {:ok, body, conn} = Plug.Conn.read_body(conn)
+
+          assert %{"profiles" => profiles} = Jason.decode!(body)
+
+          assert Enum.count(profiles) == 2
+
+          conn
+          |> Plug.Conn.put_resp_header("content-type", "application/json")
+          |> Plug.Conn.resp(200, update_instance)
         end
       )
 
