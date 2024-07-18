@@ -76,7 +76,7 @@ defmodule Uplink.Packages do
   defdelegate get_or_create_project_name(client, metadata),
     to: Metadata.Manager
 
-  defdelegate get_or_create_size_profile(cient, metadata),
+  defdelegate get_or_upsert_size_profile(cient, metadata),
     to: Metadata.Manager
 
   defdelegate profile_name(metadata),

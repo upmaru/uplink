@@ -32,9 +32,9 @@ defmodule Uplink.Packages.Metadata.Manager do
     end
   end
 
-  def get_or_create_size_profile(_client, %Metadata{package_size: nil}), do: nil
+  def get_or_upsert_size_profile(_client, %Metadata{package_size: nil}), do: nil
 
-  def get_or_create_size_profile(
+  def get_or_upsert_size_profile(
         client,
         %Metadata{package_size: %Metadata.Size{}} = metadata
       ) do
@@ -43,8 +43,8 @@ defmodule Uplink.Packages.Metadata.Manager do
     client
     |> Lexdee.get_profile(size_profile)
     |> case do
-      {:ok, %{body: %{"name" => name}}} ->
-        name
+      {:ok, %{body: %{"name" => _name}}} ->
+        update_size_profile(client, metadata)
 
       {:error, %{"error_code" => 404}} ->
         create_size_profile(client, metadata)
@@ -77,10 +77,39 @@ defmodule Uplink.Packages.Metadata.Manager do
     end
   end
 
-  defp create_size_profile(
-         client,
-         %Metadata{package_size: package_size} = metadata
-       ) do
+  defp create_size_profile(client, %Metadata{} = metadata) do
+    profile_params = build_size_config(metadata)
+    profile_name = profile_params["name"]
+
+    client
+    |> Lexdee.create_profile(profile_params)
+    |> case do
+      {:ok, %{body: nil}} ->
+        profile_name
+
+      {:error, %{"error" => _message}} ->
+        nil
+    end
+  end
+
+  defp update_size_profile(client, %Metadata{} = metadata) do
+    profile_params = build_size_config(metadata)
+    profile_name = profile_params["name"]
+
+    profile_params = Map.delete(profile_params, "name")
+
+    client
+    |> Lexdee.update_profile(profile_name, profile_params)
+    |> case do
+      {:ok, %{body: _body}} ->
+        profile_name
+
+      {:error, %{"error" => _message}} ->
+        nil
+    end
+  end
+
+  defp build_size_config(%Metadata{package_size: package_size} = metadata) do
     profile_name = size_profile_name(metadata)
 
     config = %{
@@ -108,22 +137,12 @@ defmodule Uplink.Packages.Metadata.Manager do
         config
       end
 
-    params = %{
+    %{
       "name" => profile_name,
       "config" => config,
       "description" =>
         "Size profile for #{metadata.channel.package.organization.slug}/#{metadata.channel.package.slug}"
     }
-
-    client
-    |> Lexdee.create_profile(params)
-    |> case do
-      {:ok, %{body: nil}} ->
-        profile_name
-
-      {:error, %{"error" => _message}} ->
-        nil
-    end
   end
 
   defp project_name(%Metadata{channel: channel}) do
