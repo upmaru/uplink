@@ -134,7 +134,7 @@ defmodule Uplink.Packages.Metadata.Manager do
 
     config =
       if package_size.allocation.cpu do
-        Map.put(config, "limits.cpu", package_size.allocation.cpu)
+        Map.put(config, "limits.cpu", "#{package_size.allocation.cpu}")
       else
         config
       end
