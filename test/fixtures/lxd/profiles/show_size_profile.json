@@ -1,0 +1,18 @@
+{
+  "type": "sync",
+  "status": "Success",
+  "status_code": 200,
+  "operation": "",
+  "error_code": 0,
+  "error": "",
+  "metadata": {
+    "name": "example.medium",
+    "description": "",
+    "config": {
+      "limits.cpu": "1",
+      "limits.memory": "1GiB"
+    },
+    "devices": {},
+    "used_by": []
+  }
+}

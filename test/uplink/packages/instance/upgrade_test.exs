@@ -732,4 +732,259 @@ defmodule Uplink.Packages.Instance.UpgradeTest do
       assert worker == "Uplink.Packages.Instance.Restart"
     end
   end
+
+  @deployment_with_package_size %{
+    "hash" => "some-hash-2-with-package-size",
+    "archive_url" => "http://localhost/archives/packages.zip",
+    "stack" => "alpine/3.14",
+    "channel" => "develop",
+    "metadata" => %{
+      "id" => 1,
+      "slug" => "uplink-web",
+      "service_port" => 4000,
+      "exposed_port" => 49152,
+      "package_size" => %{
+        "slug" => "medium",
+        "allocation" => %{
+          "cpu" => 1,
+          "cpu_allowance" => "100%",
+          "cpu_priority" => 10,
+          "memory" => 1,
+          "memory_unit" => "GiB",
+          "memory_swap" => false,
+          "memory_enforce" => "hard"
+        }
+      },
+      "variables" => [
+        %{"key" => "SOMETHING", "value" => "blah"}
+      ],
+      "channel" => %{
+        "slug" => "develop",
+        "package" => %{
+          "slug" => "something-1640927800",
+          "credential" => %{
+            "public_key" => "public_key"
+          },
+          "organization" => %{
+            "slug" => "upmaru"
+          }
+        }
+      },
+      "instances" => [
+        %{
+          "id" => 1,
+          "slug" => "something-1",
+          "node" => %{
+            "slug" => "some-node"
+          }
+        }
+      ]
+    }
+  }
+
+  describe "upgrade instance with size profile" do
+    setup [:setup_base_with_package_size]
+
+    setup %{app: app, metadata: metadata} do
+      {:ok, first_deployment} =
+        Packages.get_or_create_deployment(app, @first_deployment)
+
+      {:ok, second_deployment} =
+        Packages.get_or_create_deployment(app, @deployment_with_package_size)
+
+      {:ok, first_install} =
+        Packages.create_install(first_deployment, %{
+          "installation_id" => 1,
+          "deployment" => @first_deployment
+        })
+
+      first_install
+      |> Ecto.Changeset.cast(%{current_state: "completed"}, [:current_state])
+      |> Repo.update()
+
+      {:ok, second_install} =
+        Packages.create_install(second_deployment, %{
+          "installation_id" => 1,
+          "deployment" => @deployment_with_package_size
+        })
+
+      second_install
+      |> Ecto.Changeset.cast(%{current_state: "completed"}, [:current_state])
+      |> Repo.update()
+
+      project =
+        "#{metadata.channel.package.organization.slug}.#{metadata.channel.package.slug}"
+
+      size_profile =
+        "size.#{metadata.channel.package.organization.slug}.#{metadata.channel.package.slug}.#{second_install.metadata_snapshot.package_size.slug}"
+
+      {:ok, project: project, size_profile: size_profile}
+    end
+
+    test "perform", %{
+      bypass: bypass,
+      actor: actor,
+      install: install,
+      exec_instance: exec_instance,
+      wait_with_log: wait_with_log,
+      metadata: metadata,
+      project: project_name,
+      size_profile: size_profile
+    } do
+      instance_slug = "some-instance-01"
+
+      project_found = File.read!("test/fixtures/lxd/projects/show.json")
+
+      Bypass.expect_once(
+        bypass,
+        "GET",
+        "/1.0/projects/#{project_name}",
+        fn conn ->
+          conn
+          |> Plug.Conn.put_resp_header("content-type", "application/json")
+          |> Plug.Conn.resp(200, project_found)
+        end
+      )
+
+      size_profile_response =
+        File.read!("test/fixtures/lxd/profiles/show_size_profile.json")
+
+      Bypass.expect_once(
+        bypass,
+        "GET",
+        "/1.0/profiles/#{size_profile}",
+        fn conn ->
+          conn
+          |> Plug.Conn.put_resp_header("content-type", "application/json")
+          |> Plug.Conn.resp(200, size_profile_response)
+        end
+      )
+
+      update_instance = File.read!("test/fixtures/lxd/instances/update.json")
+
+      Bypass.expect_once(
+        bypass,
+        "PATCH",
+        "/1.0/instances/#{instance_slug}",
+        fn conn ->
+          {:ok, body, conn} = Plug.Conn.read_body(conn)
+
+          assert %{"profiles" => profiles} = Jason.decode!(body)
+
+          assert size_profile in profiles
+
+          conn
+          |> Plug.Conn.put_resp_header("content-type", "application/json")
+          |> Plug.Conn.resp(200, update_instance)
+        end
+      )
+
+      Bypass.expect_once(
+        bypass,
+        "POST",
+        "/1.0/instances/#{instance_slug}/exec",
+        fn conn ->
+          assert %{"project" => project} = conn.query_params
+
+          assert project == project_name
+
+          assert {:ok, body, conn} = Plug.Conn.read_body(conn)
+          assert {:ok, %{"command" => command}} = Jason.decode(body)
+
+          assert command == [
+                   "/bin/sh",
+                   "-c",
+                   "apk update && apk add --upgrade #{metadata.channel.package.slug}\n"
+                 ]
+
+          conn
+          |> Plug.Conn.put_resp_header("content-type", "application/json")
+          |> Plug.Conn.resp(200, exec_instance)
+        end
+      )
+
+      exec_instance_params = Jason.decode!(exec_instance)
+      exec_instance_operation_id = exec_instance_params["metadata"]["id"]
+
+      Bypass.expect_once(
+        bypass,
+        "GET",
+        "/1.0/operations/#{exec_instance_operation_id}/wait",
+        fn conn ->
+          assert %{"timeout" => "180"} = conn.query_params
+
+          conn
+          |> Plug.Conn.put_resp_header("content-type", "application/json")
+          |> Plug.Conn.resp(200, wait_with_log)
+        end
+      )
+
+      complete_message = "upgrade complete"
+
+      Bypass.expect_once(
+        bypass,
+        "GET",
+        "/1.0/instances/#{instance_slug}/logs/stdout.log",
+        fn conn ->
+          assert %{"project" => project} = conn.query_params
+
+          assert project == project_name
+
+          conn
+          |> Plug.Conn.resp(
+            200,
+            complete_message
+          )
+        end
+      )
+
+      Bypass.expect_once(
+        bypass,
+        "GET",
+        "/1.0/instances/#{instance_slug}/logs/stderr.log",
+        fn conn ->
+          assert %{"project" => project} = conn.query_params
+
+          assert project == project_name
+
+          conn
+          |> Plug.Conn.resp(200, "")
+        end
+      )
+
+      Bypass.expect(
+        bypass,
+        "POST",
+        "/uplink/installations/#{install.instellar_installation_id}/instances/#{instance_slug}/events",
+        fn conn ->
+          assert {:ok, body, conn} = Plug.Conn.read_body(conn)
+          assert {:ok, body} = Jason.decode(body)
+
+          assert %{"event" => %{"name" => event_name}} = body
+          assert event_name in ["upgrade", "complete"]
+
+          conn
+          |> Plug.Conn.put_resp_header("content-type", "application/json")
+          |> Plug.Conn.resp(
+            201,
+            Jason.encode!(%{
+              "data" => %{"attributes" => %{"id" => 1, "name" => event_name}}
+            })
+          )
+        end
+      )
+
+      assert {:ok, %Oban.Job{worker: worker}} =
+               perform_job(Upgrade, %{
+                 instance: %{
+                   slug: instance_slug,
+                   node: %{slug: "some-node-01"}
+                 },
+                 install_id: install.id,
+                 actor_id: actor.id
+               })
+
+      assert worker == "Uplink.Packages.Instance.Finalize"
+    end
+  end
 end

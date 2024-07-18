@@ -16,6 +16,20 @@ defmodule Uplink.Packages.Metadata do
 
     embeds_many :ports, __MODULE__.Port
 
+    embeds_one :package_size, Size, primary_key: false do
+      field :slug, :string
+
+      embeds_one :allocation, Allocation, primary_key: false do
+        field :cpu, :integer
+        field :cpu_allowance, :string, default: "100%"
+        field :cpu_priority, :integer, default: 10
+        field :memory, :integer
+        field :memory_unit, :string, default: "GiB"
+        field :memory_enforce, Ecto.Enum, values: [:hard, :soft], default: :hard
+        field :memory_swap, :boolean, default: false
+      end
+    end
+
     embeds_one :channel, Channel, primary_key: false do
       field :slug, :string
 
@@ -57,6 +71,7 @@ defmodule Uplink.Packages.Metadata do
     |> cast_embed(:main_port)
     |> cast_embed(:ports)
     |> cast_embed(:variables, with: &variable_changeset/2)
+    |> cast_embed(:package_size, with: &package_size_changeset/2)
   end
 
   defp organization_changeset(organization, params) do
@@ -69,6 +84,30 @@ defmodule Uplink.Packages.Metadata do
     variable
     |> cast(params, [:key, :value])
     |> validate_required([:key, :value])
+  end
+
+  defp package_size_changeset(package_size, params) do
+    package_size
+    |> cast(params, [:slug])
+    |> cast_embed(:allocation, with: &allocation_changeset/2)
+  end
+
+  defp allocation_changeset(allocation, params) do
+    allocation
+    |> cast(params, [
+      :cpu,
+      :cpu_allowance,
+      :cpu_priority,
+      :memory,
+      :memory_unit,
+      :memory_enforce,
+      :memory_swap
+    ])
+    |> validate_inclusion(:memory_unit, ["GiB", "MiB", "GB", "MB"])
+    |> validate_number(:cpu_priority,
+      greater_than_or_equal_to: 0,
+      less_than_or_equal_to: 10
+    )
   end
 
   defp package_changeset(package, params) do
