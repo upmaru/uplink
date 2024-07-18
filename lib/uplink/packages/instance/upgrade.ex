@@ -227,7 +227,7 @@ defmodule Uplink.Packages.Instance.Upgrade do
 
   defp handle_update_config(client, instance, metadata) do
     profile_name = Packages.profile_name(metadata)
-    size_profile_name = Packages.get_or_upsert_size_profile(client, metadata)
+    size_profile_name = Packages.get_size_profile(metadata)
 
     profiles = [profile_name, "default"]
 

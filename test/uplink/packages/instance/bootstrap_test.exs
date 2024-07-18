@@ -902,19 +902,6 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
         end
       )
 
-      create_size_profile = File.read!("test/fixtures/lxd/profiles/create.json")
-
-      Bypass.expect_once(
-        bypass,
-        "POST",
-        "/1.0/profiles",
-        fn conn ->
-          conn
-          |> Plug.Conn.put_resp_header("content-type", "application/json")
-          |> Plug.Conn.resp(200, create_size_profile)
-        end
-      )
-
       Bypass.expect_once(bypass, "POST", "/1.0/instances", fn conn ->
         assert %{
                  "target" => "ubuntu-s-1vcpu-1gb-sgp1-01",
@@ -923,10 +910,8 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
 
         {:ok, body, conn} = Plug.Conn.read_body(conn)
 
-        assert %{"source" => source, "profiles" => profiles} =
+        assert %{"source" => source, "profiles" => _profiles} =
                  Jason.decode!(body)
-
-        assert size_profile in profiles
 
         assert %{"server" => server} = source
 
@@ -1194,25 +1179,6 @@ defmodule Uplink.Packages.Instance.BootstrapTest do
           conn
           |> Plug.Conn.put_resp_header("content-type", "application/json")
           |> Plug.Conn.resp(200, size_profile_response)
-        end
-      )
-
-      update_size_profile = File.read!("test/fixtures/lxd/profiles/update.json")
-
-      Bypass.expect_once(
-        bypass,
-        "PATCH",
-        "/1.0/profiles/#{size_profile}",
-        fn conn ->
-          {:ok, body, _} = Plug.Conn.read_body(conn)
-
-          params = Jason.decode!(body)
-
-          assert is_nil(params["name"])
-
-          conn
-          |> Plug.Conn.put_resp_header("content-type", "application/json")
-          |> Plug.Conn.resp(200, update_size_profile)
         end
       )
 

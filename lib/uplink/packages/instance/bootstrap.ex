@@ -87,8 +87,7 @@ defmodule Uplink.Packages.Instance.Bootstrap do
 
         profile_name = Packages.profile_name(metadata)
 
-        size_profile_name =
-          Packages.get_or_upsert_size_profile(client, metadata)
+        size_profile_name = Packages.get_size_profile(metadata)
 
         lxd_project_name = Packages.get_or_create_project_name(client, metadata)
 

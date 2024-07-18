@@ -846,8 +846,8 @@ defmodule Uplink.Packages.Instance.UpgradeTest do
         end
       )
 
-      size_profile_not_found =
-        File.read!("test/fixtures/lxd/profiles/not_found.json")
+      size_profile_response =
+        File.read!("test/fixtures/lxd/profiles/show_size_profile.json")
 
       Bypass.expect_once(
         bypass,
@@ -856,20 +856,7 @@ defmodule Uplink.Packages.Instance.UpgradeTest do
         fn conn ->
           conn
           |> Plug.Conn.put_resp_header("content-type", "application/json")
-          |> Plug.Conn.resp(404, size_profile_not_found)
-        end
-      )
-
-      create_size_profile = File.read!("test/fixtures/lxd/profiles/create.json")
-
-      Bypass.expect_once(
-        bypass,
-        "POST",
-        "/1.0/profiles",
-        fn conn ->
-          conn
-          |> Plug.Conn.put_resp_header("content-type", "application/json")
-          |> Plug.Conn.resp(200, create_size_profile)
+          |> Plug.Conn.resp(200, size_profile_response)
         end
       )
 
@@ -880,6 +867,12 @@ defmodule Uplink.Packages.Instance.UpgradeTest do
         "PATCH",
         "/1.0/instances/#{instance_slug}",
         fn conn ->
+          {:ok, body, conn} = Plug.Conn.read_body(conn)
+
+          assert %{"profiles" => profiles} = Jason.decode!(body)
+
+          assert size_profile in profiles
+
           conn
           |> Plug.Conn.put_resp_header("content-type", "application/json")
           |> Plug.Conn.resp(200, update_instance)

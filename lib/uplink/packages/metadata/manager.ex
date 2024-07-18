@@ -1,5 +1,6 @@
 defmodule Uplink.Packages.Metadata.Manager do
   alias Uplink.Packages.Metadata
+  alias Uplink.Clients.LXD
 
   defdelegate parse(params),
     to: Metadata
@@ -32,13 +33,26 @@ defmodule Uplink.Packages.Metadata.Manager do
     end
   end
 
-  def get_or_upsert_size_profile(_client, %Metadata{package_size: nil}), do: nil
+  def get_size_profile(%Metadata{package_size: nil}), do: nil
 
-  def get_or_upsert_size_profile(
-        client,
-        %Metadata{package_size: %Metadata.Size{}} = metadata
-      ) do
+  def get_size_profile(%Metadata{} = metadata) do
     size_profile = size_profile_name(metadata)
+
+    LXD.client()
+    |> Lexdee.get_profile(size_profile)
+    |> case do
+      {:ok, %{body: %{"name" => _name}}} ->
+        size_profile
+
+      {:error, %{"error_code" => 404}} ->
+        nil
+    end
+  end
+
+  def upsert_size_profile(%Metadata{package_size: %Metadata.Size{}} = metadata) do
+    size_profile = size_profile_name(metadata)
+
+    client = LXD.client()
 
     client
     |> Lexdee.get_profile(size_profile)
@@ -79,16 +93,15 @@ defmodule Uplink.Packages.Metadata.Manager do
 
   defp create_size_profile(client, %Metadata{} = metadata) do
     profile_params = build_size_config(metadata)
-    profile_name = profile_params["name"]
 
     client
     |> Lexdee.create_profile(profile_params)
     |> case do
       {:ok, %{body: nil}} ->
-        profile_name
+        {:ok, :size_profile_created}
 
-      {:error, %{"error" => _message}} ->
-        nil
+      {:error, %{"error" => message}} ->
+        {:error, message}
     end
   end
 
@@ -102,10 +115,10 @@ defmodule Uplink.Packages.Metadata.Manager do
     |> Lexdee.update_profile(profile_name, profile_params)
     |> case do
       {:ok, %{body: _body}} ->
-        profile_name
+        {:ok, :size_profile_updated}
 
-      {:error, %{"error" => _message}} ->
-        nil
+      {:error, %{"error" => message}} ->
+        {:error, message}
     end
   end
 
