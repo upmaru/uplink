@@ -127,8 +127,8 @@ defmodule Uplink.Packages.Metadata.Manager do
 
     config = %{
       "limits.cpu.allowance" => package_size.allocation.cpu_allowance,
-      "limits.cpu.priority" => package_size.allocation.cpu_priority,
-      "limits.memory.swap" => package_size.allocation.memory_swap,
+      "limits.cpu.priority" => "#{package_size.allocation.cpu_priority}",
+      "limits.memory.swap" => "#{package_size.allocation.memory_swap}",
       "limits.memory.enforce" => "#{package_size.allocation.memory_enforce}"
     }
 
