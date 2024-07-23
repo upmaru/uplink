@@ -32,6 +32,18 @@ defmodule Uplink.Packages.Deployment.RouterTest do
                     "slug" => "uplink-web",
                     "service_port" => 4000,
                     "exposed_port" => 49152,
+                    "package_size" => %{
+                      "slug" => "medium",
+                      "allocation" => %{
+                        "cpu" => 1,
+                        "cpu_allowance" => "100%",
+                        "cpu_priority" => 10,
+                        "memory" => 1,
+                        "memory_unit" => "GiB",
+                        "memory_swap" => false,
+                        "memory_enforce" => "hard"
+                      }
+                    },
                     "channel" => %{
                       "slug" => "develop",
                       "package" => %{
@@ -213,6 +225,8 @@ defmodule Uplink.Packages.Deployment.RouterTest do
       install = Uplink.Repo.get(Uplink.Packages.Install, install_id)
 
       assert install.current_state == "validating"
+
+      assert install.metadata_snapshot.package_size != nil
     end
   end
 

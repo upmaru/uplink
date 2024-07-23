@@ -129,6 +129,7 @@ defmodule Uplink.Packages.Instance.Upgrade do
       Map.put(@transition_parameters, "node", node["slug"])
 
     LXD.client()
+    |> handle_update_config(formation_instance, metadata)
     |> Formation.lxd_upgrade_alpine_package(formation_instance)
     |> case do
       {:ok, upgrade_package_output} ->
@@ -219,5 +220,35 @@ defmodule Uplink.Packages.Instance.Upgrade do
     })
     |> Instance.Cleanup.new()
     |> Oban.insert()
+  end
+
+  defp handle_update_config(client, instance, metadata) do
+    profile_name = Packages.profile_name(metadata)
+    size_profile_name = Packages.get_size_profile(metadata)
+
+    profiles = [profile_name, "default"]
+
+    profiles =
+      if size_profile_name do
+        [size_profile_name | profiles]
+      else
+        profiles
+      end
+
+    params = %{
+      "profiles" => profiles
+    }
+
+    client
+    |> Lexdee.update_instance(instance.slug, params,
+      query: [project: instance.project]
+    )
+    |> case do
+      {:ok, _message} ->
+        client
+
+      {:error, error} ->
+        raise "Failed to update instance config: #{inspect(error)}"
+    end
   end
 end

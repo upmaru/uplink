@@ -11,9 +11,8 @@ defmodule Uplink.Packages.Install.Validate do
 
   alias Members.Actor
 
-  alias Packages.{
-    Install
-  }
+  alias Packages.Install
+  alias Packages.Metadata
 
   alias Clients.LXD
 
@@ -41,7 +40,26 @@ defmodule Uplink.Packages.Install.Validate do
 
     install
     |> Packages.build_install_state(actor)
+    |> ensure_size_profile_exists()
     |> ensure_profile_exists()
+  end
+
+  defp ensure_size_profile_exists(
+         %{metadata: %Metadata{package_size: nil}} = state
+       ),
+       do: state
+
+  defp ensure_size_profile_exists(
+         %{metadata: %Metadata{package_size: %Metadata.Size{}} = metadata} =
+           state
+       ) do
+    case Packages.upsert_size_profile(metadata) do
+      {:ok, _} ->
+        state
+
+      {:error, error} ->
+        raise "Error: #{inspect(error)} occured when attempting to update or create size profile"
+    end
   end
 
   defp ensure_profile_exists(%{

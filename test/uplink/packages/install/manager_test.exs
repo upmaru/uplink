@@ -26,6 +26,18 @@ defmodule Uplink.Packages.Install.ManagerTest do
         "source" => 49153,
         "target" => 4000
       },
+      "package_size" => %{
+        "slug" => "medium",
+        "allocation" => %{
+          "cpu" => 1,
+          "cpu_allowance" => "100%",
+          "cpu_priority" => 10,
+          "memory" => 1,
+          "memory_unit" => "GiB",
+          "memory_swap" => false,
+          "memory_enforce" => "hard"
+        }
+      },
       "channel" => %{
         "slug" => "develop",
         "package" => %{
