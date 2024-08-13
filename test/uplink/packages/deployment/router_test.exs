@@ -176,16 +176,21 @@ defmodule Uplink.Packages.Deployment.RouterTest do
       |> put_req_header("content-type", "application/json")
       |> Router.call(@opts)
 
-      deployment = Repo.get_by(Uplink.Packages.Deployment, hash: "some-hash", channel: "develop")
+      deployment =
+        Repo.get_by(Uplink.Packages.Deployment,
+          hash: "some-hash",
+          channel: "develop"
+        )
 
       {:ok, signature: signature, deployment: deployment}
     end
 
-    test "return 201 for deployment with same hash different channel", %{deployment: existing_deployment} do
-      %{"deployment" =>
-        %{"metadata" =>
-          %{"channel" => channel} = metadata
-        } = deployment
+    test "return 201 for deployment with same hash different channel", %{
+      deployment: existing_deployment
+    } do
+      %{
+        "deployment" =>
+          %{"metadata" => %{"channel" => channel} = metadata} = deployment
       } = body = Jason.decode!(@valid_body)
 
       channel = Map.put(channel, "slug", "master")
