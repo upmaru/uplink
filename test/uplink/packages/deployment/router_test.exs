@@ -164,6 +164,73 @@ defmodule Uplink.Packages.Deployment.RouterTest do
     end
   end
 
+  describe "deployment with same hash different channel" do
+    setup do
+      signature =
+        :crypto.mac(:hmac, :sha256, Uplink.Secret.get(), @valid_body)
+        |> Base.encode16()
+        |> String.downcase()
+
+      conn(:post, "/", @valid_body)
+      |> put_req_header("x-uplink-signature-256", "sha256=#{signature}")
+      |> put_req_header("content-type", "application/json")
+      |> Router.call(@opts)
+
+      deployment =
+        Repo.get_by(Uplink.Packages.Deployment,
+          hash: "some-hash",
+          channel: "develop"
+        )
+
+      {:ok, signature: signature, deployment: deployment}
+    end
+
+    test "return 201 for deployment with same hash different channel", %{
+      deployment: existing_deployment
+    } do
+      %{
+        "deployment" =>
+          %{"metadata" => %{"channel" => channel} = metadata} = deployment
+      } = body = Jason.decode!(@valid_body)
+
+      channel = Map.put(channel, "slug", "master")
+
+      metadata = Map.put(metadata, "channel", channel)
+
+      deployment =
+        deployment
+        |> Map.put("channel", "master")
+        |> Map.put("metadata", metadata)
+
+      body =
+        body
+        |> Map.put("deployment", deployment)
+        |> Jason.encode!()
+
+      new_signature =
+        :crypto.mac(:hmac, :sha256, Uplink.Secret.get(), body)
+        |> Base.encode16()
+        |> String.downcase()
+
+      conn =
+        conn(:post, "/", body)
+        |> put_req_header("x-uplink-signature-256", "sha256=#{new_signature}")
+        |> put_req_header("content-type", "application/json")
+        |> Router.call(@opts)
+
+      assert conn.status == 201
+
+      assert %{"data" => %{"id" => deployment_id}} =
+               Jason.decode!(conn.resp_body)
+
+      deployment = Uplink.Repo.get(Uplink.Packages.Deployment, deployment_id)
+
+      assert deployment.id != existing_deployment.id
+
+      assert deployment.current_state == "preparing"
+    end
+  end
+
   describe "repeated deployment push with different installation_id" do
     setup do
       original_signature =
