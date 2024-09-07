@@ -46,7 +46,7 @@ defmodule Uplink.Packages.Deployment do
     |> cast(params, @valid_attrs)
     |> validate_required(@required_attrs)
     |> unique_constraint(:hash,
-      name: :deployments_app_id_hash_index
+      name: :deployments_app_id_hash_channel_index
     )
   end
 
