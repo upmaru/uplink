@@ -1,10 +1,10 @@
-name: 'Deployment'
+name: "Deployment"
 
 on:
-  workflow_run: 
+  workflow_run:
     workflows: ["CI"]
     branches: [master, develop]
-    types: 
+    types:
       - completed
 
 jobs:
@@ -13,14 +13,14 @@ jobs:
     runs-on: warp-ubuntu-latest-x64-2x
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
-      - name: 'Checkout'
+      - name: "Checkout"
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.workflow_run.head_branch }}
           fetch-depth: 0
 
       - name: Setup Pakman
-        uses: upmaru/pakman@develop
+        uses: upmaru/pakman@v8
         with:
           alpine: v3.18
 
@@ -32,7 +32,7 @@ jobs:
           ABUILD_PRIVATE_KEY: ${{secrets.ABUILD_PRIVATE_KEY}}
           ABUILD_PUBLIC_KEY: ${{secrets.ABUILD_PUBLIC_KEY}}
 
-      - name: 'Build Package'
+      - name: "Build Package"
         run: |
           cd "$GITHUB_WORKSPACE"/.apk/"$GITHUB_REPOSITORY" || exit
 
@@ -50,7 +50,7 @@ jobs:
     name: Deploy
     needs: build
     runs-on: warp-ubuntu-latest-x64-2x
-    steps: 
+    steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
@@ -58,11 +58,11 @@ jobs:
           fetch-depth: 0
 
       - uses: actions/download-artifact@v4
-        with: 
+        with:
           path: /home/runner/artifacts
 
       - name: Setup Pakman
-        uses: upmaru/pakman@develop
+        uses: upmaru/pakman@v8
         with:
           alpine: v3.18
 
