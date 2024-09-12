@@ -51,6 +51,8 @@ defmodule Uplink.Packages.Instance.PlacementTest do
     } do
       placement_name = Placement.name(node_name)
 
+      Uplink.Cache.delete({:available_nodes, placement_name})
+
       Bypass.expect_once(bypass, "GET", "/1.0/instances", fn conn ->
         assert %{"recursion" => "1", "all-projects" => _} = conn.query_params
 
@@ -59,7 +61,7 @@ defmodule Uplink.Packages.Instance.PlacementTest do
         |> Plug.Conn.resp(200, existing_instances)
       end)
 
-      Bypass.stub(bypass, "GET", "/1.0/cluster/members", fn conn ->
+      Bypass.expect_once(bypass, "GET", "/1.0/cluster/members", fn conn ->
         conn
         |> Plug.Conn.put_resp_header("content-type", "application/json")
         |> Plug.Conn.resp(200, cluster_members)
