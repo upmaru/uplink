@@ -46,12 +46,10 @@ defmodule Uplink.Packages.Instance.PlacementTest do
     test "fallback to auto when no availability", %{
       bypass: bypass,
       existing_instances: existing_instances,
-      cluster_members: cluster_members,
-      node_name: node_name
+      cluster_members: cluster_members
     } do
+      node_name = "instellar-0e89ea876-02"
       placement_name = Placement.name(node_name)
-
-      Uplink.Cache.delete({:available_nodes, placement_name})
 
       Bypass.expect_once(bypass, "GET", "/1.0/instances", fn conn ->
         assert %{"recursion" => "1", "all-projects" => _} = conn.query_params
@@ -61,13 +59,14 @@ defmodule Uplink.Packages.Instance.PlacementTest do
         |> Plug.Conn.resp(200, existing_instances)
       end)
 
-      Bypass.stub(bypass, "GET", "/1.0/cluster/members", fn conn ->
+      Bypass.expect_once(bypass, "GET", "/1.0/cluster/members", fn conn ->
         conn
         |> Plug.Conn.put_resp_header("content-type", "application/json")
         |> Plug.Conn.resp(200, cluster_members)
       end)
 
       Uplink.Cache.put({:available_nodes, placement_name}, [])
+      Uplink.Cache.delete(:cluster_members)
 
       assert {:ok, %Placement{}} = Placement.find(node_name, "spread")
     end
