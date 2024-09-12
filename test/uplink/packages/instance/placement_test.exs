@@ -66,6 +66,7 @@ defmodule Uplink.Packages.Instance.PlacementTest do
       end)
 
       Uplink.Cache.put({:available_nodes, placement_name}, [])
+      Uplink.Cache.delete(:cluster_members)
 
       assert {:ok, %Placement{}} = Placement.find(node_name, "spread")
     end
