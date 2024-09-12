@@ -59,20 +59,15 @@ defmodule Uplink.Packages.Instance.PlacementTest do
         |> Plug.Conn.resp(200, existing_instances)
       end)
 
-      Bypass.expect_once(bypass, "GET", "/1.0/cluster/members", fn conn ->
+      Bypass.stub(bypass, "GET", "/1.0/cluster/members", fn conn ->
         conn
         |> Plug.Conn.put_resp_header("content-type", "application/json")
         |> Plug.Conn.resp(200, cluster_members)
       end)
 
-      Uplink.Cache.transaction(
-        [keys: [{:available_nodes, placement_name}]],
-        fn ->
-          Uplink.Cache.put({:available_nodes, placement_name}, [])
+      Uplink.Cache.put({:available_nodes, placement_name}, [])
 
-          assert {:ok, %Placement{}} = Placement.find(node_name, "spread")
-        end
-      )
+      assert {:ok, %Placement{}} = Placement.find(node_name, "spread")
     end
   end
 end
