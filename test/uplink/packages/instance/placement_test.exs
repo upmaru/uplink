@@ -51,8 +51,6 @@ defmodule Uplink.Packages.Instance.PlacementTest do
     } do
       placement_name = Placement.name(node_name)
 
-      Uplink.Cache.put({:available_nodes, placement_name}, [])
-
       Bypass.expect_once(bypass, "GET", "/1.0/instances", fn conn ->
         assert %{"recursion" => "1", "all-projects" => _} = conn.query_params
 
@@ -67,7 +65,14 @@ defmodule Uplink.Packages.Instance.PlacementTest do
         |> Plug.Conn.resp(200, cluster_members)
       end)
 
-      assert {:ok, %Placement{}} = Placement.find(node_name, "spread")
+      Uplink.Cache.put({:available_nodes, placement_name}, [])
+
+      Uplink.Cache.transaction(
+        [keys: [{:available_nodes, placement_name}]],
+        fn ->
+          assert {:ok, %Placement{}} = Placement.find(node_name, "spread")
+        end
+      )
     end
   end
 end
