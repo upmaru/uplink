@@ -48,7 +48,8 @@ defmodule Uplink.Packages.Instance.PlacementTest do
       existing_instances: existing_instances,
       cluster_members: cluster_members
     } do
-      placement_name = Placement.name("instellar-0e89ea876-02")
+      node_name = "instellar-0e89ea876-02"
+      placement_name = Placement.name(node_name)
 
       Bypass.expect_once(bypass, "GET", "/1.0/instances", fn conn ->
         assert %{"recursion" => "1", "all-projects" => _} = conn.query_params
