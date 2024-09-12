@@ -2,6 +2,7 @@ defmodule Uplink.Packages.Instance.Cleanup do
   use Oban.Worker, queue: :instance, max_attempts: 3
 
   alias Uplink.{
+    Cache,
     Clients,
     Packages,
     Members,
@@ -22,6 +23,7 @@ defmodule Uplink.Packages.Instance.Cleanup do
   }
 
   alias Instance.Bootstrap
+  alias Instance.Placement
 
   @transition_parameters %{
     "from" => "uplink",
@@ -85,6 +87,7 @@ defmodule Uplink.Packages.Instance.Cleanup do
          } = args
        ) do
     Caddy.schedule_config_reload(install)
+    maybe_clear_availability_cache(name)
 
     Uplink.TaskSupervisor
     |> @task_supervisor.async_nolink(
@@ -104,6 +107,8 @@ defmodule Uplink.Packages.Instance.Cleanup do
   end
 
   defp finalize(name, install, "deactivate_and_boot", args) do
+    maybe_clear_availability_cache(name)
+
     Uplink.TaskSupervisor
     |> @task_supervisor.async_nolink(
       fn ->
@@ -126,4 +131,12 @@ defmodule Uplink.Packages.Instance.Cleanup do
   defp parse_comment(comment) when is_binary(comment), do: comment
 
   defp parse_comment(comment), do: inspect(comment)
+
+  defp maybe_clear_availability_cache(node_name) do
+    placement_name = Placement.name(node_name)
+
+    if Cache.has_key?({:available_nodes, placement_name}) do
+      Cache.delete({:available_nodes, placement_name})
+    end
+  end
 end
