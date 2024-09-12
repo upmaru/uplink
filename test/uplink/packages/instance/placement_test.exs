@@ -61,7 +61,7 @@ defmodule Uplink.Packages.Instance.PlacementTest do
         |> Plug.Conn.resp(200, existing_instances)
       end)
 
-      Bypass.expect_once(bypass, "GET", "/1.0/cluster/members", fn conn ->
+      Bypass.stub(bypass, "GET", "/1.0/cluster/members", fn conn ->
         conn
         |> Plug.Conn.put_resp_header("content-type", "application/json")
         |> Plug.Conn.resp(200, cluster_members)
