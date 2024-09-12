@@ -43,7 +43,7 @@ defmodule Uplink.Packages.Instance.Placement do
         {:ok, %__MODULE__{node: node}}
 
       nil ->
-        {:error, :no_available_node}
+        find(node_name, "auto")
     end
   end
 
