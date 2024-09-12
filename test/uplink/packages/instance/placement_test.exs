@@ -65,11 +65,11 @@ defmodule Uplink.Packages.Instance.PlacementTest do
         |> Plug.Conn.resp(200, cluster_members)
       end)
 
-      Uplink.Cache.put({:available_nodes, placement_name}, [])
-
       Uplink.Cache.transaction(
         [keys: [{:available_nodes, placement_name}]],
         fn ->
+          Uplink.Cache.put({:available_nodes, placement_name}, [])
+
           assert {:ok, %Placement{}} = Placement.find(node_name, "spread")
         end
       )
