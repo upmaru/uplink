@@ -9,8 +9,11 @@ defmodule Uplink.Packages.Instance.CleanupTest do
   }
 
   alias Packages.{
-    Metadata
+    Metadata,
+    Instance
   }
+
+  alias Instance.Placement
 
   @deployment_params %{
     "hash" => "some-hash",
@@ -243,6 +246,12 @@ defmodule Uplink.Packages.Instance.CleanupTest do
         end
       )
 
+      placement_name = Placement.name(instance_slug)
+
+      Uplink.Cache.put({:available_nodes, placement_name}, [])
+
+      refute is_nil(Uplink.Cache.get({:available_nodes, placement_name}))
+
       assert perform_job(Cleanup, %{
                instance: %{
                  slug: instance_slug,
@@ -252,6 +261,8 @@ defmodule Uplink.Packages.Instance.CleanupTest do
                install_id: install.id,
                actor_id: actor.id
              })
+
+      assert is_nil(Uplink.Cache.get({:available_nodes, placement_name}))
 
       assert_enqueued(
         worker: Uplink.Clients.Caddy.Config.Reload,
