@@ -108,7 +108,9 @@ defmodule Uplink.Packages.Instance.FinalizeTest do
           assert {:ok, body, conn} = Plug.Conn.read_body(conn)
           assert {:ok, body} = Jason.decode(body)
 
-          %{"event" => %{"name" => event_name}} = body
+          %{"event" => %{"name" => event_name, "parameters" => %{"hash" => hash}}} = body
+
+          assert hash == "some-hash"
 
           assert event_name in ["complete"]
 
