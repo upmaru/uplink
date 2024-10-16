@@ -67,10 +67,46 @@ defmodule Uplink.Packages.Instance.Router do
         })
 
       nil ->
-        json(conn, :not_found, %{
-          error: %{message: "install not available, create a deployment first"}
-        })
+        handle_not_found(conn, action, conn.body_params)
     end
+  end
+
+  defp handle_not_found(
+         conn,
+         action,
+         %{
+           "actor" => actor_params,
+           "installation_id" => instellar_installation_id,
+           "instance" => instance_params
+         }
+       )
+       when action in ["cleanup", "restart"] do
+    with {:ok, %Members.Actor{id: actor_id}} <-
+           Members.get_or_create_actor(actor_params),
+         %Packages.Install{id: install_id} <-
+           Packages.latest_install(instellar_installation_id, nil) do
+      module = get_module(action)
+
+      {:ok, %{id: job_id}} =
+        %{
+          instance: instance_params,
+          install_id: install_id,
+          actor_id: actor_id
+        }
+        |> module.new()
+        |> Oban.insert()
+
+      json(conn, :created, %{id: job_id})
+    else
+      _ ->
+        handle_not_found(conn, nil, nil)
+    end
+  end
+
+  defp handle_not_found(conn, _action, _params) do
+    json(conn, :not_found, %{
+      error: %{message: "install not available, create a deployment first"}
+    })
   end
 
   defp get_module(action) do

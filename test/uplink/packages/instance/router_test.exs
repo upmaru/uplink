@@ -156,4 +156,93 @@ defmodule Uplink.Packages.Instance.RouterTest do
       assert conn.status == 401
     end
   end
+
+  describe "fallback on install not found" do
+    setup do
+      valid_body =
+        Jason.encode!(%{
+          "actor" => %{
+            "provider" => "instellar",
+            "identifier" => "zacksiri",
+            "id" => "1"
+          },
+          "installation_id" => 1,
+          "deployment" => %{
+            "hash" => "some-hash-not-existing"
+          },
+          "instance" => %{
+            "slug" => "some-instane-1",
+            "node" => %{
+              "slug" => "some-node-1"
+            }
+          }
+        })
+
+      {:ok, body: valid_body}
+    end
+
+    test "returns 404 for instance bootstrap", %{body: body} do
+      signature =
+        :crypto.mac(:hmac, :sha256, Uplink.Secret.get(), body)
+        |> Base.encode16()
+        |> String.downcase()
+
+      conn =
+        conn(:post, "/bootstrap", body)
+        |> put_req_header("x-uplink-signature-256", "sha256=#{signature}")
+        |> put_req_header("content-type", "application/json")
+        |> Router.call(@opts)
+
+      assert conn.status == 404
+    end
+
+    test "returns 201 for instance cleanup", %{body: body} do
+      signature =
+        :crypto.mac(:hmac, :sha256, Uplink.Secret.get(), body)
+        |> Base.encode16()
+        |> String.downcase()
+
+      conn =
+        conn(:post, "/cleanup", body)
+        |> put_req_header("x-uplink-signature-256", "sha256=#{signature}")
+        |> put_req_header("content-type", "application/json")
+        |> Router.call(@opts)
+
+      assert conn.status == 201
+
+      assert %{"data" => %{"id" => _job_id}} = Jason.decode!(conn.resp_body)
+    end
+
+    test "returns 201 for instance restart", %{body: body} do
+      signature =
+        :crypto.mac(:hmac, :sha256, Uplink.Secret.get(), body)
+        |> Base.encode16()
+        |> String.downcase()
+
+      conn =
+        conn(:post, "/restart", body)
+        |> put_req_header("x-uplink-signature-256", "sha256=#{signature}")
+        |> put_req_header("content-type", "application/json")
+        |> Router.call(@opts)
+
+      assert conn.status == 201
+
+      assert %{"data" => %{"id" => _job_id}} = Jason.decode!(conn.resp_body)
+    end
+
+    test "returns 404 for instance upgrade", %{body: body} do
+      signature =
+        :crypto.mac(:hmac, :sha256, Uplink.Secret.get(), body)
+        |> Base.encode16()
+        |> String.downcase()
+
+      conn =
+        conn(:post, "/upgrade", body)
+        |> put_req_header("x-uplink-signature-256", "sha256=#{signature}")
+        |> put_req_header("content-type", "application/json")
+        |> Router.call(@opts)
+
+      assert conn.status == 404
+    end
+  end
 end
