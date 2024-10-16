@@ -41,7 +41,10 @@ defmodule Uplink.Packages.Instance.Router do
          {:ok, %Members.Actor{id: actor_id}} <-
            Members.get_or_create_actor(actor_params),
          %Packages.Install{id: install_id} <-
-           Packages.latest_install(instellar_installation_id) do
+           Packages.latest_install(
+             instellar_installation_id,
+             Map.get(conn.body_params, "deployment")
+           ) do
       {:ok, %{id: job_id}} =
         %{
           instance: instance_params,

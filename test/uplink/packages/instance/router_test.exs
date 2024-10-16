@@ -20,6 +20,9 @@ defmodule Uplink.Packages.Instance.RouterTest do
                   "id" => "1"
                 },
                 "installation_id" => 1,
+                "deployment" => %{
+                  "hash" => "some-hash"
+                },
                 "instance" => %{
                   "slug" => "some-instane-1",
                   "node" => %{

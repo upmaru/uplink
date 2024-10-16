@@ -25,7 +25,7 @@ defmodule Uplink.Packages do
     to: Install.Manager,
     as: :build_state
 
-  defdelegate latest_install(instellar_installation_id),
+  defdelegate latest_install(instellar_installation_id, option \\ nil),
     to: Install.Manager,
     as: :latest
 
