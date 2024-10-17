@@ -65,100 +65,11 @@ defmodule Uplink.Packages.Instance.Bootstrap do
     end
   end
 
-  defp handle_placement(
-         %{
-           install: install,
-           metadata:
-             %{orchestration: %{placement: placement_strategy}} = metadata
-         } = state,
-         %{"slug" => instance_name}
-       ) do
+  defp handle_placement(state, %{"slug" => instance_name}) do
     placement_name = Placement.name(instance_name)
 
     Cache.transaction([keys: [{:available_nodes, placement_name}]], fn ->
-      with {:ok, %Placement{node: node} = placement} <-
-             Placement.find(instance_name, placement_strategy),
-           %Member{architecture: architecture} <-
-             LXD.list_cluster_members()
-             |> Enum.find(fn member ->
-               member.server_name == node
-             end) do
-        client = LXD.client()
-
-        profile_name = Packages.profile_name(metadata)
-
-        size_profile_name = Packages.get_size_profile(metadata)
-
-        lxd_project_name = Packages.get_or_create_project_name(client, metadata)
-
-        image_server = get_image_server()
-
-        profiles = [profile_name, "default"]
-
-        profiles =
-          if size_profile_name do
-            [size_profile_name | profiles]
-          else
-            profiles
-          end
-
-        lxd_instance =
-          Map.merge(@default_params, %{
-            "name" => instance_name,
-            "architecture" => architecture,
-            "profiles" => profiles,
-            "source" => %{
-              "type" => "image",
-              "mode" => "pull",
-              "protocol" => "simplestreams",
-              "server" => image_server,
-              "alias" => install.deployment.stack
-            }
-          })
-
-        client
-        |> Formation.lxd_create(node, lxd_instance, project: lxd_project_name)
-        |> case do
-          %Tesla.Client{} = client ->
-            transition_parameters =
-              Map.put(
-                @transition_parameters,
-                "node",
-                node
-              )
-
-            Uplink.TaskSupervisor
-            |> @task_supervisor.async_nolink(
-              fn ->
-                Instellar.transition_instance(instance_name, install, "boot",
-                  comment:
-                    "[Uplink.Packages.Instance.Bootstrap] Starting bootstrap with #{placement_strategy} placement...",
-                  parameters: transition_parameters
-                )
-              end,
-              shutdown: 30_000
-            )
-
-            Cache.get_and_update(
-              {:available_nodes, placement_name},
-              fn current_value ->
-                if is_list(current_value) do
-                  {current_value, current_value -- [node]}
-                else
-                  {current_value, []}
-                end
-              end
-            )
-
-            state
-            |> Map.put(:client, client)
-            |> Map.put(:lxd_project_name, lxd_project_name)
-            |> Map.put(:placement, placement)
-
-          error ->
-            error
-        end
-      end
+      place_instance(state, instance_name)
     end)
   end
 
@@ -247,11 +158,115 @@ defmodule Uplink.Packages.Instance.Bootstrap do
   defp handle_error(%{install: install, actor: _actor}, error, %{
          "slug" => instance_name
        }) do
-    Instellar.transition_instance(instance_name, install, "fail",
+    Instellar.transition_instance(instance_name, install, "off",
       comment:
         "[Uplink.Packages.Instance.Bootstrap] #{instance_name} #{inspect(error)}",
       parameters: @transition_parameters
     )
+  end
+
+  defp place_instance(
+         %{
+           install: install,
+           metadata:
+             %{orchestration: %{placement: placement_strategy}} = metadata
+         } = state,
+         instance_name
+       ) do
+    with {:ok, %Placement{node: node} = placement} <-
+           Placement.find(instance_name, placement_strategy),
+         %Member{architecture: architecture} <-
+           LXD.list_cluster_members()
+           |> Enum.find(fn member ->
+             member.server_name == node
+           end) do
+      client = LXD.client()
+
+      profile_name = Packages.profile_name(metadata)
+
+      size_profile_name = Packages.get_size_profile(metadata)
+
+      lxd_project_name = Packages.get_or_create_project_name(client, metadata)
+
+      image_server = get_image_server()
+
+      profiles = [profile_name, "default"]
+
+      profiles =
+        if size_profile_name do
+          [size_profile_name | profiles]
+        else
+          profiles
+        end
+
+      lxd_instance =
+        Map.merge(@default_params, %{
+          "name" => instance_name,
+          "architecture" => architecture,
+          "profiles" => profiles,
+          "source" => %{
+            "type" => "image",
+            "mode" => "pull",
+            "protocol" => "simplestreams",
+            "server" => image_server,
+            "alias" => install.deployment.stack
+          }
+        })
+
+      client
+      |> Formation.lxd_create(node, lxd_instance, project: lxd_project_name)
+      |> case do
+        %Tesla.Client{} = client ->
+          state
+          |> Map.put(:client, client)
+          |> Map.put(:lxd_project_name, lxd_project_name)
+          |> Map.put(:placement, placement)
+          |> Map.put(:instance_name, instance_name)
+          |> Map.put(:node, node)
+          |> post_instance_creation()
+
+        error ->
+          error
+      end
+    end
+  end
+
+  defp post_instance_creation(
+         %{
+           install: install,
+           metadata: %{orchestration: %{placement: placement_strategy}},
+           node: node,
+           instance_name: instance_name
+         } = state
+       ) do
+    placement_name = Placement.name(instance_name)
+
+    transition_parameters = Map.put(@transition_parameters, "node", node)
+
+    Uplink.TaskSupervisor
+    |> @task_supervisor.async_nolink(
+      fn ->
+        Instellar.transition_instance(instance_name, install, "boot",
+          comment:
+            "[Uplink.Packages.Instance.Bootstrap] Starting bootstrap with #{placement_strategy} placement...",
+          parameters: transition_parameters
+        )
+      end,
+      shutdown: 30_000
+    )
+
+    Cache.get_and_update(
+      {:available_nodes, placement_name},
+      fn current_value ->
+        if is_list(current_value) do
+          {current_value, current_value -- [node]}
+        else
+          {current_value, []}
+        end
+      end
+    )
+
+    state
   end
 
   defp get_image_server do
