@@ -5,6 +5,8 @@ defmodule Uplink.Packages.Instance.Bootstrap do
 
   alias Uplink.Repo
   alias Uplink.Cache
+  alias Uplink.Instances
+
   alias Uplink.Members.Actor
 
   alias Uplink.Packages
@@ -46,27 +48,32 @@ defmodule Uplink.Packages.Instance.Bootstrap do
 
     %Actor{} = actor = Repo.get(Actor, actor_id)
 
-    %Install{} =
-      install =
+    %{install: %Install{deployment: deployment}} =
+      state =
       Install
       |> preload([:deployment])
       |> Repo.get(install_id)
+      |> Packages.build_install_state(actor)
 
-    state = Packages.build_install_state(install, actor)
+    if deployment.current_state == "live" do
+      state
+      |> handle_placement(instance_params)
+      |> case do
+        %{client: _, lxd_project_name: _, placement: _} = updated_state ->
+          handle_provisioning(updated_state, instance_params)
 
-    state
-    |> handle_placement(instance_params)
-    |> case do
-      %{client: _, lxd_project_name: _, placement: _} = updated_state ->
-        handle_provisioning(updated_state, instance_params)
-
-      error ->
-        handle_error(state, error, instance_params)
+        error ->
+          handle_error(state, error, instance_params)
+      end
+    else
+      {:snooze, 10}
     end
   end
 
-  defp handle_placement(state, %{"slug" => instance_name}) do
+  defp handle_placement(%{install: install} = state, %{"slug" => instance_name}) do
     placement_name = Placement.name(instance_name)
+
+    Instances.mark("executing", install.id, instance_name)
 
     Cache.transaction([keys: [{:available_nodes, placement_name}]], fn ->
       place_instance(state, instance_name)

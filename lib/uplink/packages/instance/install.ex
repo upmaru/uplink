@@ -3,6 +3,7 @@ defmodule Uplink.Packages.Instance.Install do
 
   alias Uplink.Repo
   alias Uplink.Cache
+  alias Uplink.Instances
 
   alias Uplink.Clients.LXD
   alias Uplink.Clients.Caddy
@@ -92,17 +93,7 @@ defmodule Uplink.Packages.Instance.Install do
     |> Formation.add_package_and_restart_lxd_instance(formation_instance)
     |> case do
       {:ok, add_package_output} ->
-        Cache.transaction([keys: [{:install, install_id, "completed"}]], fn ->
-          Cache.get_and_update(
-            {:install, install_id, "completed"},
-            fn current_value ->
-              completed_instances =
-                if current_value, do: current_value ++ [name], else: [name]
-
-              {current_value, Enum.uniq(completed_instances)}
-            end
-          )
-        end)
+        Instances.mark("completed", install_id, name)
 
         Caddy.schedule_config_reload(install)
 

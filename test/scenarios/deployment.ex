@@ -195,6 +195,16 @@ defmodule Uplink.Scenarios.Deployment do
     {:ok, deployment} =
       Packages.get_or_create_deployment(app, @deployment_params)
 
+    {:ok, %{resource: preparing_deployment}} =
+      Packages.transition_deployment_with(deployment, actor, "prepare")
+
+    {:ok, %{resource: deployment}} =
+      Packages.transition_deployment_with(
+        preparing_deployment,
+        actor,
+        "complete"
+      )
+
     {:ok, install} =
       Packages.create_install(deployment, %{
         "installation_id" => 1,
@@ -243,6 +253,16 @@ defmodule Uplink.Scenarios.Deployment do
       Packages.get_or_create_deployment(
         app,
         @deployment_params_with_package_size
+      )
+
+    {:ok, %{resource: preparing_deployment}} =
+      Packages.transition_deployment_with(deployment, actor, "prepare")
+
+    {:ok, %{resource: deployment}} =
+      Packages.transition_deployment_with(
+        preparing_deployment,
+        actor,
+        "complete"
       )
 
     {:ok, install} =

@@ -3,6 +3,7 @@ defmodule Uplink.Packages.Install.Execute do
 
   alias Uplink.Repo
   alias Uplink.Cache
+  alias Uplink.Instances
 
   alias Uplink.Clients.LXD
   alias Uplink.Clients.Instellar
@@ -96,22 +97,7 @@ defmodule Uplink.Packages.Install.Execute do
       )
     end)
 
-    Cache.transaction(
-      [keys: [{:install, state.install.id, "executing"}]],
-      fn ->
-        Cache.get_and_update(
-          {:install, state.install.id, "executing"},
-          fn current_value ->
-            executing_instances =
-              if current_value,
-                do: current_value ++ [instance.slug],
-                else: [instance.slug]
-
-            {current_value, Enum.uniq(executing_instances)}
-          end
-        )
-      end
-    )
+    Instances.mark("executing", state.install.id, instance.slug)
 
     case event_name do
       "upgrade" ->
