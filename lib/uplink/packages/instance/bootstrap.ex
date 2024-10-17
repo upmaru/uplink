@@ -244,11 +244,13 @@ defmodule Uplink.Packages.Instance.Bootstrap do
     end
   end
 
-  defp handle_error(%{install: install, actor: actor}, error, %{
+  defp handle_error(%{install: install, actor: _actor}, error, %{
          "slug" => instance_name
        }) do
-    Packages.transition_install_with(install, actor, "fail",
-      comment: "#{instance_name} #{inspect(error)}"
+    Instellar.transition_instance(instance_name, install, "fail",
+      comment:
+        "[Uplink.Packages.Instance.Bootstrap] #{instance_name} #{inspect(error)}",
+      parameters: @transition_parameters
     )
   end
 
