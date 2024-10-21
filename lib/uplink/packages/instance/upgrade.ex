@@ -7,6 +7,7 @@ defmodule Uplink.Packages.Instance.Upgrade do
 
   alias Uplink.Repo
   alias Uplink.Cache
+  alias Uplink.Instances
 
   alias Uplink.Packages
   alias Uplink.Packages.Install
@@ -133,19 +134,7 @@ defmodule Uplink.Packages.Instance.Upgrade do
     |> Formation.lxd_upgrade_alpine_package(formation_instance)
     |> case do
       {:ok, upgrade_package_output} ->
-        Cache.transaction([keys: [{:install, install.id, "completed"}]], fn ->
-          Cache.get_and_update(
-            {:install, install.id, "completed"},
-            fn current_value ->
-              completed_instances =
-                if current_value,
-                  do: current_value ++ [formation_instance.slug],
-                  else: [formation_instance.slug]
-
-              {current_value, Enum.uniq(completed_instances)}
-            end
-          )
-        end)
+        Instances.mark("completed", install.id, formation_instance.slug)
 
         Caddy.schedule_config_reload(install)
 

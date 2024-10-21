@@ -47,11 +47,21 @@ defmodule Uplink.Packages.Install.Manager do
     |> Repo.insert()
   end
 
-  def latest(instellar_installation_id) do
+  def latest(instellar_installation_id, nil) do
     Packages.Install
     |> where(
       [i],
       i.instellar_installation_id == ^instellar_installation_id
+    )
+    |> order_by(desc: :inserted_at)
+    |> limit(1)
+    |> Repo.one()
+  end
+
+  def latest(instellar_installation_id, %{"hash" => deployment_hash}) do
+    Install.by_hash_and_installation(
+      deployment_hash,
+      instellar_installation_id
     )
     |> order_by(desc: :inserted_at)
     |> limit(1)

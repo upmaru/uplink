@@ -33,7 +33,9 @@ defmodule Uplink.Packages.Instance.Finalize do
     node = Map.get(instance_params, "node", %{})
 
     transition_parameters =
-      Map.put(@transition_parameters, "node", node["slug"])
+      @transition_parameters
+      |> Map.put("node", node["slug"])
+      |> Map.put("hash", install.deployment.hash)
 
     Instellar.transition_instance(name, install, "complete",
       comment: comment,
