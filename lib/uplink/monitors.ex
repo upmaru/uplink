@@ -4,7 +4,7 @@ defmodule Uplink.Monitors do
   def index(type) do
     %{"uplink" => %{"id" => uplink_id}} = Instellar.get_self()
 
-    "metrics-system.#{type}-uplink-#{uplink_id}-*"
+    "metrics-system.#{type}-uplink-#{uplink_id}"
   end
 
   def push(monitor, type, params) do
