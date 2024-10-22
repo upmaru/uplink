@@ -60,7 +60,7 @@ defmodule Uplink.Packages.Install.Execute do
     project = Packages.get_project_name(client, metadata)
 
     existing_instances =
-      LXD.list_instances(project)
+      LXD.list_instances(project: project)
       |> Enum.filter(&only_uplink_instance/1)
 
     Cache.put_new({:install, state.install.id, "completed"}, [],

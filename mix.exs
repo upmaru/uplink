@@ -70,6 +70,7 @@ defmodule Uplink.MixProject do
       {:plug_cowboy, "~> 2.0"},
       {:reverse_proxy_plug, "~> 2.1"},
       {:mint_web_socket, "~> 1.0.2"},
+      {:broadway, "~> 1.0"},
 
       # Test
       {:bypass, "~> 2.1", only: :test},

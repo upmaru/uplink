@@ -1,26 +1,29 @@
 defmodule Uplink.Monitors do
   alias Uplink.Clients.Instellar
 
-  def index(type) do
+  defdelegate get_instances_metrics,
+    to: __MODULE__.Instance,
+    as: :metrics
+
+  def push(%{"attributes" => attributes} = monitor, type, document) do
+    headers = headers(monitor)
+    index = index(type)
+    endpoint = Map.fetch!(attributes, "endpoint")
+
+    [endpoint, index, "_doc"]
+    |> Path.join()
+    |> Req.post(headers: headers, json: document)
+  end
+
+  defp index(type) do
     %{"uplink" => %{"id" => uplink_id}} = Instellar.get_self()
 
     "metrics-system.#{type}-uplink-#{uplink_id}"
   end
 
-  def push(monitor, type, params) do
-    headers = headers(monitor)
-    index = index(type)
-
-    [index, "_doc"]
-    |> Path.join()
-    |> Repo.post(headers: headers, json: params)
-  end
-
   defp headers(%{"attributes" => %{"uid" => uid, "token" => token}}) do
-    Base.encode64("#{uid}:#{token}")
+    encoded_token = Base.encode64("#{uid}:#{token}")
 
-    [
-      {"authorization", "ApiKey #{token}"}
-    ]
+    [{"authorization", "ApiKey #{encoded_token}"}]
   end
 end
