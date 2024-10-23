@@ -32,9 +32,7 @@ defmodule Uplink.Monitors.Pipeline do
     memory = Metric.memory(instance_metric)
     cpu = Metric.cpu(instance_metric, previous_cpu_metric)
 
-    data = %{memory: memory, cpu: cpu}
-
-    Message.put_data(message, data)
+    Message.put_data(message, %{memory: memory, cpu: cpu})
   end
 
   def handle_batch(_, messages, _batch_info, _context) do

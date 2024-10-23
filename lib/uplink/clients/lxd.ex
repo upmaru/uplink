@@ -4,6 +4,10 @@ defmodule Uplink.Clients.LXD do
 
   alias Uplink.Clients.LXD
 
+  defdelegate get_node(name),
+    to: __MODULE__.Node.Manager,
+    as: :show
+
   defdelegate list_cluster_members(),
     to: __MODULE__.Cluster.Manager,
     as: :list_members

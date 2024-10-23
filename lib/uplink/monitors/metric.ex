@@ -1,7 +1,7 @@
 defprotocol Uplink.Monitors.Metric do
-  @spec cpu(struct, map) :: {:ok, map()} | {:error, String.t()}
+  @spec cpu(struct, map) :: map() | nil
   def cpu(data, previous_cpu_metric)
 
-  @spec memory(struct) :: {:ok, map()} | {:error, String.t()}
+  @spec memory(struct) :: map() | nil
   def memory(data)
 end

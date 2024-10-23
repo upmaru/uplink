@@ -11,7 +11,7 @@ defmodule Uplink.Clients.LXD.Instance.Manager do
     recursion = Keyword.get(options, :recursion, 1)
 
     if recursion < 1 do
-      raise "recursion must be greater than 0"
+      raise "recursion must be greater than 0 and less than 3 but got #{recursion}"
     end
 
     project_query =
