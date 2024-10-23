@@ -1,9 +1,7 @@
 defimpl Uplink.Monitors.Metric, for: Uplink.Monitors.Instance do
   alias Uplink.Monitors.Instance
 
-  def memory(
-        %Instance{name: node_name, timestamp: timestamp, data: data} = instance
-      ) do
+  def memory(%Instance{data: data} = instance) do
     %{
       "memory" =>
         %{"usage" => memory_usage, "total" => memory_total} = memory_data
@@ -34,11 +32,10 @@ defimpl Uplink.Monitors.Metric, for: Uplink.Monitors.Instance do
     |> Map.merge(memory_params)
   end
 
-  def cpu(%Instance{} = instance, nil), do: nil
+  def cpu(%Instance{}, nil), do: nil
 
   def cpu(
-        %Instance{name: node_name, timestamp: timestamp, node: node, data: data} =
-          instance,
+        %Instance{node: node, timestamp: timestamp, data: data} = instance,
         %{
           timestamp: previous_cpu_metric_timestamp,
           data: previous_cpu_metric_data
@@ -47,10 +44,28 @@ defimpl Uplink.Monitors.Metric, for: Uplink.Monitors.Instance do
     cores =
       Map.get(data.expanded_config, "limits.cpu") || "#{node.cpu_cores_count}"
 
+    cores = String.to_integer(cores)
+
+    time_diff_seconds =
+      (DateTime.to_unix(timestamp, :millisecond) - previous_cpu_metric_timestamp) /
+        1000
+
+    %{"usage" => later_usage} = data.state["cpu"]
+
+    %{"usage" => earlier_usage} = previous_cpu_metric_data
+
+    pct = cpu_percentage(cores, time_diff_seconds, earlier_usage, later_usage)
+
     cpu = %{
       "system" => %{
         "cpu" => %{
-          "cores" => String.to_integer(cores)
+          "cores" => cores,
+          "system" => %{
+            "pct" => 0.0
+          },
+          "user" => %{
+            "pct" => pct
+          }
         }
       }
     }
@@ -60,8 +75,10 @@ defimpl Uplink.Monitors.Metric, for: Uplink.Monitors.Instance do
     |> Map.merge(cpu)
   end
 
-  defp cpu_percentage(cores, time_diff) do
-    available_compute = cores * time_diff * :math.pow(10, 9)
+  defp cpu_percentage(cores, time_diff_seconds, earlier_usage, later_usage) do
+    available_compute = cores * time_diff_seconds * :math.pow(10, 9)
+
+    (later_usage - earlier_usage) / available_compute * 100
   end
 
   defp memory_percentage(%{"total" => total, "usage" => usage_bytes}) do

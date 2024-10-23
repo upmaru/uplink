@@ -5,17 +5,26 @@ defmodule Uplink.Monitors do
     to: __MODULE__.Instance,
     as: :metrics
 
-  def push(%{"attributes" => attributes} = monitor, type, document) do
+  def push!(%{"attributes" => attributes} = monitor, documents) do
     headers = headers(monitor)
-    index = index(type)
     endpoint = Map.fetch!(attributes, "endpoint")
 
-    [endpoint, index, "_doc"]
-    |> Path.join()
-    |> Req.post(headers: headers, json: document)
+    request =
+      Req.new(
+        base_url: endpoint,
+        connect_options: [
+          protocols: [:http1],
+          transport_opts: [
+            verify: :verify_none
+          ]
+        ],
+        headers: headers
+      )
+
+    Req.post!(request, url: "/_bulk", body: documents)
   end
 
-  defp index(type) do
+  def index(type) do
     %{"uplink" => %{"id" => uplink_id}} = Instellar.get_self()
 
     "metrics-system.#{type}-uplink-#{uplink_id}"
@@ -24,6 +33,9 @@ defmodule Uplink.Monitors do
   defp headers(%{"attributes" => %{"uid" => uid, "token" => token}}) do
     encoded_token = Base.encode64("#{uid}:#{token}")
 
-    [{"authorization", "ApiKey #{encoded_token}"}]
+    [
+      {"authorization", "ApiKey #{encoded_token}"},
+      {"content-type", "application/json"}
+    ]
   end
 end

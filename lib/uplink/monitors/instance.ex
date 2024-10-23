@@ -1,7 +1,7 @@
 defmodule Uplink.Monitors.Instance do
   alias Uplink.Clients.LXD
 
-  defstruct [:name, :timestamp, :data, :node]
+  defstruct [:name, :timestamp, :data, :node, :monitor]
 
   def metrics do
     instances = LXD.list_instances(recursion: 2)
