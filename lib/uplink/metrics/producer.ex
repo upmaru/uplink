@@ -1,9 +1,8 @@
-defmodule Uplink.Monitors.Producer do
+defmodule Uplink.Metrics.Producer do
   use GenStage
   @behaviour Broadway.Producer
 
-  alias Uplink.Monitors
-  alias Uplink.Clients.Instellar
+  alias Uplink.Metrics
 
   @doc false
   def start_link(opts) do
@@ -12,14 +11,6 @@ defmodule Uplink.Monitors.Producer do
 
   @impl true
   def init(opts) do
-    {:ok, monitors} = Instellar.list_monitors()
-
-    metrics_monitor =
-      monitors
-      |> Enum.find(fn monitor ->
-        monitor["attributes"]["type"] == "metrics"
-      end)
-
     state = %{
       demand: 0,
       poll_interval: Keyword.get(opts, :poll_interval, 15_000),
@@ -52,7 +43,7 @@ defmodule Uplink.Monitors.Producer do
   defp load_metrics(demand, state) do
     demand = demand + state.demand
 
-    metrics = Monitors.get_instances_metrics()
+    metrics = Metrics.for_instances()
 
     messages = transform_metrics(metrics, state.previous_cpu_metrics)
 

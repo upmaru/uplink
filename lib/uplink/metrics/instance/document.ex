@@ -1,5 +1,5 @@
-defimpl Uplink.Monitors.Metric, for: Uplink.Monitors.Instance do
-  alias Uplink.Monitors.Instance
+defimpl Uplink.Metrics.Document, for: Uplink.Metrics.Instance do
+  alias Uplink.Metrics.Instance
 
   def memory(%Instance{data: data} = instance) do
     %{

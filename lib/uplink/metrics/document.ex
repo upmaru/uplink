@@ -1,4 +1,4 @@
-defprotocol Uplink.Monitors.Metric do
+defprotocol Uplink.Metrics.Document do
   @spec cpu(struct, map) :: map() | nil
   def cpu(data, previous_cpu_metric)
 

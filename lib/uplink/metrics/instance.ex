@@ -1,4 +1,4 @@
-defmodule Uplink.Monitors.Instance do
+defmodule Uplink.Metrics.Instance do
   alias Uplink.Clients.LXD
 
   defstruct [:name, :timestamp, :data, :node, :monitor]

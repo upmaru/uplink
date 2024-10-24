@@ -1,10 +1,10 @@
-defmodule Uplink.Monitors.Pipeline do
+defmodule Uplink.Metrics.Pipeline do
   use Broadway
 
   alias Broadway.Message
 
-  alias Uplink.Monitors
-  alias Uplink.Monitors.Metric
+  alias Uplink.Metrics
+  alias Uplink.Metrics.Document
 
   def start_link(opts) do
     monitor = Keyword.fetch!(opts, :monitor)
@@ -36,38 +36,43 @@ defmodule Uplink.Monitors.Pipeline do
   def handle_message(_, %Message{data: data} = message, _) do
     %{metric: instance_metric, previous_cpu_metric: previous_cpu_metric} = data
 
-    memory = Metric.memory(instance_metric)
-    cpu = Metric.cpu(instance_metric, previous_cpu_metric)
+    memory = Document.memory(instance_metric)
+    cpu = Document.cpu(instance_metric, previous_cpu_metric)
 
     Message.put_data(message, %{memory: memory, cpu: cpu})
   end
 
   def handle_batch(_, messages, _batch_info, context) do
+    documents = to_ndjson(messages)
+
+    Metrics.push!(context.monitor, documents)
+
+    messages
+  end
+
+  defp to_ndjson(messages) do
     documents =
-      Enum.flat_map(messages, fn message ->
-        dataset =
-          message.data
-          |> Enum.to_list()
-          |> Enum.reject(fn {_key, value} ->
-            is_nil(value)
-          end)
-
-        dataset
-        |> Enum.flat_map(fn {type, data} ->
-          index = Monitors.index(type)
-          metadata = %{"create" => %{"_index" => index}}
-
-          [metadata, data]
-        end)
-      end)
+      Enum.flat_map(messages, &to_bulk/1)
       |> Enum.map(&Jason.encode!/1)
       |> Enum.join("\n")
 
-    documents = documents <> "\n"
+    documents <> "\n"
+  end
 
-    Monitors.push!(context.monitor, documents)
-    |> IO.inspect()
+  defp to_bulk(%Message{} = message) do
+    dataset =
+      message.data
+      |> Enum.to_list()
+      |> Enum.reject(fn {_key, value} ->
+        is_nil(value)
+      end)
 
-    messages
+    dataset
+    |> Enum.flat_map(fn {type, data} ->
+      index = Metrics.index(type)
+      metadata = %{"create" => %{"_index" => index}}
+
+      [metadata, data]
+    end)
   end
 end

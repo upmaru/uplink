@@ -1,7 +1,7 @@
-defmodule Uplink.Monitors do
+defmodule Uplink.Metrics do
   alias Uplink.Clients.Instellar
 
-  defdelegate get_instances_metrics,
+  defdelegate for_instances(),
     to: __MODULE__.Instance,
     as: :metrics
 
