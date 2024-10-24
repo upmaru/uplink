@@ -66,11 +66,12 @@ defmodule Uplink.MixProject do
 
       # Infrastructure
       {:formation, "~> 0.15"},
-      {:lexdee, "~> 2.4"},
+      {:lexdee, path: "../lexdee", override: true},
       {:plug_cowboy, "~> 2.0"},
       {:reverse_proxy_plug, "~> 2.1"},
       {:mint_web_socket, "~> 1.0.2"},
       {:broadway, "~> 1.0"},
+      {:prometheus_parser, "~> 0.1.10"},
 
       # Test
       {:bypass, "~> 2.1", only: :test},

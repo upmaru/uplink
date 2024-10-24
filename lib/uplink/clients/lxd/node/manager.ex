@@ -12,9 +12,24 @@ defmodule Uplink.Clients.LXD.Node.Manager do
     |> Lexdee.show_resources(name)
     |> case do
       {:ok, %{body: node}} ->
-        %{"cpu" => %{"total" => total_cores_count}} = node
+        %{
+          "cpu" => %{"total" => total_cores_count},
+          "memory" => %{"total" => total_memory},
+          "storage" => %{"disks" => disks}
+        } = node
 
-        Node.parse(%{name: name, cpu_cores_count: total_cores_count})
+        disk_sizes =
+          Enum.map(disks, fn disk ->
+            disk["size"]
+          end)
+          |> Enum.sum()
+
+        Node.parse(%{
+          name: name,
+          cpu_cores_count: total_cores_count,
+          total_memory: total_memory,
+          total_storage: disk_sizes
+        })
 
       error ->
         error

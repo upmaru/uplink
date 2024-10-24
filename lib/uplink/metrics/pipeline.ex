@@ -15,7 +15,7 @@ defmodule Uplink.Metrics.Pipeline do
         monitor: monitor
       },
       producer: [
-        module: {Uplink.Monitors.Producer, [poll_interval: :timer.seconds(15)]},
+        module: {Uplink.Metrics.Producer, [poll_interval: :timer.seconds(15)]},
         concurrency: 1
       ],
       processors: [
@@ -38,28 +38,39 @@ defmodule Uplink.Metrics.Pipeline do
 
     memory = Document.memory(instance_metric)
     cpu = Document.cpu(instance_metric, previous_cpu_metric)
+    uptime = Document.uptime(instance_metric)
+    filesystem = Document.filesystem(instance_metric)
+    diskio = Document.diskio(instance_metric)
 
-    Message.put_data(message, %{memory: memory, cpu: cpu})
+    data = %{
+      memory: memory,
+      cpu: cpu,
+      uptime: uptime,
+      filesystem: filesystem,
+      diskio: diskio
+    }
+
+    Message.put_data(message, data)
   end
 
   def handle_batch(_, messages, _batch_info, context) do
     documents = to_ndjson(messages)
 
-    Metrics.push!(context.monitor, documents)
+    Metrics.push!(context.monitor, documents) |> IO.inspect()
 
     messages
   end
 
   defp to_ndjson(messages) do
     documents =
-      Enum.flat_map(messages, &to_bulk/1)
+      Enum.flat_map(messages, &to_entry/1)
       |> Enum.map(&Jason.encode!/1)
       |> Enum.join("\n")
 
     documents <> "\n"
   end
 
-  defp to_bulk(%Message{} = message) do
+  defp to_entry(%Message{} = message) do
     dataset =
       message.data
       |> Enum.to_list()

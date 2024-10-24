@@ -20,6 +20,10 @@ defmodule Uplink.Clients.LXD do
     to: __MODULE__.Profile.Manager,
     as: :get
 
+  defdelegate list_metrics(options \\ []),
+    to: __MODULE__.Metric.Manager,
+    as: :list
+
   defdelegate list_instances(options \\ []),
     to: __MODULE__.Instance.Manager,
     as: :list
