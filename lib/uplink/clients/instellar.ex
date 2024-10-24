@@ -9,6 +9,7 @@ defmodule Uplink.Clients.Instellar do
     Instance,
     Register,
     Component,
+    Monitor,
     Variable,
     Proxy,
     Self
@@ -33,6 +34,10 @@ defmodule Uplink.Clients.Instellar do
 
   defdelegate list_proxies(router_id),
     to: Proxy,
+    as: :list
+
+  defdelegate list_monitors,
+    to: Monitor,
     as: :list
 
   defdelegate deployment_metadata(install),

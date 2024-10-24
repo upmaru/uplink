@@ -9,10 +9,13 @@ defmodule Uplink.Clients.LXD.Instance do
     status
     architecture
     profiles
+    project
     description
     created_at
     last_used_at
     expanded_config
+    expanded_devices
+    state
   )a
 
   @required_attrs ~w(
@@ -34,6 +37,7 @@ defmodule Uplink.Clients.LXD.Instance do
     field :status, :string
     field :architecture, :string
     field :profiles, {:array, :string}
+    field :project, :string
     field :description, :string
 
     field :created_at, :utc_datetime_usec
@@ -41,6 +45,8 @@ defmodule Uplink.Clients.LXD.Instance do
 
     field :expanded_config, :map
     field :expanded_devices, :map
+
+    field :state, :map
   end
 
   def changeset(schema, params) do
