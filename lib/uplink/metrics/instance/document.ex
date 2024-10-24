@@ -85,14 +85,23 @@ defimpl Uplink.Metrics.Document, for: Uplink.Metrics.Instance do
     if usage_bytes > 0 and total > 0, do: usage_bytes / total, else: 0.0
   end
 
-  defp build_base(%Instance{name: node_name, timestamp: timestamp, data: data}) do
+  defp build_base(%Instance{
+         name: name,
+         timestamp: timestamp,
+         data: data,
+         node: node
+       }) do
     %{
       "@timestamp" => timestamp,
       "host" => %{
-        "name" => node_name,
+        "name" => name,
         "containerized" => data.type == "container"
       },
-      "container.id" => node_name
+      "container.id" => name,
+      "agent.id" => "uplink",
+      "cloud" => %{
+        "instance.id" => node.name
+      }
     }
   end
 end
