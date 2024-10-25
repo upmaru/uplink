@@ -7,12 +7,12 @@ defmodule Uplink.Metrics.Pipeline do
   alias Uplink.Metrics.Document
 
   def start_link(opts) do
-    monitor = Keyword.fetch!(opts, :monitor)
+    monitors = Keyword.fetch!(opts, :monitors)
 
     Broadway.start_link(__MODULE__,
-      name: __MODULE__,
+      name: {:global, __MODULE__},
       context: %{
-        monitor: monitor
+        monitors: monitors
       },
       producer: [
         module: {Uplink.Metrics.Producer, [poll_interval: :timer.seconds(15)]},
@@ -31,6 +31,14 @@ defmodule Uplink.Metrics.Pipeline do
         ]
       ]
     )
+    |> case do
+      {:ok, pid} ->
+        {:ok, pid}
+
+      {:error, {:already_started, pid}} ->
+        Process.link(pid)
+        {:ok, pid}
+    end
   end
 
   def handle_message(_, %Message{data: data} = message, _) do
@@ -56,7 +64,10 @@ defmodule Uplink.Metrics.Pipeline do
   def handle_batch(_, messages, _batch_info, context) do
     documents = to_ndjson(messages)
 
-    Metrics.push!(context.monitor, documents) |> IO.inspect()
+    context.monitors
+    |> Enum.map(fn monitor ->
+      Metrics.push!(context.monitor, documents)
+    end)
 
     messages
   end
