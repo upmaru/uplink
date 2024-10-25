@@ -1,6 +1,7 @@
 defmodule Uplink.Monitors do
   use Task
 
+  alias Uplink.Cache
   alias Uplink.Pipelines
   alias Uplink.Clients.Instellar
 
@@ -15,10 +16,14 @@ defmodule Uplink.Monitors do
   end
 
   def run(_options) do
+    Cache.put_new({:monitors, :metrics}, [])
+
     Instellar.list_monitors()
     |> case do
       {:ok, monitors} ->
-        start_pipeline(monitors, :metrics)
+        Cache.transaction([keys: [{:monitors, :metrics}]], fn ->
+          start_pipeline(monitors, :metrics)
+        end)
 
       error ->
         {:error, error}

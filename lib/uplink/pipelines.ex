@@ -1,11 +1,15 @@
 defmodule Uplink.Pipelines do
-  defdelegate get_monitors(context),
-    to: __MODULE__.Context,
-    as: :get
+  alias Uplink.Cache
 
-  defdelegate append_monitors(context, monitors),
-    to: __MODULE__.Context,
-    as: :append
+  def get_monitors(context) do
+    Cache.get({:monitors, context}) || []
+  end
+
+  def append_monitors(context, monitors) do
+    Cache.get_and_update({:monitors, context}, fn existing_monitors ->
+      {existing_monitors, existing_monitors ++ monitors}
+    end)
+  end
 
   def start(module) do
     spec = %{
