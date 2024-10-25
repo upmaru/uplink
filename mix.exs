@@ -57,6 +57,7 @@ defmodule Uplink.MixProject do
 
       # Clustering
       {:libcluster, "~> 3.0"},
+      {:pogo, "~> 0.3.0"},
 
       # One time password
       {:pot, "~> 1.0.2"},

@@ -1,17 +1,22 @@
 defmodule Uplink.Pipelines do
-  use DynamicSupervisor
+  defdelegate get_monitors(context),
+    to: __MODULE__.Context,
+    as: :get
 
-  def start_link(options) do
-    DynamicSupervisor.start_link(__MODULE__, options, name: __MODULE__)
+  defdelegate append_monitors(context, monitors),
+    to: __MODULE__.Context,
+    as: :append
+
+  def start(module) do
+    spec = %{
+      id: module,
+      start: {module, :start_link, []}
+    }
+
+    Pogo.DynamicSupervisor.start_child(Uplink.PipelineSupervisor, spec)
   end
 
-  def start_metrics(monitors) do
-    spec = {Uplink.Metrics.Pipeline, monitors: monitors}
-
-    DynamicSupervisor.start_child(__MODULE__, spec)
-  end
-
-  def init(_options) do
-    DynamicSupervisor.init(strategy: :one_for_one)
+  def list do
+    Pogo.DynamicSupervisor.which_children(Uplink.PipelineSupervisor, :global)
   end
 end
