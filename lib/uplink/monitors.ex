@@ -67,7 +67,8 @@ defmodule Uplink.Monitors do
   end
 
   def config(key, default) do
-    Application.get_env(:uplink, __MODULE__)
-    |> Keyword.get(key, default)
+    configuration = Application.get_env(:uplink, __MODULE__) || []
+
+    Keyword.get(configuration, key, default)
   end
 end

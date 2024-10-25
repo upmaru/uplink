@@ -11,11 +11,21 @@ defmodule Uplink.Metrics.Pipeline do
   require Logger
 
   def start_link(_opts \\ []) do
+    configuration = Application.get_env(:uplink, __MODULE__) || []
+
+    producer_module =
+      Keyword.get(configuration, :producer_module, Uplink.Metrics.Producer)
+
+    producer_options =
+      Keyword.get(configuration, :producer_options,
+        poll_interval: :timer.seconds(15)
+      )
+
     Broadway.start_link(__MODULE__,
       name: __MODULE__,
       context: :metrics,
       producer: [
-        module: {Uplink.Metrics.Producer, [poll_interval: :timer.seconds(15)]},
+        module: {producer_module, producer_options},
         concurrency: 1
       ],
       processors: [

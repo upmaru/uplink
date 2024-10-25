@@ -4,6 +4,10 @@ config :uplink, Uplink.Data, mode: "pro"
 
 config :uplink, Uplink.Monitors, enabled: false
 
+config :uplink, Uplink.Metrics.Pipeline,
+  producer_module: Broadway.DummyProducer,
+  producer_options: []
+
 config :uplink, Uplink.Repo,
   username:
     System.get_env("UPLINK_DB_USERNAME") || System.get_env("POSTGRES_USERNAME"),
