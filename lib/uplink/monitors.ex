@@ -12,7 +12,13 @@ defmodule Uplink.Monitors do
   }
 
   def start_link(options) do
-    Task.start_link(__MODULE__, :run, [options])
+    enabled? = config(:enabled, true)
+
+    if enabled? do
+      Task.start_link(__MODULE__, :run, [options])
+    else
+      :ignore
+    end
   end
 
   def run(_options) do
@@ -58,5 +64,10 @@ defmodule Uplink.Monitors do
     module = Map.fetch!(@pipeline_modules, context)
 
     Pipelines.start(module)
+  end
+
+  def config(key, default) do
+    Application.get_env(:uplink, __MODULE__)
+    |> Keyword.get(key, default)
   end
 end

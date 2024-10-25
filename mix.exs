@@ -67,7 +67,7 @@ defmodule Uplink.MixProject do
 
       # Infrastructure
       {:formation, "~> 0.15"},
-      {:lexdee, path: "../lexdee", override: true},
+      {:lexdee, "~> 2.4.4"},
       {:plug_cowboy, "~> 2.0"},
       {:reverse_proxy_plug, "~> 2.1"},
       {:mint_web_socket, "~> 1.0.2"},
