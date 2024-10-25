@@ -137,6 +137,7 @@ defmodule Uplink.Scenarios.Deployment do
           "endpoint" => "http://localhost:#{bypass.port}"
         },
         "uplink" => %{
+          "id" => 1,
           "image_server" => "https://localhost/spaces/test"
         },
         "organization" => %{

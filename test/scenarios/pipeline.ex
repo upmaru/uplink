@@ -1,47 +1,45 @@
 defmodule Uplink.Scenarios.Pipeline do
   alias Uplink.Cache
 
-  def self(context) do
-    Cache.transaction([keys: [:self]], fn ->
-      Cache.put(:self, %{
-        "credential" => %{
-          "endpoint" => "http://localhost"
-        },
-        "uplink" => %{
+  def self(_context) do
+    Cache.put(:self, %{
+      "credential" => %{
+        "endpoint" => "http://localhost"
+      },
+      "uplink" => %{
+        "id" => 1,
+        "image_server" => "https://localhost/spaces/test"
+      },
+      "organization" => %{
+        "slug" => "someorg",
+        "storage" => %{
+          "type" => "s3",
+          "host" => "some.host",
+          "bucket" => "some-bucket",
+          "region" => "sgp1",
+          "credential" => %{
+            "access_key_id" => "access-key",
+            "secret_access_key" => "secret"
+          }
+        }
+      },
+      "instances" => [
+        %{
           "id" => 1,
-          "image_server" => "https://localhost/spaces/test"
-        },
-        "organization" => %{
-          "slug" => "someorg",
-          "storage" => %{
-            "type" => "s3",
-            "host" => "some.host",
-            "bucket" => "some-bucket",
-            "region" => "sgp1",
-            "credential" => %{
-              "access_key_id" => "access-key",
-              "secret_access_key" => "secret"
-            }
-          }
-        },
-        "instances" => [
-          %{
+          "slug" => "uplink-01",
+          "node" => %{
             "id" => 1,
-            "slug" => "uplink-01",
-            "node" => %{
-              "id" => 1,
-              "slug" => "some-node-01",
-              "public_ip" => "127.0.0.1"
-            }
+            "slug" => "some-node-01",
+            "public_ip" => "127.0.0.1"
           }
-        ]
-      })
-    end)
+        }
+      ]
+    })
 
     :ok
   end
 
-  def messages(context) do
+  def messages(_context) do
     message_without_previous_cpu_metric = %{
       metric: %Uplink.Metrics.Instance{
         name: "insterra-testing",
