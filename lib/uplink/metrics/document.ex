@@ -16,4 +16,7 @@ defprotocol Uplink.Metrics.Document do
 
   @spec network(struct, map | nil) :: map() | nil
   def network(data, previous_network_metric)
+
+  @spec load(struct, map | nil) :: map() | nil
+  def load(data, previous_load_metric)
 end

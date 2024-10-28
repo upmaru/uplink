@@ -215,6 +215,34 @@ defimpl Uplink.Metrics.Document, for: Uplink.Metrics.Instance do
 
   def uptime(%Instance{}), do: nil
 
+  def load(%Instance{}, %{cpu_60_metric: nil}), do: nil
+
+  def load(%Instance{}, %{cpu_60_metric: cpu_60_metric}) do
+    cores =
+      Map.get(data.expanded_config, "limits.cpu") || "#{node.cpu_cores_count}"
+
+    cores = String.to_integer(cores)
+
+    %{"usage" => load_1_usage} = cpu_60_metric
+    %{"usage" => later_usage} = data.state["cpu"]
+
+    load_1_time_diff_seconds =
+      (DateTime.to_unix(timestamp, :millisecond) - previous_cpu_metric_timestamp) /
+        1000
+
+    load_1 =
+      cpu_percentage(cores, load_1_time_diff_seconds, load_1_usage, later_usage)
+
+    load_params = %{
+      "system" => %{
+        "cores" => cores,
+        "load" => %{
+          "1" => load_1 * cores
+        }
+      }
+    }
+  end
+
   def cpu(%Instance{}, nil), do: nil
 
   def cpu(

@@ -5,6 +5,8 @@ defmodule Uplink.Metrics.Producer do
   alias Uplink.Cache
   alias Uplink.Metrics
 
+  @last_fetched_timestamp {:monitors, :metrics, :last_fetched_timestamp}
+
   @doc false
   def start_link(opts) do
     GenStage.start_link(__MODULE__, opts)
@@ -15,8 +17,12 @@ defmodule Uplink.Metrics.Producer do
     state = %{
       demand: 0,
       poll_interval: Keyword.get(opts, :poll_interval, 15_000),
+      cycle: 0,
       previous_cpu_metrics: [],
-      previous_network_metrics: []
+      previous_network_metrics: [],
+      cpu_60_metrics: [],
+      cpu_300_metrics: [],
+      cpu_900_metrics: []
     }
 
     {:producer, state}
@@ -61,10 +67,9 @@ defmodule Uplink.Metrics.Producer do
 
     current_demand = demand - length(messages)
 
-    fetch_timestamp =
-      DateTime.to_unix(DateTime.utc_now(), :millisecond) |> IO.inspect()
+    fetch_timestamp = DateTime.to_unix(DateTime.utc_now(), :millisecond)
 
-    Cache.put({:monitors, :metrics, :last_fetched_timestamp}, fetch_timestamp)
+    Cache.put(@last_fetched_timestamp, fetch_timestamp)
 
     previous_cpu_metrics =
       Enum.map(metrics, fn instance ->
@@ -92,13 +97,39 @@ defmodule Uplink.Metrics.Producer do
       |> Map.put(:last_fetched_timestamp, fetch_timestamp)
       |> Map.put(:previous_cpu_metrics, previous_cpu_metrics)
       |> Map.put(:previous_network_metrics, previous_network_metrics)
+      |> Map.put(:cycle, state.cycle + 1)
+
+    state =
+      if rem(state.cycle, 4) == 0 do
+        Map.put(state, :cpu_60_metrics, previous_cpu_metrics)
+      else
+        state
+      end
+
+    state =
+      if rem(state.cycle, 20) == 0 do
+        Map.put(state, :cpu_300_metrics, previous_cpu_metrics)
+      else
+        state
+      end
+
+    state =
+      if rem(state.cycle, 60) == 0 do
+        Map.put(state, :cpu_900_metrics, previous_cpu_metrics)
+      else
+        state
+      end
 
     {messages, state}
   end
 
   defp transform_metrics(metrics, %{
          previous_cpu_metrics: previous_cpu_metrics,
-         previous_network_metrics: previous_network_metrics
+         previous_network_metrics: previous_network_metrics,
+         cpu_60_metrics: cpu_60_metrics,
+         cpu_300_metrics: cpu_300_metrics,
+         cpu_900_metrics: cpu_900_metrics,
+         cycle: cycle
        }) do
     metrics
     |> Enum.map(fn metric ->
@@ -114,10 +145,32 @@ defmodule Uplink.Metrics.Producer do
           &find_matching_previous(&1, metric.data.name, metric.data.project)
         )
 
+      cpu_60_metric =
+        Enum.find(
+          cpu_60_metrics,
+          &find_matching_previous(&1, metric.data.name, metric.data.project)
+        )
+
+      cpu_300_metric =
+        Enum.find(
+          cpu_300_metrics,
+          &find_matching_previous(&1, metric.data.name, metric.data.project)
+        )
+
+      cpu_900_metric =
+        Enum.find(
+          cpu_900_metrics,
+          &find_matching_previous(&1, metric.data.name, metric.data.project)
+        )
+
       %{
         metric: metric,
+        cycle: cycle,
         previous_network_metric: previous_network_metric,
-        previous_cpu_metric: previous_cpu_metric
+        previous_cpu_metric: previous_cpu_metric,
+        cpu_60_metric: cpu_60_metric,
+        cpu_300_metric: cpu_300_metric,
+        cpu_900_metric: cpu_900_metric
       }
     end)
     |> Enum.map(&transform_message/1)
@@ -132,12 +185,11 @@ defmodule Uplink.Metrics.Producer do
 
   defp ready_to_fetch?(state) do
     Cache.transaction(
-      [keys: [{:monitors, :metrics, :last_fetched_timestamp}]],
+      [keys: [@last_fetched_timestamp]],
       fn ->
         now = DateTime.to_unix(DateTime.utc_now(), :millisecond)
 
-        last_fetched_timestamp =
-          Cache.get({:monitors, :metrics, :last_fetched_timestamp})
+        last_fetched_timestamp = Cache.get(@last_fetched_timestamp)
 
         is_nil(last_fetched_timestamp) ||
           now - last_fetched_timestamp > state.poll_interval

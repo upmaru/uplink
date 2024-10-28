@@ -2,7 +2,7 @@ defmodule Uplink.Metrics.Instance do
   alias Uplink.Clients.LXD
   alias Uplink.Clients.Instellar
 
-  defstruct [:name, :timestamp, :data, :node, :metrics, :account]
+  defstruct [:name, :cycle, :timestamp, :data, :node, :metrics, :account]
 
   def metrics do
     instances = LXD.list_instances(recursion: 2)

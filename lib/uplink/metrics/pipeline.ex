@@ -57,7 +57,10 @@ defmodule Uplink.Metrics.Pipeline do
     %{
       metric: instance_metric,
       previous_cpu_metric: previous_cpu_metric,
-      previous_network_metric: previous_network_metric
+      previous_network_metric: previous_network_metric,
+      cpu_60_metric: cpu_60_metric,
+      cpu_300_metric: cpu_300_metric,
+      cpu_900_metric: cpu_900_metric
     } = data
 
     memory = Document.memory(instance_metric)
@@ -67,13 +70,21 @@ defmodule Uplink.Metrics.Pipeline do
     diskio = Document.diskio(instance_metric)
     network = Document.network(instance_metric, previous_network_metric)
 
+    load =
+      Document.load(instance_metric, %{
+        cpu_60_metric: cpu_60_metric,
+        cpu_300_metric: cpu_300_metric,
+        cpu_900_metric: cpu_900_metric
+      })
+
     data = %{
       memory: memory,
       cpu: cpu,
       uptime: uptime,
       filesystem: filesystem,
       diskio: diskio,
-      network: network
+      network: network,
+      load: load
     }
 
     Message.put_data(message, data)
