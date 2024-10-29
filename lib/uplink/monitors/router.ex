@@ -15,9 +15,9 @@ defmodule Uplink.Monitors.Router do
 
   plug :dispatch
 
-  post "/" do
+  post "/refresh" do
     Uplink.Monitors.run()
 
-    json(conn, :ok, %{message: "monitors updated."})
+    json(conn, :ok, %{message: "monitors refreshed."})
   end
 end

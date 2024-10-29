@@ -55,7 +55,7 @@ defmodule Uplink.Monitors do
         monitor["attributes"]["type"]
       end)
 
-    context_monitors = Map.get(grouped_monitors, "#{context}")
+    context_monitors = Map.get(grouped_monitors, "#{context}") || []
 
     if Enum.count(context_monitors) > 0 do
       Pipelines.append_monitors(context, context_monitors)
