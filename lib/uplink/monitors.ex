@@ -21,7 +21,7 @@ defmodule Uplink.Monitors do
     end
   end
 
-  def run(_options) do
+  def run(_options \\ []) do
     Cache.put_new({:monitors, :metrics}, [])
 
     Instellar.list_monitors()
