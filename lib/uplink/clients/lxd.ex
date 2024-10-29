@@ -4,6 +4,10 @@ defmodule Uplink.Clients.LXD do
 
   alias Uplink.Clients.LXD
 
+  defdelegate get_node(name),
+    to: __MODULE__.Node.Manager,
+    as: :show
+
   defdelegate list_cluster_members(),
     to: __MODULE__.Cluster.Manager,
     as: :list_members
@@ -16,11 +20,11 @@ defmodule Uplink.Clients.LXD do
     to: __MODULE__.Profile.Manager,
     as: :get
 
-  defdelegate list_instances(project),
-    to: __MODULE__.Instance.Manager,
+  defdelegate list_metrics(options \\ []),
+    to: __MODULE__.Metric.Manager,
     as: :list
 
-  defdelegate list_instances(),
+  defdelegate list_instances(options \\ []),
     to: __MODULE__.Instance.Manager,
     as: :list
 
@@ -33,37 +37,36 @@ defmodule Uplink.Clients.LXD do
     as: :leases
 
   def uplink_leases do
-    Cache.get({:leases, "uplink"}) ||
-      (
-        config = Application.get_env(:uplink, Uplink.Data) || []
-        uplink_project = Keyword.get(config, :project, "default")
-        client = LXD.client()
+    Cache.get({:leases, "uplink"}) || fetch_leases()
+  end
 
-        uplink_project =
-          client
-          |> Lexdee.get_project(uplink_project)
-          |> case do
-            {:ok, %{body: %{"name" => name}}} -> name
-            {:error, %{"error_code" => 404}} -> "default"
-          end
+  defp fetch_leases do
+    config = Application.get_env(:uplink, Uplink.Data) || []
+    uplink_project = Keyword.get(config, :project, "default")
+    client = LXD.client()
 
-        case LXD.network_leases(uplink_project) do
-          leases when is_list(leases) ->
-            uplink_addresses =
-              Enum.map(leases, fn lease ->
-                lease.address
-              end)
+    uplink_project =
+      client
+      |> Lexdee.get_project(uplink_project)
+      |> case do
+        {:ok, %{body: %{"name" => name}}} -> name
+        {:error, %{"error_code" => 404}} -> "default"
+      end
 
-            Cache.put({:leases, "uplink"}, uplink_addresses,
-              ttl: :timer.hours(3)
-            )
+    case LXD.network_leases(uplink_project) do
+      leases when is_list(leases) ->
+        uplink_addresses =
+          Enum.map(leases, fn lease ->
+            lease.address
+          end)
 
-            uplink_addresses
+        Cache.put({:leases, "uplink"}, uplink_addresses, ttl: :timer.hours(3))
 
-          {:error, error} ->
-            {:error, error}
-        end
-      )
+        uplink_addresses
+
+      {:error, error} ->
+        {:error, error}
+    end
   end
 
   def client do

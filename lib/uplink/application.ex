@@ -22,6 +22,9 @@ defmodule Uplink.Application do
       {Cluster.Supervisor, [topologies, [name: Uplink.ClusterSupervisor]]},
       {Task.Supervisor, name: Uplink.TaskSupervisor},
       {Plug.Cowboy, plug: Uplink.Internal, scheme: :http, port: internal_port},
+      {Pogo.DynamicSupervisor,
+       [name: Uplink.PipelineSupervisor, scope: :uplink]},
+      {Uplink.Monitors, []},
       {
         Plug.Cowboy,
         plug: Uplink.Router,
