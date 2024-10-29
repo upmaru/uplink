@@ -58,16 +58,24 @@ defmodule Uplink.Metrics.Producer do
 
     previous_cpu_metrics = state.previous_cpu_metrics
     previous_network_metrics = state.previous_network_metrics
+    cpu_60_metrics = state.cpu_60_metrics
+    cpu_300_metrics = state.cpu_300_metrics
+    cpu_900_metrics = state.cpu_900_metrics
 
     messages =
       transform_metrics(metrics, %{
         previous_cpu_metrics: previous_cpu_metrics,
-        previous_network_metrics: previous_network_metrics
+        previous_network_metrics: previous_network_metrics,
+        cpu_60_metrics: cpu_60_metrics,
+        cpu_300_metrics: cpu_300_metrics,
+        cpu_900_metrics: cpu_900_metrics,
+        cycle: state.cycle
       })
 
     current_demand = demand - length(messages)
 
-    fetch_timestamp = DateTime.to_unix(DateTime.utc_now(), :millisecond)
+    fetch_timestamp =
+      DateTime.to_unix(DateTime.utc_now(), :millisecond) |> IO.inspect()
 
     Cache.put(@last_fetched_timestamp, fetch_timestamp)
 

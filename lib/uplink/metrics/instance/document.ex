@@ -217,30 +217,93 @@ defimpl Uplink.Metrics.Document, for: Uplink.Metrics.Instance do
 
   def load(%Instance{}, %{cpu_60_metric: nil}), do: nil
 
-  def load(%Instance{}, %{cpu_60_metric: cpu_60_metric}) do
+  def load(
+        %Instance{data: data, timestamp: timestamp, node: node} = instance,
+        %{cpu_60_metric: cpu_60_metric} = params
+      ) do
     cores =
       Map.get(data.expanded_config, "limits.cpu") || "#{node.cpu_cores_count}"
 
     cores = String.to_integer(cores)
 
-    %{"usage" => load_1_usage} = cpu_60_metric
-    %{"usage" => later_usage} = data.state["cpu"]
+    %{data: %{"usage" => load_1_usage}} = cpu_60_metric
+    %{"usage" => current_usage} = data.state["cpu"]
 
     load_1_time_diff_seconds =
-      (DateTime.to_unix(timestamp, :millisecond) - previous_cpu_metric_timestamp) /
+      (DateTime.to_unix(timestamp, :millisecond) - cpu_60_metric.timestamp) /
         1000
 
     load_1 =
-      cpu_percentage(cores, load_1_time_diff_seconds, load_1_usage, later_usage)
+      cpu_percentage(
+        cores,
+        load_1_time_diff_seconds,
+        load_1_usage,
+        current_usage
+      ) / 100
+
+    load_1 = %{load: load_1 * cores, norm: load_1}
+
+    load_5 =
+      if cpu_300_metric = Map.get(params, :cpu_300_metric) do
+        %{data: %{"usage" => load_5_usage}} = cpu_300_metric
+
+        load_5_time_diff_seconds =
+          (DateTime.to_unix(timestamp, :millisecond) - cpu_300_metric.timestamp) /
+            1000
+
+        load_5 =
+          cpu_percentage(
+            cores,
+            load_5_time_diff_seconds,
+            load_5_usage,
+            current_usage
+          ) / 100
+
+        %{load: load_5 * cores, norm: load_5}
+      else
+        %{}
+      end
+
+    load_15 =
+      if cpu_900_metric = Map.get(params, :cpu_900_metric) do
+        %{data: %{"usage" => load_15_usage}} = cpu_900_metric
+
+        load_15_time_diff_seconds =
+          (DateTime.to_unix(timestamp, :millisecond) - cpu_900_metric.timestamp) /
+            1000
+
+        load_15 =
+          cpu_percentage(
+            cores,
+            load_15_time_diff_seconds,
+            load_15_usage,
+            current_usage
+          ) / 100
+
+        %{load: load_15 * cores, norm: load_15}
+      else
+        %{}
+      end
 
     load_params = %{
       "system" => %{
-        "cores" => cores,
         "load" => %{
-          "1" => load_1 * cores
+          "cores" => cores,
+          "1" => load_1.load,
+          "5" => Map.get(load_5, :load),
+          "15" => Map.get(load_15, :load),
+          "norm" => %{
+            "1" => load_1.norm,
+            "5" => Map.get(load_5, :norm),
+            "15" => Map.get(load_15, :norm)
+          }
         }
       }
     }
+
+    instance
+    |> build_base()
+    |> Map.merge(load_params)
   end
 
   def cpu(%Instance{}, nil), do: nil

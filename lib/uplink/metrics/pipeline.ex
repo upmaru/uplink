@@ -96,7 +96,7 @@ defmodule Uplink.Metrics.Pipeline do
 
     monitors
     |> Enum.map(fn monitor ->
-      Metrics.push!(monitor, documents)
+      Metrics.push!(monitor, documents) |> IO.inspect()
     end)
 
     messages
