@@ -63,111 +63,96 @@ defimpl Uplink.Metrics.Document, for: Uplink.Metrics.Instance do
     release = Map.get(config, "image.release")
     serial = Map.get(config, "image.serial")
 
-    initial_networking_data = %{
-      "bytes_received" => 0,
-      "bytes_sent" => 0,
-      "errors_received" => 0,
-      "errors_sent" => 0,
-      "packets_dropped_inbound" => 0,
-      "packets_dropped_outbound" => 0,
-      "packets_received" => 0,
-      "packets_sent" => 0
-    }
-
-    current_counters =
-      Enum.reduce(
-        network,
-        initial_networking_data,
-        &accumulate_networking_metrics/2
-      )
-
-    previous_counters =
-      Enum.reduce(
-        previous_network_metric_data,
-        initial_networking_data,
-        &accumulate_networking_metrics/2
-      )
-
-    %{
-      "bytes_received" => previous_bytes_received,
-      "bytes_sent" => previous_bytes_sent,
-      "packets_received" => previous_packets_received,
-      "packets_sent" => previous_packets_sent
-    } = previous_counters
-
-    %{
-      "bytes_received" => bytes_received,
-      "bytes_sent" => bytes_sent,
-      "errors_received" => errors_received,
-      "errors_sent" => errors_sent,
-      "packets_dropped_inbound" => packets_dropped_inbound,
-      "packets_dropped_outbound" => packets_dropped_outbound,
-      "packets_received" => packets_received,
-      "packets_sent" => packets_sent
-    } = current_counters
-
-    diff_bytes_received = bytes_received - previous_bytes_received
-    diff_packets_received = packets_received - previous_packets_received
-    diff_bytes_sent = bytes_sent - previous_bytes_sent
-    diff_packets_sent = packets_sent - previous_packets_sent
-
     time_diff_milliseconds =
       DateTime.to_unix(timestamp, :millisecond) -
         previous_network_metric_timestamp
 
-    network_params = %{
-      "metricset" => %{
-        "period" => time_diff_milliseconds
-      },
-      "host" => %{
-        "name" => name,
-        "created" => data.created_at,
-        "accessed" => data.last_used_at,
-        "containerized" => data.type == "container",
-        "os" => %{
-          "codename" => os,
-          "build" => "#{release}-#{serial}"
+    Enum.map(network, fn {interface, network_data} ->
+      {_, previous_network_data} =
+        Enum.find(previous_network_metric_data, fn {i, _} -> i == interface end)
+
+      %{"counters" => current_counters} = network_data
+
+      %{"counters" => previous_counters} = previous_network_data
+
+      %{
+        "bytes_received" => previous_bytes_received,
+        "bytes_sent" => previous_bytes_sent,
+        "packets_received" => previous_packets_received,
+        "packets_sent" => previous_packets_sent
+      } = previous_counters
+
+      %{
+        "bytes_received" => bytes_received,
+        "bytes_sent" => bytes_sent,
+        "errors_received" => errors_received,
+        "errors_sent" => errors_sent,
+        "packets_dropped_inbound" => packets_dropped_inbound,
+        "packets_dropped_outbound" => packets_dropped_outbound,
+        "packets_received" => packets_received,
+        "packets_sent" => packets_sent
+      } = current_counters
+
+      diff_bytes_received = bytes_received - previous_bytes_received
+      diff_packets_received = packets_received - previous_packets_received
+      diff_bytes_sent = bytes_sent - previous_bytes_sent
+      diff_packets_sent = packets_sent - previous_packets_sent
+
+      network_params = %{
+        "metricset" => %{
+          "period" => time_diff_milliseconds
         },
-        "network" => %{
-          "in" => %{
-            "bytes" => diff_bytes_received,
-            "packets" => diff_packets_received
+        "host" => %{
+          "name" => name,
+          "created" => data.created_at,
+          "accessed" => data.last_used_at,
+          "containerized" => data.type == "container",
+          "os" => %{
+            "codename" => os,
+            "build" => "#{release}-#{serial}"
           },
-          "ingress" => %{
-            "bytes" => diff_bytes_received,
-            "packets" => diff_packets_received
-          },
-          "out" => %{
-            "bytes" => diff_bytes_sent,
-            "packets" => diff_packets_sent
-          },
-          "egress" => %{
-            "bytes" => diff_bytes_sent,
-            "packets" => diff_packets_sent
+          "network" => %{
+            "in" => %{
+              "bytes" => diff_bytes_received,
+              "packets" => diff_packets_received
+            },
+            "ingress" => %{
+              "bytes" => diff_bytes_received,
+              "packets" => diff_packets_received
+            },
+            "out" => %{
+              "bytes" => diff_bytes_sent,
+              "packets" => diff_packets_sent
+            },
+            "egress" => %{
+              "bytes" => diff_bytes_sent,
+              "packets" => diff_packets_sent
+            }
           }
-        }
-      },
-      "system" => %{
-        "network" => %{
-          "in" => %{
-            "bytes" => diff_bytes_received,
-            "dropped" => packets_dropped_inbound,
-            "errors" => errors_received,
-            "packets" => diff_packets_received
-          },
-          "out" => %{
-            "bytes" => diff_bytes_received,
-            "dropped" => packets_dropped_outbound,
-            "errors" => errors_sent,
-            "packets" => diff_packets_sent
+        },
+        "system" => %{
+          "network" => %{
+            "in" => %{
+              "bytes" => diff_bytes_received,
+              "dropped" => packets_dropped_inbound,
+              "errors" => errors_received,
+              "packets" => diff_packets_received
+            },
+            "name" => interface,
+            "out" => %{
+              "bytes" => diff_bytes_received,
+              "dropped" => packets_dropped_outbound,
+              "errors" => errors_sent,
+              "packets" => diff_packets_sent
+            }
           }
         }
       }
-    }
 
-    instance
-    |> build_base()
-    |> Map.merge(network_params)
+      instance
+      |> build_base()
+      |> Map.merge(network_params)
+    end)
   end
 
   def diskio(%Instance{metrics: metrics} = instance) do
@@ -374,43 +359,6 @@ defimpl Uplink.Metrics.Document, for: Uplink.Metrics.Instance do
     instance
     |> build_base()
     |> Map.merge(filesystem_params)
-  end
-
-  defp accumulate_networking_metrics({_interface, data}, acc) do
-    bytes_received = acc["bytes_received"] + data["counters"]["bytes_received"]
-
-    bytes_sent = acc["bytes_sent"] + data["counters"]["bytes_sent"]
-
-    errors_received =
-      acc["errors_received"] + data["counters"]["errors_received"]
-
-    errors_sent = acc["errors_sent"] + data["counters"]["errors_sent"]
-
-    packets_dropped_inbound =
-      acc["packets_dropped_inbound"] +
-        data["counters"]["packets_dropped_inbound"]
-
-    packets_dropped_outbound =
-      acc["packets_dropped_outbound"] +
-        data["counters"]["packets_dropped_outbound"]
-
-    packets_received =
-      acc["packets_received"] +
-        data["counters"]["packets_received"]
-
-    packets_sent =
-      acc["packets_sent"] +
-        data["counters"]["packets_sent"]
-
-    acc
-    |> Map.put("bytes_received", bytes_received)
-    |> Map.put("bytes_sent", bytes_sent)
-    |> Map.put("errors_received", errors_received)
-    |> Map.put("errors_sent", errors_sent)
-    |> Map.put("packets_dropped_inbound", packets_dropped_inbound)
-    |> Map.put("packets_dropped_outbound", packets_dropped_outbound)
-    |> Map.put("packets_received", packets_received)
-    |> Map.put("packets_sent", packets_sent)
   end
 
   defp cpu_percentage(cores, time_diff_seconds, earlier_usage, later_usage) do

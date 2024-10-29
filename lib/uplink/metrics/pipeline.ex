@@ -96,7 +96,7 @@ defmodule Uplink.Metrics.Pipeline do
 
     monitors
     |> Enum.map(fn monitor ->
-      Metrics.push!(monitor, documents) |> IO.inspect()
+      Metrics.push!(monitor, documents)
     end)
 
     messages
@@ -120,11 +120,23 @@ defmodule Uplink.Metrics.Pipeline do
       end)
 
     dataset
-    |> Enum.flat_map(fn {type, data} ->
-      index = Metrics.index(type)
+    |> Enum.flat_map(&build_request/1)
+  end
+
+  defp build_request({type, data}) when is_list(data) do
+    index = Metrics.index(type)
+
+    Enum.reduce(data, [], fn entry, acc ->
       metadata = %{"create" => %{"_index" => index}}
 
-      [metadata, data]
+      [metadata, entry | acc]
     end)
+  end
+
+  defp build_request({type, data}) when is_map(data) do
+    index = Metrics.index(type)
+    metadata = %{"create" => %{"_index" => index}}
+
+    [metadata, data]
   end
 end

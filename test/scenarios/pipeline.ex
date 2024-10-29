@@ -402,7 +402,11 @@ defmodule Uplink.Scenarios.Pipeline do
         ],
         account: %{id: "upmaru-stage"}
       },
-      previous_cpu_metric: nil
+      previous_cpu_metric: nil,
+      previous_network_metric: nil,
+      cpu_60_metric: nil,
+      cpu_300_metric: nil,
+      cpu_900_metric: nil
     }
 
     {:ok,
