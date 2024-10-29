@@ -116,4 +116,16 @@ defmodule Uplink.Metrics.PipelineTest do
 
     assert not is_nil(load_15)
   end
+
+  test "handle batch", %{
+    message_with_previous_cpu_metric: message1,
+    message_with_previous_network_metric: message2
+  } do
+    ref = Broadway.test_batch(Uplink.Metrics.Pipeline, [message1, message2])
+
+    assert_receive {:ack, ^ref, successful, failed}, 10_000
+
+    assert length(successful) == 2
+    assert length(failed) == 0
+  end
 end
