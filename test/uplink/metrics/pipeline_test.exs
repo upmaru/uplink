@@ -33,14 +33,87 @@ defmodule Uplink.Metrics.PipelineTest do
              filesystem: filesystem,
              cpu: cpu,
              diskio: diskio,
-             uptime: uptime
+             uptime: uptime,
+             network: network,
+             load: load
            } = data
 
     assert is_nil(cpu)
+    assert is_nil(load)
+    assert is_nil(network)
 
     assert %{"system" => %{"memory" => _}} = memory
     assert %{"system" => %{"filesystem" => _}} = filesystem
     assert %{"system" => %{"diskio" => _}} = diskio
     assert %{"system" => %{"uptime" => _}} = uptime
+  end
+
+  test "handle message with cpu metric", %{
+    message_with_previous_cpu_metric: message
+  } do
+    ref = Broadway.test_message(Uplink.Metrics.Pipeline, message)
+
+    assert_receive {:ack, ^ref, [%{data: data}], []}
+
+    assert %{cpu: cpu} = data
+
+    assert %{"system" => %{"cpu" => _}} = cpu
+  end
+
+  test "handle message with network metric", %{
+    message_with_previous_network_metric: message
+  } do
+    ref = Broadway.test_message(Uplink.Metrics.Pipeline, message)
+
+    assert_receive {:ack, ^ref, [%{data: data}], []}
+
+    assert %{network: network} = data
+
+    assert [
+             %{"system" => %{"network" => _}},
+             %{"system" => %{"network" => _}},
+             %{"system" => %{"network" => _}}
+           ] = network
+  end
+
+  test "handle message with load 1", %{
+    message_with_cpu_60_metric: message
+  } do
+    ref = Broadway.test_message(Uplink.Metrics.Pipeline, message)
+
+    assert_receive {:ack, ^ref, [%{data: data}], []}
+
+    assert %{load: load} = data
+
+    assert %{"system" => %{"load" => _}} = load
+  end
+
+  test "handle message with load 5", %{
+    message_with_cpu_300_metric: message
+  } do
+    ref = Broadway.test_message(Uplink.Metrics.Pipeline, message)
+
+    assert_receive {:ack, ^ref, [%{data: data}], []}
+
+    assert %{load: load} = data
+
+    assert %{"system" => %{"load" => %{"1" => _, "5" => load_5}}} = load
+
+    assert not is_nil(load_5)
+  end
+
+  test "handle message with load 15", %{
+    message_with_cpu_900_metric: message
+  } do
+    ref = Broadway.test_message(Uplink.Metrics.Pipeline, message)
+
+    assert_receive {:ack, ^ref, [%{data: data}], []}
+
+    assert %{load: load} = data
+
+    assert %{"system" => %{"load" => %{"1" => _, "5" => _, "15" => load_15}}} =
+             load
+
+    assert not is_nil(load_15)
   end
 end
