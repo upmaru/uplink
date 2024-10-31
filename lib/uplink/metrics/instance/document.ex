@@ -1,17 +1,28 @@
 defimpl Uplink.Metrics.Document, for: Uplink.Metrics.Instance do
   alias Uplink.Metrics.Instance
 
-  def memory(%Instance{data: data, metrics: metrics, node: node} = instance) do
-    %{
-      "memory" => %{"usage" => memory_usage, "total" => instance_memory_total}
-    } = data.state
+  def memory(%Instance{data: data, metrics: metrics} = instance) do
+    %{"memory" => %{"usage" => memory_usage}} = data.state
+
+    memory_usage = Decimal.new(memory_usage)
+
+    total_memory =
+      Enum.find(metrics, fn metric ->
+        metric.label == "lxd_memory_MemTotal_bytes"
+      end)
 
     memory_total =
-      if instance_memory_total == 0,
-        do: node.total_memory,
-        else: instance_memory_total
+      if total_memory do
+        Decimal.new(total_memory.value)
+      else
+        Decimal.new(0)
+      end
 
-    pct = memory_percentage(%{"usage" => memory_usage, "total" => memory_total})
+    pct =
+      memory_percentage(%{
+        "usage" => memory_usage,
+        "total" => memory_total
+      })
 
     cached_memory =
       Enum.find(metrics, fn metric ->
@@ -26,7 +37,7 @@ defimpl Uplink.Metrics.Document, for: Uplink.Metrics.Instance do
     memory_params = %{
       "system" => %{
         "memory" => %{
-          "free" => memory_total - memory_usage,
+          "free" => Decimal.sub(memory_total, memory_usage),
           "actual" => %{
             "used" => %{
               "bytes" => actual_used_bytes,
@@ -372,16 +383,16 @@ defimpl Uplink.Metrics.Document, for: Uplink.Metrics.Instance do
   end
 
   defp memory_percentage(%{"total" => total, "usage" => usage_bytes}) do
-    if usage_bytes > 0 and total > 0, do: usage_bytes / total, else: 0.0
+    if Decimal.gt?(usage_bytes, 0) and Decimal.gt?(total, 0),
+      do: Decimal.div(usage_bytes, total),
+      else: Decimal.new(0)
   end
 
   defp actual_memory_usage(
          %PrometheusParser.Line{value: cached_memory_value},
          memory_usage
        ) do
-    Decimal.new(memory_usage)
-    |> Decimal.sub(Decimal.new(cached_memory_value))
-    |> Decimal.to_integer()
+    Decimal.sub(memory_usage, Decimal.new(cached_memory_value))
   end
 
   defp actual_memory_usage(nil, _), do: 0

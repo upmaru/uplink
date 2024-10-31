@@ -17,7 +17,8 @@ defmodule Uplink.Metrics.Instance do
           "lxd_disk_reads_completed_total",
           "lxd_disk_written_bytes_total",
           "lxd_disk_writes_completed_total",
-          "lxd_memory_Cached_bytes"
+          "lxd_memory_Cached_bytes",
+          "lxd_memory_MemTotal_bytes"
         ] && line.value != "0"
       end)
       |> Enum.group_by(fn line ->
