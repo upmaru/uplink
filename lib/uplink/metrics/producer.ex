@@ -35,12 +35,12 @@ defmodule Uplink.Metrics.Producer do
 
   def handle_demand(demand, state) do
     Logger.info("[Metrics.Producer] handle demand #{DateTime.utc_now()}")
+    Process.send_after(self(), :poll, state.poll_interval)
 
     if ready_to_fetch?(state) do
       {messages, state} = load_metrics(demand, state)
       {:noreply, messages, state}
     else
-      Process.send_after(self(), :poll, state.poll_interval)
       {:noreply, [], state}
     end
   end
@@ -48,12 +48,12 @@ defmodule Uplink.Metrics.Producer do
   @impl true
   def handle_info(:poll, state) do
     Logger.info("[Metrics.Producer] poll #{DateTime.utc_now()}")
+    Process.send_after(self(), :poll, state.poll_interval)
 
     if ready_to_fetch?(state) do
       {messages, state} = load_metrics(0, state)
       {:noreply, messages, state}
     else
-      Process.send_after(self(), :poll, state.poll_interval)
       {:noreply, [], state}
     end
   end
