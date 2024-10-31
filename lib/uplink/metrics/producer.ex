@@ -54,7 +54,7 @@ defmodule Uplink.Metrics.Producer do
   @impl true
   def handle_info(:poll, state) do
     Logger.info("[Metrics.Producer] poll #{DateTime.utc_now()}")
-    next_schedule = div(poll_interval, 2)
+    next_schedule = div(state.poll_interval, 2)
     Process.send_after(self(), :poll, next_schedule)
 
     if ready_to_fetch?(state) do
