@@ -17,6 +17,7 @@ defmodule Uplink.Metrics.Producer do
   @impl true
   def init(opts) do
     poll_interval = Keyword.get(opts, :poll_interval, 15_000)
+    next_schedule = div(poll_interval, 3)
 
     state = %{
       demand: 0,
@@ -29,7 +30,7 @@ defmodule Uplink.Metrics.Producer do
       cpu_900_metrics: []
     }
 
-    Process.send_after(self(), :poll, poll_interval / 3)
+    Process.send_after(self(), :poll, next_schedule)
 
     {:producer, state}
   end
@@ -53,7 +54,8 @@ defmodule Uplink.Metrics.Producer do
   @impl true
   def handle_info(:poll, state) do
     Logger.info("[Metrics.Producer] poll #{DateTime.utc_now()}")
-    Process.send_after(self(), :poll, state.poll_interval / 3)
+    next_schedule = div(poll_interval, 2)
+    Process.send_after(self(), :poll, next_schedule)
 
     if ready_to_fetch?(state) do
       {messages, state} = load_metrics(0, state)
