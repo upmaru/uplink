@@ -224,7 +224,7 @@ defimpl Uplink.Metrics.Document, for: Uplink.Metrics.Instance do
         load_1_time_diff_seconds,
         load_1_usage,
         current_usage
-      ) / 100
+      )
 
     load_1 = %{load: load_1 * cores, norm: load_1}
 
@@ -242,7 +242,7 @@ defimpl Uplink.Metrics.Document, for: Uplink.Metrics.Instance do
             load_5_time_diff_seconds,
             load_5_usage,
             current_usage
-          ) / 100
+          )
 
         %{load: load_5 * cores, norm: load_5}
       else
@@ -263,7 +263,7 @@ defimpl Uplink.Metrics.Document, for: Uplink.Metrics.Instance do
             load_15_time_diff_seconds,
             load_15_usage,
             current_usage
-          ) / 100
+          )
 
         %{load: load_15 * cores, norm: load_15}
       else
@@ -364,7 +364,7 @@ defimpl Uplink.Metrics.Document, for: Uplink.Metrics.Instance do
   defp cpu_percentage(cores, time_diff_seconds, earlier_usage, later_usage) do
     available_compute = cores * time_diff_seconds * :math.pow(10, 9)
 
-    (later_usage - earlier_usage) / available_compute * 100
+    (later_usage - earlier_usage) / available_compute
   end
 
   defp memory_percentage(%{"total" => total, "usage" => usage_bytes}) do
