@@ -1,13 +1,17 @@
 defimpl Uplink.Metrics.Document, for: Uplink.Metrics.Instance do
   alias Uplink.Metrics.Instance
 
-  def memory(%Instance{data: data, metrics: metrics} = instance) do
+  def memory(%Instance{data: data, metrics: metrics, node: node} = instance) do
     %{
-      "memory" =>
-        %{"usage" => memory_usage, "total" => memory_total} = memory_data
+      "memory" => %{"usage" => memory_usage, "total" => instance_memory_total}
     } = data.state
 
-    pct = memory_percentage(memory_data)
+    memory_total =
+      if instance_memory_total == 0,
+        do: node.total_memory,
+        else: instance_memory_total
+
+    pct = memory_percentage(%{"usage" => memory_usage, "total" => memory_total})
 
     cached_memory =
       Enum.find(metrics, fn metric ->
