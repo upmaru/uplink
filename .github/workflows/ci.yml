@@ -1,17 +1,17 @@
-name: 'CI'
+name: "CI"
 
 on:
   push:
     branches:
       - master
       - develop
-      - 'feature/**'
-      - 'hotfix/**'
+      - "feature/**"
+      - "hotfix/**"
 
 jobs:
   deps:
     name: Dependencies
-    runs-on: warp-ubuntu-latest-x64-2x
+    runs-on: warp-ubuntu-2204-x64-2x
     container:
       image: alpine:3.18
 
@@ -55,7 +55,7 @@ jobs:
   static_code_analysis:
     name: Static Code Analysis
     needs: deps
-    runs-on: warp-ubuntu-latest-x64-2x
+    runs-on: warp-ubuntu-2204-x64-2x
     container:
       image: alpine:3.18
 
@@ -96,7 +96,7 @@ jobs:
   test:
     name: Unit Tests
     needs: deps
-    runs-on: warp-ubuntu-latest-x64-2x
+    runs-on: warp-ubuntu-2204-x64-2x
     container:
       image: alpine:3.18
 
