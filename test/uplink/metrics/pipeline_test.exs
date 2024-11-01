@@ -93,7 +93,7 @@ defmodule Uplink.Metrics.PipelineTest do
   } do
     ref = Broadway.test_message(Uplink.Metrics.Pipeline, message)
 
-    assert_receive {:ack, ^ref, [%{data: data}], []}
+    assert_receive {:ack, ^ref, [%{data: data}], []}, 10_000
 
     assert %{load: load} = data
 

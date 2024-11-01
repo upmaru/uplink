@@ -19,6 +19,13 @@ defmodule Uplink.Packages.Instance.Bootstrap do
   alias Uplink.Clients.LXD
   alias Uplink.Clients.LXD.Cluster.Member
 
+  @instance_bootstrappable_states [
+    "executing",
+    "completed",
+    "refreshing",
+    "degraded"
+  ]
+
   @transition_parameters %{
     "from" => "uplink",
     "trigger" => false
@@ -77,12 +84,7 @@ defmodule Uplink.Packages.Instance.Bootstrap do
          } = state,
          %{"slug" => instance_name}
        )
-       when install_current_state in [
-              "executing",
-              "completed",
-              "refreshing",
-              "degraded"
-            ] do
+       when install_current_state in @instance_bootstrappable_states do
     placement_name = Placement.name(instance_name)
 
     Instances.mark("executing", install.id, instance_name)
