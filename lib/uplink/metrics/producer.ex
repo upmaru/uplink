@@ -49,7 +49,7 @@ defmodule Uplink.Metrics.Producer do
 
   @impl true
   def handle_info(:poll, state) do
-    next_schedule = div(state.poll_interval, 3)
+    next_schedule = div(state.poll_interval + 200, 3)
     Process.send_after(self(), :poll, next_schedule)
 
     if ready_to_fetch?(state) do
