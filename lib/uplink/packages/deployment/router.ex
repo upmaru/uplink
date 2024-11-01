@@ -146,12 +146,6 @@ defmodule Uplink.Packages.Deployment.Router do
       {:error, error} ->
         json(conn, :unprocessable_entity, %{error: %{message: error}})
 
-      {:error, error, _} ->
-        json(conn, :unprocessable_entity, %{error: %{message: error}})
-
-      {:error, error, _, _} ->
-        json(conn, :unprocessable_entity, %{error: %{message: error}})
-
       {:actor, :not_found} ->
         json(conn, :not_found, %{error: %{message: "actor not found"}})
     end
