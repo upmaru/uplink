@@ -7,6 +7,18 @@ defmodule Uplink.Web do
     |> send_resp(status, Jason.encode!(%{data: response}))
   end
 
+  def redirect(conn, location) do
+    html = Plug.HTML.html_escape(location)
+
+    body =
+      "<html><body>You are being <a href=\"#{html}\">redirected</a>.</body></html>"
+
+    conn
+    |> put_resp_header("location", location)
+    |> put_resp_content_type("text/html")
+    |> send_resp(conn.status || 302, body)
+  end
+
   def translate_errors(%Ecto.Changeset{} = changeset) do
     Ecto.Changeset.traverse_errors(changeset, fn {msg, opts} ->
       Regex.replace(~r"%{(\w+)}", msg, fn _, key ->
