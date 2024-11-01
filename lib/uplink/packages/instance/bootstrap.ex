@@ -68,7 +68,11 @@ defmodule Uplink.Packages.Instance.Bootstrap do
   end
 
   defp handle_placement(
-         %{install: %{deployment: %{current_state: "live"}} = install} = state,
+         %{
+           install:
+             %{deployment: %{current_state: "live"}, current_state: "executing"} =
+               install
+         } = state,
          %{"slug" => instance_name}
        ) do
     placement_name = Placement.name(instance_name)
@@ -81,7 +85,7 @@ defmodule Uplink.Packages.Instance.Bootstrap do
   end
 
   defp handle_placement(
-         %{install: %{deployment: %{current_state: _}}},
+         %{install: %{deployment: %{current_state: _}, current_state: _}},
          _instance_params
        ) do
     {:snooze, 10}
