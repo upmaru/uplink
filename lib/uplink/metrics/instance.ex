@@ -6,7 +6,14 @@ defmodule Uplink.Metrics.Instance do
 
   def metrics do
     instances = LXD.list_instances(recursion: 2)
-    metrics = LXD.list_metrics()
+
+    cluster_members = LXD.list_cluster_members()
+
+    metrics =
+      Enum.flat_map(cluster_members, fn cluster_member ->
+        LXD.list_metrics(target: cluster_member.server_name)
+      end)
+
     %{"organization" => %{"slug" => account_id}} = Instellar.get_self()
 
     metrics =
