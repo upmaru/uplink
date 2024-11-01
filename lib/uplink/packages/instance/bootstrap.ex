@@ -70,11 +70,19 @@ defmodule Uplink.Packages.Instance.Bootstrap do
   defp handle_placement(
          %{
            install:
-             %{deployment: %{current_state: "live"}, current_state: "executing"} =
-               install
+             %{
+               deployment: %{current_state: "live"},
+               current_state: install_current_state
+             } = install
          } = state,
          %{"slug" => instance_name}
-       ) do
+       )
+       when install_current_state in [
+              "executing",
+              "completed",
+              "refreshing",
+              "degraded"
+            ] do
     placement_name = Placement.name(instance_name)
 
     Instances.mark("executing", install.id, instance_name)
