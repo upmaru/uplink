@@ -12,6 +12,8 @@ defmodule Uplink.Router do
     Deployment
   }
 
+  plug Plug.Logger
+
   plug :match
   plug :dispatch
 

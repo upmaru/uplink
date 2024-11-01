@@ -94,7 +94,7 @@ defmodule Uplink.Metrics.Pipeline do
     documents = to_ndjson(messages)
     monitors = Pipelines.get_monitors(context)
 
-    Logger.info("[Metrics.Pipeline] shipping #{DateTime.utc_now()}")
+    Logger.info("[Metrics.Pipeline] pushing #{DateTime.utc_now()}")
 
     monitors
     |> Enum.map(fn monitor ->

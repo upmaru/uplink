@@ -5,8 +5,6 @@ defmodule Uplink.Metrics.Producer do
   alias Uplink.Cache
   alias Uplink.Metrics
 
-  require Logger
-
   @last_fetched_timestamp {:monitors, :metrics, :last_fetched_timestamp}
 
   @doc false
@@ -41,8 +39,6 @@ defmodule Uplink.Metrics.Producer do
   end
 
   def handle_demand(demand, state) do
-    Logger.info("[Metrics.Producer] handle demand #{DateTime.utc_now()}")
-
     if ready_to_fetch?(state) do
       {messages, state} = load_metrics(demand, state)
       {:noreply, messages, state}
@@ -53,7 +49,6 @@ defmodule Uplink.Metrics.Producer do
 
   @impl true
   def handle_info(:poll, state) do
-    Logger.info("[Metrics.Producer] poll #{DateTime.utc_now()}")
     next_schedule = div(state.poll_interval, 2)
     Process.send_after(self(), :poll, next_schedule)
 
