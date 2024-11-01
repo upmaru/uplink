@@ -16,8 +16,6 @@ defmodule Uplink.Installations.Router do
 
   plug :dispatch
 
-  plug Plug.Logger
-
   post "/:instellar_installation_id/events" do
     case conn.body_params do
       %{"event" => %{"name" => "delete"}} ->
