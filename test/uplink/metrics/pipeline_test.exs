@@ -2,7 +2,7 @@ defmodule Uplink.Metrics.PipelineTest do
   use ExUnit.Case
 
   import Uplink.Scenarios.Pipeline
-  import TimeHelper
+  import AssertAsync
 
   alias Uplink.Cache
   alias Uplink.Pipelines
@@ -14,9 +14,9 @@ defmodule Uplink.Metrics.PipelineTest do
 
     Pipelines.start(Uplink.Metrics.Pipeline)
 
-    wait_until(5_000, fn ->
+    assert_async do
       assert Uplink.Pipelines.list() != []
-    end)
+    end
 
     :ok
   end

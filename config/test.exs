@@ -8,6 +8,8 @@ config :uplink, Uplink.Metrics.Pipeline,
   producer_module: Broadway.DummyProducer,
   producer_options: []
 
+config :uplink, Uplink.PipelineSupervisor, sync_interval: 100
+
 config :uplink, Uplink.Repo,
   username:
     System.get_env("UPLINK_DB_USERNAME") || System.get_env("POSTGRES_USERNAME"),
@@ -44,4 +46,5 @@ config :uplink, :drivers, aws_s3: Uplink.Drivers.Bucket.AwsMock
 
 # config :plug, :validate_header_keys_during_test, false
 # Print only warnings and errors during test
+# Disable logging in tests
 config :logger, level: :warn

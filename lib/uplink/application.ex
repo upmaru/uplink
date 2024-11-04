@@ -5,8 +5,17 @@ defmodule Uplink.Application do
 
   alias Uplink.Web
 
+  @pipeline_supervisor Uplink.PipelineSupervisor
+
   def start(_type, _args) do
     %{key: key, cert: cert} = Web.Certificate.generate()
+
+    pipeline_supervisor_config =
+      Application.get_env(:uplink, @pipeline_supervisor, [])
+
+    sync_interval =
+      Keyword.get(pipeline_supervisor_config, :sync_interval, 5_000)
+
     router_config = Application.get_env(:uplink, Uplink.Router, port: 4040)
 
     internal_router_config =
@@ -23,7 +32,7 @@ defmodule Uplink.Application do
       {Task.Supervisor, name: Uplink.TaskSupervisor},
       {Plug.Cowboy, plug: Uplink.Internal, scheme: :http, port: internal_port},
       {Pogo.DynamicSupervisor,
-       [name: Uplink.PipelineSupervisor, scope: :uplink]},
+       name: @pipeline_supervisor, scope: :uplink, sync_interval: sync_interval},
       {Uplink.Monitors, []},
       {
         Plug.Cowboy,
