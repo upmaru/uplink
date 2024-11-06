@@ -2,7 +2,6 @@ defmodule Uplink.Packages.Instance.Install do
   use Oban.Worker, queue: :instance, max_attempts: 3
 
   alias Uplink.Repo
-  alias Uplink.Cache
   alias Uplink.Instances
 
   alias Uplink.Clients.LXD

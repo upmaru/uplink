@@ -11,6 +11,8 @@ defmodule Uplink.Internal do
     Install
   }
 
+  plug Plug.Logger
+
   plug :match
   plug :dispatch
 

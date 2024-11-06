@@ -1,5 +1,5 @@
 defmodule Uplink.Packages.Install.Validate do
-  use Oban.Worker, queue: :install, max_attempts: 1
+  use Oban.Worker, queue: :install, max_attempts: 3
 
   alias Uplink.{
     Clients,
@@ -23,6 +23,12 @@ defmodule Uplink.Packages.Install.Validate do
 
   @state ~s(validating)
 
+  @impl Worker
+  def backoff(%Job{attempt: attempt}) do
+    trunc(:math.pow(attempt, 4) + 15 + :rand.uniform(30) * attempt)
+  end
+
+  @impl Worker
   def perform(%Oban.Job{
         args: %{"install_id" => install_id, "actor_id" => actor_id}
       }) do

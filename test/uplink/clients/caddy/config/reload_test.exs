@@ -101,6 +101,9 @@ defmodule Uplink.Clients.Caddy.Config.ReloadTest do
       "credential" => %{
         "endpoint" => "http://localhost:#{bypass.port}"
       },
+      "uplink" => %{
+        "id" => 1
+      },
       "organization" => %{
         "slug" => "someorg",
         "storage" => %{

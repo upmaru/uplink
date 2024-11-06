@@ -33,10 +33,6 @@ config :uplink, Oban,
     components: 1
   ]
 
-config :reverse_proxy_plug,
-       :http_client,
-       ReverseProxyPlug.HTTPClient.Adapters.HTTPoison
-
 config :formation, Formation.Lxd, timeout: 180
 
 config :logger,

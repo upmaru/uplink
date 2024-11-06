@@ -1,6 +1,8 @@
 defmodule Uplink.Packages.Install.Triggers do
   use Eventful.Trigger
 
+  alias Uplink.Cache
+
   alias Uplink.{
     Packages,
     Clients
@@ -36,6 +38,8 @@ defmodule Uplink.Packages.Install.Triggers do
 
   Install
   |> trigger([currently: "completed"], fn event, install ->
+    Cache.put({:install, install.id, "executing"}, [])
+
     Clients.Caddy.schedule_config_reload(install, actor_id: event.actor_id)
   end)
 end

@@ -35,3 +35,5 @@ uplink-*.tar
 mnesia
 
 .mnesia
+
+.envrc

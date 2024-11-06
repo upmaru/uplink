@@ -183,4 +183,60 @@ defmodule Uplink.Packages.DistributionTest do
       assert conn.status == 200
     end
   end
+
+  describe "not matching arvhive node" do
+    setup %{deployment: deployment, actor: actor} do
+      node_host = "somethingelse"
+
+      {:ok, archive} =
+        Packages.create_archive(deployment, %{
+          node: "nonode@#{node_host}",
+          locations: [
+            "#{deployment.channel}/#{@app_slug}/x86_64/APKINDEX.tar.gz"
+          ]
+        })
+
+      {:ok, %{resource: completed_deployment}} =
+        Packages.transition_deployment_with(deployment, actor, "complete")
+
+      {:ok,
+       archive: archive, deployment: completed_deployment, node_host: node_host}
+    end
+
+    test "successfully redirect", %{
+      bypass: bypass,
+      deployment: deployment,
+      address: address,
+      node_host: node_host
+    } do
+      project_found = File.read!("test/fixtures/lxd/projects/show.json")
+
+      Bypass.expect(
+        bypass,
+        "GET",
+        "/1.0/projects/default",
+        fn conn ->
+          conn
+          |> Plug.Conn.put_resp_header("content-type", "application/json")
+          |> Plug.Conn.resp(200, project_found)
+        end
+      )
+
+      path =
+        "/distribution/#{deployment.channel}/#{@app_slug}/x86_64/APKINDEX.tar.gz"
+
+      conn =
+        conn(:get, path)
+        |> Map.put(:remote_ip, address)
+        |> Uplink.Internal.call([])
+
+      assert [location] = get_resp_header(conn, "location")
+
+      assert conn.status == 302
+
+      assert location =~ node_host
+      assert location =~ path
+      assert location =~ "4080"
+    end
+  end
 end

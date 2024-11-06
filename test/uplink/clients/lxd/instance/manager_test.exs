@@ -37,7 +37,7 @@ defmodule Uplink.Clients.LXD.Instance.ManagerTest do
         |> Plug.Conn.resp(200, response)
       end)
 
-      assert [instance1, _instance2] = Manager.list("default")
+      assert [instance1, _instance2] = Manager.list(project: "default")
       assert %Instance{} = instance1
     end
   end

@@ -1,6 +1,14 @@
 defmodule Uplink.Instances do
   alias Uplink.Cache
 
+  def exists?(state, install_id, instance_name) do
+    Cache.get({:install, install_id, state})
+    |> case do
+      nil -> false
+      member_instances -> Enum.member?(member_instances, instance_name)
+    end
+  end
+
   def mark(state, install_id, instance_name) do
     Cache.transaction(
       [keys: [{:install, install_id, state}]],

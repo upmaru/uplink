@@ -1,6 +1,5 @@
 defmodule Uplink.Packages.Distribution do
   use Plug.Builder
-  plug Plug.Logger
 
   alias Uplink.{
     Internal,
@@ -16,7 +15,7 @@ defmodule Uplink.Packages.Distribution do
 
   plug :validate
 
-  plug :serve_or_proxy
+  plug :serve_or_redirect
 
   defp validate(conn, _opts) do
     case Firewall.allowed?(conn) do
@@ -33,7 +32,7 @@ defmodule Uplink.Packages.Distribution do
     end
   end
 
-  defp serve_or_proxy(conn, _opts) do
+  defp serve_or_redirect(conn, _opts) do
     %{"glob" => params} = conn.params
 
     [channel, org, package] = Enum.take(params, 3)
@@ -43,7 +42,7 @@ defmodule Uplink.Packages.Distribution do
     |> Packages.get_latest_deployment(channel)
     |> case do
       %Deployment{archive: archive} ->
-        serve(conn, archive)
+        respond(conn, archive)
 
       nil ->
         conn
@@ -52,7 +51,7 @@ defmodule Uplink.Packages.Distribution do
     end
   end
 
-  defp serve(conn, %Archive{node: archive_node}) do
+  defp respond(conn, %Archive{node: archive_node}) do
     if Atom.to_string(Node.self()) == archive_node do
       static_options =
         Plug.Static.init(
@@ -67,15 +66,11 @@ defmodule Uplink.Packages.Distribution do
       internal_router_config = Application.get_env(:uplink, Uplink.Internal)
       port = Keyword.get(internal_router_config, :port, 4080)
 
-      upstream =
+      location =
         ["#{conn.scheme}://", "#{node_host_name}:#{port}", conn.request_path]
         |> Path.join()
 
-      reverse_proxy_options = ReverseProxyPlug.init(upstream: upstream)
-
-      conn
-      |> Map.put(:path_info, [])
-      |> ReverseProxyPlug.call(reverse_proxy_options)
+      Uplink.Web.redirect(conn, location)
     end
   end
 end
