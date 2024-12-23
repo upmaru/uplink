@@ -66,32 +66,38 @@ defmodule Uplink.Clients.Caddy.Config.BuilderTest do
              "provider" => %{"api_token" => "something", "name" => "cloudflare"}
            } = dns
 
-    assert %{routes: [first_route, second_route, third_route]} = server
+    assert %{routes: routes} = server
+
+    routes = Enum.sort(routes)
+
+    [first_route, second_route, third_route] = routes
 
     assert %{handle: [handle], match: [match]} = first_route
     assert %{handle: [second_handle], match: [second_match]} = second_route
     assert %{handle: [third_handle], match: [third_match]} = third_route
 
+    assert match.host == ["another.com", "something.com"]
     assert match.path == ["/configure*"]
 
-    assert third_match.path == ["*"]
+    assert second_match.path == ["/*"]
 
-    assert second_match.path == ["/how-to*"]
+    assert third_match.path == ["/how-to*"]
 
-    assert "grpc.something.com" in third_match.host
+    assert "grpc.something.com" in second_match.host
+    assert "grpc.another.com" in second_match.host
 
-    [third_upstream] = third_handle.upstreams
+    [second_upstream] = second_handle.upstreams
 
-    assert third_upstream.dial =~ "6000"
+    assert second_upstream.dial =~ "6000"
 
     assert %{handler: "reverse_proxy"} = handle
     assert %{host: _hosts} = match
 
-    [second_upstream] = second_handle.upstreams
+    [third_upstream] = third_handle.upstreams
 
-    assert %{protocol: "http", tls: %{}} = second_handle.transport
+    assert %{protocol: "http", tls: %{}} = third_handle.transport
 
-    assert second_upstream.dial == "proxy.webflow.com:80"
+    assert third_upstream.dial == "proxy.webflow.com:80"
 
     assert %{identity: identity} = admin
     assert %{identifiers: ["127.0.0.1"]} = identity

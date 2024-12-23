@@ -137,7 +137,7 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
       end
 
     main_paths =
-      if main_routing do
+      if main_routing && main_routing.paths != [] do
         main_routing.paths
       else
         ["*"]
@@ -198,6 +198,7 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
       metadata.hosts
       |> Enum.concat(main_routing_hosts)
       |> Enum.uniq()
+      |> Enum.sort()
 
     main_route = %{
       group: main_group,
@@ -258,9 +259,10 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
           hosts
           |> Enum.concat(routing_hosts)
           |> Enum.uniq()
+          |> Enum.sort()
 
         paths =
-          if routing do
+          if routing && routing.paths != [] do
             routing.paths
           else
             ["*"]
