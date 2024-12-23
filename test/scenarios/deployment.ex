@@ -24,6 +24,7 @@ defmodule Uplink.Scenarios.Deployment do
         "target" => 4000,
         "routing" => %{
           "router_id" => 1,
+          "hosts" => ["another.com", "something.com"],
           "paths" => ["/configure*"]
         }
       },
@@ -31,7 +32,12 @@ defmodule Uplink.Scenarios.Deployment do
         %{
           "slug" => "grpc",
           "source" => 49153,
-          "target" => 6000
+          "target" => 6000,
+          "routing" => %{
+            "router_id" => 1,
+            "hosts" => ["another.com", "something.com"],
+            "paths" => ["/*"]
+          }
         }
       ],
       "hosts" => ["something.com"],

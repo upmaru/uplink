@@ -10,6 +10,7 @@ defmodule Uplink.Packages.Metadata.Port do
 
     embeds_one :routing, Routing, primary_key: false do
       field :router_id, :integer
+      field :hosts, {:array, :string}, default: []
       field :paths, {:array, :string}, default: ["*"]
     end
   end
@@ -23,7 +24,7 @@ defmodule Uplink.Packages.Metadata.Port do
 
   defp routing_changeset(routing, params) do
     routing
-    |> cast(params, [:router_id, :paths])
+    |> cast(params, [:router_id, :hosts, :paths])
     |> validate_required([:router_id, :paths])
   end
 end
