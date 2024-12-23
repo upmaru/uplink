@@ -129,6 +129,13 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
        ) do
     main_routing = Map.get(metadata.main_port, :routing)
 
+    main_routing_hosts =
+      if main_routing do
+        main_routing.hosts
+      else
+        []
+      end
+
     main_paths =
       if main_routing do
         main_routing.paths
@@ -187,11 +194,16 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
         }
       end)
 
+    main_hosts =
+      metadata.hosts
+      |> Enum.concat(main_routing_hosts)
+      |> Enum.uniq()
+
     main_route = %{
       group: main_group,
       match: [
         %{
-          host: metadata.hosts,
+          host: main_hosts,
           path: main_paths
         }
       ],
@@ -232,6 +244,20 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
           end)
 
         routing = Map.get(port, :routing)
+
+        routing_hosts =
+          if routing do
+            Enum.map(routing.hosts, fn host ->
+              port.slug <> "." <> host
+            end)
+          else
+            []
+          end
+
+        hosts =
+          hosts
+          |> Enum.concat(routing_hosts)
+          |> Enum.uniq()
 
         paths =
           if routing do
