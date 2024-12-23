@@ -1,6 +1,13 @@
 defmodule Uplink.Clients.Caddy.Config.BuilderTest do
   use ExUnit.Case
 
+  alias Uplink.Members
+  alias Uplink.Packages
+  alias Uplink.Secret
+  alias Uplink.Cache
+
+  alias Uplink.Packages.Metadata
+
   import Uplink.Scenarios.Deployment
 
   setup [:setup_endpoints, :setup_base]
@@ -103,5 +110,136 @@ defmodule Uplink.Clients.Caddy.Config.BuilderTest do
     assert %{identifiers: ["127.0.0.1"]} = identity
 
     assert %{module: "s3"} = storage
+  end
+
+  describe "when routing is nil" do
+    setup do
+      deployment_params = %{
+        "hash" => "a-different-hash",
+        "archive_url" => "http://localhost/archives/packages.zip",
+        "stack" => "alpine/3.14",
+        "channel" => "develop",
+        "metadata" => %{
+          "id" => 1,
+          "slug" => "uplink-web",
+          "main_port" => %{
+            "slug" => "web",
+            "source" => 49152,
+            "target" => 4000
+          },
+          "ports" => [
+            %{
+              "slug" => "grpc",
+              "source" => 49153,
+              "target" => 6000
+            }
+          ],
+          "hosts" => ["something.com"],
+          "variables" => [
+            %{"key" => "SOMETHING", "value" => "blah"}
+          ],
+          "channel" => %{
+            "slug" => "develop",
+            "package" => %{
+              "slug" => "something-1640927800",
+              "credential" => %{
+                "public_key" => "public_key"
+              },
+              "organization" => %{
+                "slug" => "upmaru"
+              }
+            }
+          },
+          "instances" => [
+            %{
+              "id" => 1,
+              "slug" => "something-1",
+              "node" => %{
+                "slug" => "some-node"
+              }
+            }
+          ]
+        }
+      }
+
+      {:ok, actor} =
+        Members.get_or_create_actor(%{
+          "identifier" => "zacksiri",
+          "provider" => "instellar",
+          "id" => "1"
+        })
+
+      metadata = Map.get(deployment_params, "metadata")
+
+      {:ok, metadata} = Packages.parse_metadata(metadata)
+
+      app =
+        metadata
+        |> Metadata.app_slug()
+        |> Packages.get_or_create_app()
+
+      {:ok, deployment} =
+        Packages.get_or_create_deployment(app, deployment_params)
+
+      {:ok, %{resource: preparing_deployment}} =
+        Packages.transition_deployment_with(deployment, actor, "prepare")
+
+      {:ok, %{resource: deployment}} =
+        Packages.transition_deployment_with(
+          preparing_deployment,
+          actor,
+          "complete"
+        )
+
+      {:ok, install} =
+        Packages.create_install(deployment, %{
+          "installation_id" => 1,
+          "deployment" => deployment_params
+        })
+
+      signature = Secret.Signature.compute_signature(deployment.hash)
+
+      Cache.put(
+        {:deployment, signature, install.instellar_installation_id},
+        metadata
+      )
+
+      {:ok, %{resource: validating_install}} =
+        Packages.transition_install_with(install, actor, "validate")
+
+      {:ok, %{resource: _executing_install}} =
+        Packages.transition_install_with(validating_install, actor, "execute")
+
+      :ok
+    end
+
+    test "render port when routing is nil correctly" do
+      assert %{apps: apps} = Uplink.Clients.Caddy.build_new_config()
+
+      assert %{http: %{servers: %{"uplink" => server}}} = apps
+
+      assert %{routes: routes} = server
+
+      routes = Enum.sort(routes)
+
+      [first_route, second_route] = routes
+
+      assert %{handle: [handle], match: [match]} = first_route
+      assert %{handle: [second_handle], match: [second_match]} = second_route
+
+      assert match.host == ["something.com"]
+      assert match.path == ["*"]
+
+      assert second_match.path == ["*"]
+
+      assert "grpc.something.com" in second_match.host
+
+      [second_upstream] = second_handle.upstreams
+
+      assert second_upstream.dial =~ "6000"
+
+      assert %{handler: "reverse_proxy"} = handle
+      assert %{host: _hosts} = match
+    end
   end
 end
