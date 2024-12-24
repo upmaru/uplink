@@ -242,4 +242,168 @@ defmodule Uplink.Clients.Caddy.Config.BuilderTest do
       assert %{host: _hosts} = match
     end
   end
+
+  describe "when metadata.hosts is empty" do
+    setup do
+      deployment_params = %{
+        "hash" => "a-different-hash-234",
+        "archive_url" => "http://localhost/archives/packages.zip",
+        "stack" => "alpine/3.14",
+        "channel" => "develop",
+        "metadata" => %{
+          "id" => 1,
+          "slug" => "uplink-web",
+          "main_port" => %{
+            "slug" => "web",
+            "source" => 49152,
+            "target" => 4000,
+            "routing" => %{
+              "router_id" => 1,
+              "hosts" => ["another.com"],
+              "paths" => ["*"]
+            }
+          },
+          "ports" => [
+            %{
+              "slug" => "grpc",
+              "source" => 49153,
+              "target" => 6000
+            }
+          ],
+          "hosts" => [],
+          "variables" => [
+            %{"key" => "SOMETHING", "value" => "blah"}
+          ],
+          "channel" => %{
+            "slug" => "develop",
+            "package" => %{
+              "slug" => "something-1640927800",
+              "credential" => %{
+                "public_key" => "public_key"
+              },
+              "organization" => %{
+                "slug" => "upmaru"
+              }
+            }
+          },
+          "instances" => [
+            %{
+              "id" => 1,
+              "slug" => "something-1",
+              "node" => %{
+                "slug" => "some-node"
+              }
+            }
+          ]
+        }
+      }
+
+      {:ok, actor} =
+        Members.get_or_create_actor(%{
+          "identifier" => "zacksiri",
+          "provider" => "instellar",
+          "id" => "1"
+        })
+
+      metadata = Map.get(deployment_params, "metadata")
+
+      {:ok, metadata} = Packages.parse_metadata(metadata)
+
+      app =
+        metadata
+        |> Metadata.app_slug()
+        |> Packages.get_or_create_app()
+
+      {:ok, deployment} =
+        Packages.get_or_create_deployment(app, deployment_params)
+
+      {:ok, %{resource: preparing_deployment}} =
+        Packages.transition_deployment_with(deployment, actor, "prepare")
+
+      {:ok, %{resource: deployment}} =
+        Packages.transition_deployment_with(
+          preparing_deployment,
+          actor,
+          "complete"
+        )
+
+      {:ok, install} =
+        Packages.create_install(deployment, %{
+          "installation_id" => 1,
+          "deployment" => deployment_params
+        })
+
+      signature = Secret.Signature.compute_signature(deployment.hash)
+
+      Cache.put(
+        {:deployment, signature, install.instellar_installation_id},
+        metadata
+      )
+
+      {:ok, %{resource: validating_install}} =
+        Packages.transition_install_with(install, actor, "validate")
+
+      {:ok, %{resource: _executing_install}} =
+        Packages.transition_install_with(validating_install, actor, "execute")
+
+      :ok
+    end
+
+    test "render port when routing correctly", %{bypass: bypass} do
+      Uplink.Cache.delete({:proxies, 1})
+
+      Bypass.expect_once(
+        bypass,
+        "GET",
+        "/uplink/self/routers/1/proxies",
+        fn conn ->
+          conn
+          |> Plug.Conn.put_resp_header("content-type", "application/json")
+          |> Plug.Conn.send_resp(
+            200,
+            Jason.encode!(%{
+              "data" => [
+                %{
+                  "attributes" => %{
+                    "id" => 1,
+                    "router_id" => 1,
+                    "hosts" => ["opsmaru.com", "www.opsmaru.com"],
+                    "paths" => ["/how-to*"],
+                    "tls" => true,
+                    "target" => "proxy.webflow.com",
+                    "port" => 80
+                  }
+                }
+              ]
+            })
+          )
+        end
+      )
+
+      assert %{apps: apps} = Uplink.Clients.Caddy.build_new_config()
+
+      assert %{http: %{servers: %{"uplink" => server}}} = apps
+
+      assert %{routes: routes} = server
+
+      routes = Enum.sort(routes)
+
+      [first_route, second_route] = routes
+
+      assert %{handle: [handle], match: [match]} = first_route
+      assert %{handle: [second_handle], match: [second_match]} = second_route
+
+      assert match.host == ["another.com"]
+      assert match.path == ["*"]
+
+      assert second_match.path == ["/how-to*"]
+
+      [second_upstream] = second_handle.upstreams
+
+      assert second_upstream.dial =~ "80"
+
+      assert %{handler: "reverse_proxy"} = handle
+      assert %{host: _hosts} = match
+    end
+  end
 end
