@@ -1,9 +1,12 @@
 defmodule Uplink.Clients.Caddy.Config.Builder do
   alias Uplink.Repo
-  alias Uplink.Cache
 
   alias Uplink.Packages
   alias Uplink.Routings
+
+  alias Uplink.Caddy.Config.Hosts
+  alias Uplink.Caddy.Config.Port
+  alias Uplink.Caddy.Config.Upstreams
 
   alias Uplink.Clients.Caddy
 
@@ -17,9 +20,7 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
       |> Repo.all()
       |> Repo.preload(deployment: [:app])
       |> Enum.map(&Packages.build_install_state/1)
-      |> Enum.reject(fn %{metadata: metadata} ->
-        metadata.hosts == [] || is_nil(metadata.main_port)
-      end)
+      |> Enum.filter(&Hosts.routable?/1)
 
     %{"organization" => %{"storage" => storage_params}} =
       uplink = Uplink.Clients.Instellar.get_self()
@@ -129,8 +130,15 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
        ) do
     main_routing = Map.get(metadata.main_port, :routing)
 
-    main_paths =
+    main_routing_hosts =
       if main_routing do
+        main_routing.hosts
+      else
+        []
+      end
+
+    main_paths =
+      if main_routing && main_routing.paths != [] do
         main_routing.paths
       else
         ["*"]
@@ -149,8 +157,6 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
       else
         []
       end
-
-    valid_instances = find_valid_instances(metadata.instances, install_id)
 
     proxy_routes =
       proxies
@@ -187,11 +193,17 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
         }
       end)
 
+    main_hosts =
+      metadata.hosts
+      |> Enum.concat(main_routing_hosts)
+      |> Enum.uniq()
+      |> Enum.sort()
+
     main_route = %{
       group: main_group,
       match: [
         %{
-          host: metadata.hosts,
+          host: main_hosts,
           path: main_paths
         }
       ],
@@ -212,75 +224,12 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
               unhealthy_latency: "30s"
             }
           },
-          upstreams:
-            Enum.map(valid_instances, fn instance ->
-              %{
-                dial: "#{instance.slug}:#{metadata.main_port.target}",
-                max_requests: 100
-              }
-            end)
+          upstreams: Upstreams.build(metadata, metadata.main_port, install_id)
         }
       ]
     }
 
-    sub_routes =
-      metadata.ports
-      |> Enum.map(fn port ->
-        hosts =
-          Enum.map(metadata.hosts, fn host ->
-            port.slug <> "." <> host
-          end)
-
-        routing = Map.get(port, :routing)
-
-        paths =
-          if routing do
-            routing.paths
-          else
-            ["*"]
-          end
-
-        group =
-          if routing,
-            do: "router_#{routing.router_id}",
-            else: "installation_#{metadata.id}"
-
-        %{
-          group: group,
-          match: [
-            %{
-              host: hosts,
-              path: paths
-            }
-          ],
-          handle: [
-            %{
-              handler: "reverse_proxy",
-              load_balancing: %{
-                selection_policy: %{
-                  policy: "least_conn"
-                }
-              },
-              health_checks: %{
-                passive: %{
-                  fail_duration: "10s",
-                  max_fails: 3,
-                  unhealthy_request_count: 80,
-                  unhealthy_status: [500, 501, 502, 503, 504],
-                  unhealthy_latency: "30s"
-                }
-              },
-              upstreams:
-                Enum.map(valid_instances, fn instance ->
-                  %{
-                    dial: "#{instance.slug}:#{port.target}",
-                    max_requests: 100
-                  }
-                end)
-            }
-          ]
-        }
-      end)
+    sub_routes = Port.build(metadata, install_id)
 
     sub_routes_and_proxies = Enum.concat(sub_routes, proxy_routes)
 
@@ -298,19 +247,6 @@ defmodule Uplink.Clients.Caddy.Config.Builder do
       })
       |> clean_acme_params()
     ]
-  end
-
-  defp find_valid_instances(instances, install_id) do
-    completed_instances = Cache.get({:install, install_id, "completed"})
-
-    if is_list(completed_instances) and Enum.count(completed_instances) > 0 do
-      instances
-      |> Enum.filter(fn instance ->
-        instance.slug in completed_instances
-      end)
-    else
-      instances
-    end
   end
 
   defp maybe_merge_tls(params, %{tls: true}) do
