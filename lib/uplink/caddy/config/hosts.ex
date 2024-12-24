@@ -6,9 +6,10 @@ defmodule Uplink.Caddy.Config.Hosts do
 
   def routable?(%{
         metadata: %Metadata{
-          main_port: %{routing: %Port.Routing{}}
+          main_port: %{routing: %Port.Routing{hosts: hosts}}
         }
-      }),
+      })
+      when length(hosts) > 0,
       do: true
 
   def routable?(%{metadata: %Metadata{hosts: hosts}}) when length(hosts) > 0,
