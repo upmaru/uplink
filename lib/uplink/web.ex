@@ -4,7 +4,7 @@ defmodule Uplink.Web do
   def json(conn, status, response) do
     conn
     |> put_resp_header("content-type", "application/json")
-    |> send_resp(status, Jason.encode!(%{data: response}))
+    |> send_resp(status, Jason.encode_to_iodata!(%{data: response}))
   end
 
   def redirect(conn, location) do

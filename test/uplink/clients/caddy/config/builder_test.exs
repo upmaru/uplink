@@ -361,7 +361,7 @@ defmodule Uplink.Clients.Caddy.Config.BuilderTest do
           |> Plug.Conn.put_resp_header("content-type", "application/json")
           |> Plug.Conn.send_resp(
             200,
-            Jason.encode!(%{
+            Jason.encode_to_iodata!(%{
               "data" => [
                 %{
                   "attributes" => %{
