@@ -16,11 +16,6 @@ defmodule Uplink.Monitors.Router do
   plug :dispatch
 
   post "/refresh" do
-    [:metrics]
-    |> Enum.each(fn context ->
-      Uplink.Pipelines.reset_monitors(context)
-    end)
-
     Uplink.Monitors.run()
 
     json(conn, :ok, %{message: "monitors refreshed."})
