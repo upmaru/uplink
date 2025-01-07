@@ -22,7 +22,7 @@ defmodule Uplink.Monitors do
   end
 
   def run(_options \\ []) do
-    Cache.put_new({:monitors, :metrics}, [])
+    Pipelines.reset_monitors(:metrics)
 
     Instellar.list_monitors()
     |> case do
@@ -39,27 +39,14 @@ defmodule Uplink.Monitors do
   defp start_pipeline(monitors, context) do
     Logger.info("[Uplink.Monitors] Starting pipeline...")
 
-    started_metrics_monitor_ids =
-      Pipelines.get_monitors(context)
-      |> Enum.map(fn monitor ->
-        monitor["attributes"]["id"]
-      end)
-
-    not_started_monitors =
-      Enum.filter(monitors, fn monitor ->
-        monitor["attributes"]["id"] not in started_metrics_monitor_ids
-      end)
-
     grouped_monitors =
-      Enum.group_by(not_started_monitors, fn monitor ->
+      Enum.group_by(monitors, fn monitor ->
         monitor["attributes"]["type"]
       end)
 
     context_monitors = Map.get(grouped_monitors, "#{context}") || []
 
-    if Enum.count(context_monitors) > 0 do
-      Pipelines.append_monitors(context, context_monitors)
-    end
+    Pipelines.update_monitors(context, context_monitors)
 
     module = Map.fetch!(@pipeline_modules, context)
 

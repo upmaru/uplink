@@ -1,14 +1,18 @@
 defmodule Uplink.Pipelines do
   alias Uplink.Cache
 
-  def get_monitors(context) do
+  @valid_contexts [:metrics]
+
+  def get_monitors(context) when context in @valid_contexts do
     Cache.get({:monitors, context}) || []
   end
 
-  def append_monitors(context, monitors) do
-    Cache.get_and_update({:monitors, context}, fn existing_monitors ->
-      {existing_monitors, existing_monitors ++ monitors}
-    end)
+  def reset_monitors(context) when context in @valid_contexts do
+    Cache.put({:monitors, context}, [])
+  end
+
+  def update_monitors(context, monitors) when context in @valid_contexts do
+    Cache.put({:monitors, context}, monitors)
   end
 
   def start(module) do
