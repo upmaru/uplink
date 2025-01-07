@@ -78,12 +78,12 @@ defmodule Uplink.Nodes.RouterTest do
 
       [node] = nodes
 
-      %{
-        "cpu_cores_count" => _,
-        "name" => _,
-        "total_memory" => _,
-        "total_storage" => _
-      } = node
+      assert %{
+               "cpu_cores_count" => _,
+               "name" => _,
+               "total_memory" => _,
+               "total_storage" => _
+             } = node
 
       assert conn.status == 200
     end
