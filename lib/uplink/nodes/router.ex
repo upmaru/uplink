@@ -16,7 +16,7 @@ defmodule Uplink.Nodes.Router do
 
   plug :dispatch
 
-  get "/" do
+  post "/" do
     nodes =
       LXD.list_cluster_members()
       |> Enum.map(fn member ->

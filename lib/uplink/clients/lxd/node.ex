@@ -2,6 +2,8 @@ defmodule Uplink.Clients.LXD.Node do
   use Ecto.Schema
   import Ecto.Changeset
 
+  @derive Jason.Encoder
+
   @primary_key false
   embedded_schema do
     field :name, :string

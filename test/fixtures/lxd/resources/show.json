@@ -1,0 +1,263 @@
+{
+  "cpu": {
+    "architecture": "x86_64",
+    "sockets": [
+      {
+        "cache": [
+          {
+            "level": 1,
+            "size": 32768,
+            "type": "Data"
+          },
+          {
+            "level": 1,
+            "size": 65536,
+            "type": "Instruction"
+          },
+          {
+            "level": 2,
+            "size": 524288,
+            "type": "Unified"
+          },
+          {
+            "level": 3,
+            "size": 8388608,
+            "type": "Unified"
+          }
+        ],
+        "cores": [
+          {
+            "core": 0,
+            "die": 0,
+            "threads": [
+              {
+                "id": 0,
+                "isolated": false,
+                "numa_node": 0,
+                "online": true,
+                "thread": 0
+              },
+              {
+                "id": 1,
+                "isolated": false,
+                "numa_node": 0,
+                "online": true,
+                "thread": 1
+              }
+            ]
+          }
+        ],
+        "name": "AMD EPYC 7571",
+        "socket": 0,
+        "vendor": "AuthenticAMD"
+      }
+    ],
+    "total": 2
+  },
+  "gpu": {
+    "cards": [
+      {
+        "numa_node": 0,
+        "pci_address": "0000:00:03.0",
+        "product_id": "1111",
+        "vendor": "Amazon.com, Inc.",
+        "vendor_id": "1d0f"
+      }
+    ],
+    "total": 1
+  },
+  "memory": {
+    "hugepages_size": 2097152,
+    "hugepages_total": 0,
+    "hugepages_used": 0,
+    "nodes": [
+      {
+        "hugepages_total": 0,
+        "hugepages_used": 0,
+        "numa_node": 0,
+        "total": 4294967296,
+        "used": 3809120256
+      }
+    ],
+    "total": 4294967296,
+    "used": 2107842560
+  },
+  "network": {
+    "cards": [
+      {
+        "driver": "ena",
+        "driver_version": "6.5.0-1023-aws",
+        "numa_node": 0,
+        "pci_address": "0000:00:05.0",
+        "ports": [
+          {
+            "address": "06:b1:cc:28:99:2d",
+            "auto_negotiation": false,
+            "id": "ens5",
+            "link_detected": true,
+            "port": 0,
+            "protocol": "ethernet"
+          }
+        ],
+        "product": "Elastic Network Adapter (ENA)",
+        "product_id": "ec20",
+        "vendor": "Amazon.com, Inc.",
+        "vendor_id": "1d0f"
+      }
+    ],
+    "total": 1
+  },
+  "pci": {
+    "devices": [
+      {
+        "driver": "",
+        "driver_version": "",
+        "iommu_group": 0,
+        "numa_node": 0,
+        "pci_address": "0000:00:00.0",
+        "product": "440FX - 82441FX PMC [Natoma]",
+        "product_id": "1237",
+        "vendor": "Intel Corporation",
+        "vendor_id": "8086",
+        "vpd": {}
+      },
+      {
+        "driver": "",
+        "driver_version": "",
+        "iommu_group": 0,
+        "numa_node": 0,
+        "pci_address": "0000:00:01.0",
+        "product": "82371SB PIIX3 ISA [Natoma/Triton II]",
+        "product_id": "7000",
+        "vendor": "Intel Corporation",
+        "vendor_id": "8086",
+        "vpd": {}
+      },
+      {
+        "driver": "",
+        "driver_version": "",
+        "iommu_group": 0,
+        "numa_node": 0,
+        "pci_address": "0000:00:01.3",
+        "product": "82371AB/EB/MB PIIX4 ACPI",
+        "product_id": "7113",
+        "vendor": "Intel Corporation",
+        "vendor_id": "8086",
+        "vpd": {}
+      },
+      {
+        "driver": "",
+        "driver_version": "",
+        "iommu_group": 0,
+        "numa_node": 0,
+        "pci_address": "0000:00:03.0",
+        "product": "",
+        "product_id": "1111",
+        "vendor": "Amazon.com, Inc.",
+        "vendor_id": "1d0f",
+        "vpd": {}
+      },
+      {
+        "driver": "nvme",
+        "driver_version": "6.5.0-1023-aws",
+        "iommu_group": 0,
+        "numa_node": 0,
+        "pci_address": "0000:00:04.0",
+        "product": "",
+        "product_id": "8061",
+        "vendor": "Amazon.com, Inc.",
+        "vendor_id": "1d0f",
+        "vpd": {}
+      },
+      {
+        "driver": "ena",
+        "driver_version": "6.5.0-1023-aws",
+        "iommu_group": 0,
+        "numa_node": 0,
+        "pci_address": "0000:00:05.0",
+        "product": "Elastic Network Adapter (ENA)",
+        "product_id": "ec20",
+        "vendor": "Amazon.com, Inc.",
+        "vendor_id": "1d0f",
+        "vpd": {}
+      }
+    ],
+    "total": 6
+  },
+  "storage": {
+    "disks": [
+      {
+        "block_size": 512,
+        "device": "259:0",
+        "device_id": "nvme-nvme.1d0f-766f6c3038346564376336353263323933646366-416d617a6f6e20456c617374696320426c6f636b2053746f7265-00000001",
+        "device_path": "pci-0000:00:04.0-nvme-1",
+        "firmware_version": "1.0",
+        "id": "nvme0n1",
+        "model": "Amazon Elastic Block Store",
+        "numa_node": 0,
+        "partitions": [
+          {
+            "device": "259:1",
+            "id": "nvme0n1p1",
+            "partition": 1,
+            "read_only": false,
+            "size": 42833264128
+          },
+          {
+            "device": "259:2",
+            "id": "nvme0n1p14",
+            "partition": 14,
+            "read_only": false,
+            "size": 4194304
+          },
+          {
+            "device": "259:3",
+            "id": "nvme0n1p15",
+            "partition": 15,
+            "read_only": false,
+            "size": 111149056
+          }
+        ],
+        "read_only": false,
+        "removable": false,
+        "rpm": 0,
+        "serial": "vol084ed7c652c293dcf",
+        "size": 42949672960,
+        "type": "nvme",
+        "wwn": "nvme.1d0f-766f6c3038346564376336353263323933646366-416d617a6f6e20456c617374696320426c6f636b2053746f7265-00000001"
+      }
+    ],
+    "total": 4
+  },
+  "system": {
+    "chassis": {
+      "serial": "",
+      "type": "Other",
+      "vendor": "Amazon EC2",
+      "version": ""
+    },
+    "family": "",
+    "firmware": {
+      "date": "10/16/2017",
+      "vendor": "Amazon EC2",
+      "version": "1.0"
+    },
+    "motherboard": {
+      "product": "",
+      "serial": "",
+      "vendor": "Amazon EC2",
+      "version": ""
+    },
+    "product": "t3a.medium",
+    "serial": "ec20b7a9-497a-9279-cba6-7417800214a3",
+    "sku": "",
+    "type": "virtual-machine",
+    "uuid": "ec20b7a9-497a-9279-cba6-7417800214a3",
+    "vendor": "Amazon EC2",
+    "version": ""
+  },
+  "usb": {
+    "devices": [],
+    "total": 0
+  }
+}

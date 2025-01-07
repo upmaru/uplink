@@ -6,6 +6,7 @@ defmodule Uplink.Router do
   alias Uplink.Installations
   alias Uplink.Cache
   alias Uplink.Monitors
+  alias Uplink.Nodes
 
   alias Uplink.Packages.{
     Instance,
@@ -27,6 +28,7 @@ defmodule Uplink.Router do
   forward "/components", to: Components.Router
   forward "/cache", to: Cache.Router
   forward "/monitors", to: Monitors.Router
+  forward "/nodes", to: Nodes.Router
 
   match _ do
     send_resp(conn, 404, "not found")
