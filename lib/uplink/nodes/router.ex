@@ -23,6 +23,6 @@ defmodule Uplink.Nodes.Router do
         LXD.get_node(member.server_name)
       end)
 
-    json(conn, :ok, %{data: nodes})
+    json(conn, :ok, nodes)
   end
 end

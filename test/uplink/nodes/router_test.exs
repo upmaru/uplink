@@ -74,6 +74,17 @@ defmodule Uplink.Nodes.RouterTest do
         |> put_req_header("content-type", "application/json")
         |> Router.call(@opts)
 
+      assert %{"data" => nodes} = Jason.decode!(conn.resp_body)
+
+      [node] = nodes
+
+      %{
+        "cpu_cores_count" => _,
+        "name" => _,
+        "total_memory" => _,
+        "total_storage" => _
+      } = node
+
       assert conn.status == 200
     end
   end
