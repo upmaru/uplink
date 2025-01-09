@@ -27,9 +27,13 @@ defmodule Uplink.Availability do
       Query.index_types()
       |> Enum.map(&Metrics.index/1)
 
-    members = LXD.list_cluster_members()
+    nodes =
+      LXD.list_cluster_members()
+      |> Enum.map(fn member ->
+        LXD.get_node(member.server_name)
+      end)
 
-    query = Query.build(members, indices)
+    query = Query.build(nodes, indices)
 
     Metrics.query!(monitor, query)
   end

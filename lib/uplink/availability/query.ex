@@ -1,6 +1,6 @@
 defmodule Uplink.Availability.Query do
+  alias Uplink.Clients.LXD.Node
   alias Uplink.Availability.Attribute
-  alias Uplink.Clients.LXD.Cluster.Member
 
   @metrics_mappings %{
     "metrics-system.memory-" => :memory,
@@ -33,16 +33,16 @@ defmodule Uplink.Availability.Query do
     Map.values(@metrics_mappings)
   end
 
-  @spec build([Member.t()] | Member.t(), [String.t()]) :: String.t()
-  def build(members, indices) when is_list(members) do
-    members
+  @spec build([Node.t()] | Member.t(), [String.t()]) :: String.t()
+  def build(nodes, indices) when is_list(members) do
+    nodes
     |> Enum.flat_map(fn node ->
       build(node, indices)
     end)
     |> Enum.join("\n")
   end
 
-  def build(%Member{server_name: key}, indices)
+  def build(%Node{name: key}, indices)
       when is_list(indices) do
     valid_prefixes = Map.keys(@metrics_mappings)
 
