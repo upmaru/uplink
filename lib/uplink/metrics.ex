@@ -8,6 +8,7 @@ defmodule Uplink.Metrics do
   def query!(%{"attributes" => attributes} = monitor, query) do
     headers = headers(monitor)
     endpoint = Map.fetch!(attributes, "endpoint")
+    query = query <> "\n"
 
     request = request(endpoint, headers)
 

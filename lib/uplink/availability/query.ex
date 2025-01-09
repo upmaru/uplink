@@ -33,10 +33,10 @@ defmodule Uplink.Availability.Query do
     Map.values(@metrics_mappings)
   end
 
-  @spec build([Node.t()] | Member.t(), [String.t()]) :: String.t()
-  def build(nodes, indices) when is_list(members) do
+  @spec build([Node.t()] | Node.t(), [String.t()]) :: String.t()
+  def build(nodes, indices) when is_list(nodes) do
     nodes
-    |> Enum.flat_map(fn node ->
+    |> Enum.map(fn node ->
       build(node, indices)
     end)
     |> Enum.join("\n")
