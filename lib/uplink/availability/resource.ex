@@ -2,23 +2,31 @@ defmodule Uplink.Availability.Resource do
   use Ecto.Schema
   import Ecto.Changeset
 
+  @derive Jason.Encoder
+
   @primary_key false
   embedded_schema do
     field :node, :string
 
     embeds_one :total, Total, primary_key: false do
+      @derive Jason.Encoder
+
       field :cpu_cores, :integer
       field :memory_bytes, :decimal
       field :storage_bytes, :decimal
     end
 
     embeds_one :used, Used, primary_key: false do
+      @derive Jason.Encoder
+
       field :load_norm_5, :decimal
       field :memory_bytes, :decimal
       field :storage_bytes, :decimal
     end
 
     embeds_one :available, Available, primary_key: false do
+      @derive Jason.Encoder
+
       field :processing, :decimal
       field :memory, :decimal
       field :storage, :decimal

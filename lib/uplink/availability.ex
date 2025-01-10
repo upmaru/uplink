@@ -39,7 +39,9 @@ defmodule Uplink.Availability do
 
     Metrics.query!(monitor, query)
     |> case do
-      %{status: 200, body: %{"responses" => responses}} ->
+      %{status: 200, body: %{"responses" => responses} = body} ->
+        File.write!("availability.json", Jason.encode!(body))
+
         resources =
           nodes
           |> Response.parse(responses)

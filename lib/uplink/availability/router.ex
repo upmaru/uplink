@@ -3,7 +3,7 @@ defmodule Uplink.Availability.Router do
   use Uplink.Web
 
   alias Uplink.Secret
-  alias Uplink.Availability.Resource
+  alias Uplink.Availability
 
   plug :match
 

@@ -1,8 +1,19 @@
-defmodule Uplink.AvailabilityTest do
+defmodule Uplink.Availability.RouterTest do
   use ExUnit.Case
+  use Plug.Test
 
   alias Uplink.Cache
-  alias Uplink.Availability
+  alias Uplink.Availability.Router
+
+  @opts Router.init([])
+
+  @valid_body Jason.encode!(%{
+                "actor" => %{
+                  "provider" => "instellar",
+                  "identifier" => "zacksiri",
+                  "id" => "1"
+                }
+              })
 
   setup do
     bypass = Bypass.open()
@@ -55,9 +66,19 @@ defmodule Uplink.AvailabilityTest do
      monitors_list_response: monitors_list_response}
   end
 
-  describe "check availability of the nodes in the cluster" do
-    test "return availability check result", %{
+  describe "POST /resources" do
+    setup do
+      signature =
+        :crypto.mac(:hmac, :sha256, Uplink.Secret.get(), @valid_body)
+        |> Base.encode16()
+        |> String.downcase()
+
+      {:ok, signature: signature}
+    end
+
+    test "can successfully fetch resources with availability", %{
       bypass: bypass,
+      signature: signature,
       resources_response: resource_response,
       availability_query_response: availability_query_response,
       cluster_members_response: cluster_members_response,
@@ -91,9 +112,22 @@ defmodule Uplink.AvailabilityTest do
         |> Plug.Conn.resp(200, availability_query_response)
       end)
 
-      assert {:ok, resources} = Availability.check!()
+      conn =
+        conn(:post, "/resources", @valid_body)
+        |> put_req_header("x-uplink-signature-256", "sha256=#{signature}")
+        |> put_req_header("content-type", "application/json")
+        |> Router.call(@opts)
 
-      assert [%Availability.Resource{} = resource] = resources
+      assert %{"data" => resources} = Jason.decode!(conn.resp_body)
+
+      [resource] = resources
+
+      assert %{
+               "node" => _node,
+               "total" => _total,
+               "used" => _used,
+               "available" => _available
+             } = resource
     end
   end
 end
