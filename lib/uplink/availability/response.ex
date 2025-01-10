@@ -37,15 +37,15 @@ defmodule Uplink.Availability.Response do
 
     %{
       "node" => node.name,
-      "usage" => %{
-        "load_norm_5" => Map.get(usage_params, "load_norm_5", 0.0),
-        "memory_bytes" => Map.get(usage_params, "memory_used_bytes", 0),
-        "storage_bytes" => Map.get(usage_params, "filesystem_used_bytes", 0)
-      },
       "available" => %{
         "cpu_cores" => node.cpu_cores_count,
         "memory_bytes" => node.total_memory,
         "storage_bytes" => node.total_storage
+      },
+      "usage" => %{
+        "load_norm_5" => Map.get(usage_params, "load_norm_5", 0.0),
+        "memory_bytes" => Map.get(usage_params, "memory_used_bytes", 0),
+        "storage_bytes" => Map.get(usage_params, "filesystem_used_bytes", 0)
       }
     }
   end

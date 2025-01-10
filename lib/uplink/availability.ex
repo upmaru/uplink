@@ -40,9 +40,12 @@ defmodule Uplink.Availability do
     Metrics.query!(monitor, query)
     |> case do
       %{status: 200, body: %{"responses" => responses}} ->
-        nodes
-        |> Response.parse(responses)
-        |> Enum.map(&Resource.parse/1)
+        resources =
+          nodes
+          |> Response.parse(responses)
+          |> Enum.map(&Resource.parse/1)
+
+        {:ok, resources}
 
       _ ->
         {:error, :could_not_query_metrics}
