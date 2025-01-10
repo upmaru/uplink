@@ -35,18 +35,36 @@ defmodule Uplink.Availability.Response do
         Map.put(acc, relevant_key, result)
       end)
 
+    load_norm_5 = Map.get(usage_params, "load_norm_5", 0.0)
+    used_memory_bytes = Map.get(usage_params, "memory_used_bytes", 0)
+    used_storage_bytes = Map.get(usage_params, "filesystem_used_bytes", 0)
+
     %{
       "node" => node.name,
-      "available" => %{
+      "total" => %{
         "cpu_cores" => node.cpu_cores_count,
         "memory_bytes" => node.total_memory,
         "storage_bytes" => node.total_storage
       },
-      "usage" => %{
-        "load_norm_5" => Map.get(usage_params, "load_norm_5", 0.0),
-        "memory_bytes" => Map.get(usage_params, "memory_used_bytes", 0),
-        "storage_bytes" => Map.get(usage_params, "filesystem_used_bytes", 0)
+      "used" => %{
+        "load_norm_5" => load_norm_5,
+        "memory_bytes" => used_memory_bytes,
+        "storage_bytes" => used_storage_bytes
+      },
+      "available" => %{
+        "processing" => 1 - load_norm_5,
+        "memory" => compute_available(node.total_memory, used_memory_bytes),
+        "storage" => compute_available(node.total_storage, used_storage_bytes)
       }
     }
+  end
+
+  defp compute_available(total, used) do
+    total = Decimal.new("#{total}")
+    used = Decimal.new("#{used}")
+
+    available = Decimal.sub(total, used)
+
+    Decimal.div(available, total)
   end
 end
