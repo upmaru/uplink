@@ -1,6 +1,7 @@
 defmodule Uplink.AvailabilityTest do
   use ExUnit.Case
 
+  alias Uplink.Cache
   alias Uplink.Availability
 
   setup do
@@ -15,7 +16,8 @@ defmodule Uplink.AvailabilityTest do
     Cache.put(:self, %{
       "credential" => %{
         "endpoint" => "http://localhost:#{bypass.port}"
-      }
+      },
+      "uplink" => %{"id" => 1}
     })
 
     cluster_members_response =
@@ -24,10 +26,13 @@ defmodule Uplink.AvailabilityTest do
     monitors_list_response =
       File.read!("test/fixtures/instellar/monitors/list.json")
 
+    resources_response = File.read!("test/fixtures/lxd/resources/show.json")
+
     Cache.delete(:cluster_members)
 
     {:ok,
      bypass: bypass,
+     resources_response: resources_response,
      cluster_members_response: cluster_members_response,
      monitors_list_response: monitors_list_response}
   end
@@ -35,6 +40,7 @@ defmodule Uplink.AvailabilityTest do
   describe "check availability of the nodes in the cluster" do
     test "return availability check result", %{
       bypass: bypass,
+      resources_response: resource_response,
       cluster_members_response: cluster_members_response,
       monitors_list_response: monitors_list_response
     } do
@@ -50,6 +56,14 @@ defmodule Uplink.AvailabilityTest do
         conn
         |> Plug.Conn.put_resp_header("content-type", "application/json")
         |> Plug.Conn.resp(200, cluster_members_response)
+      end)
+
+      Bypass.expect_once(bypass, "GET", "/1.0/resources", fn conn ->
+        assert %{"target" => _target} = conn.query_params
+
+        conn
+        |> Plug.Conn.put_resp_header("content-type", "application/json")
+        |> Plug.Conn.resp(200, resource_response)
       end)
 
       assert {:ok, result} = Availability.check!()
