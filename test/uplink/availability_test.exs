@@ -46,6 +46,7 @@ defmodule Uplink.AvailabilityTest do
       File.read!("test/fixtures/elastic/availability.json")
 
     Cache.delete(:cluster_members)
+    Cache.delete({:monitors, :metrics})
 
     {:ok,
      bypass: bypass,
