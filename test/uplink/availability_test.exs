@@ -93,7 +93,7 @@ defmodule Uplink.AvailabilityTest do
 
       assert {:ok, resources} = Availability.check!()
 
-      assert [%Availability.Resource{} = resource] = resources
+      assert [%Availability.Resource{}] = resources
     end
   end
 end
