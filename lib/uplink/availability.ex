@@ -6,6 +6,8 @@ defmodule Uplink.Availability do
   alias Uplink.Clients.Instellar
 
   alias __MODULE__.Query
+  alias __MODULE__.Response
+  alias __MODULE__.Resource
 
   def check! do
     case get_monitor() do
@@ -36,6 +38,15 @@ defmodule Uplink.Availability do
     query = Query.build(nodes, indices)
 
     Metrics.query!(monitor, query)
+    |> case do
+      %{status: 200, body: %{"responses" => responses}} ->
+        nodes
+        |> Response.parse(responses)
+        |> Enum.map(&Resource.parse/1)
+
+      _ ->
+        {:error, :could_not_query_metrics}
+    end
   end
 
   defp get_monitor do
