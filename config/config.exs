@@ -6,6 +6,8 @@ config :uplink, Uplink.Cache,
     backend: :shards
   ]
 
+config :opsmo, :mode, :inference
+
 config :uplink, Uplink.Internal, port: 4080
 
 config :uplink, Uplink.Router, port: 4040

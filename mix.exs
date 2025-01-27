@@ -73,6 +73,9 @@ defmodule Uplink.MixProject do
       {:broadway, "~> 1.0"},
       {:prometheus_parser, "~> 0.1.10"},
 
+      # Opsmo
+      {:opsmo, github: "upmaru/opsmo"},
+
       # Test
       {:bypass, "~> 2.1", only: :test},
       {:mox, "~> 1.0", only: :test},
