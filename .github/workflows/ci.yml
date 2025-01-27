@@ -13,7 +13,7 @@ jobs:
     name: Dependencies
     runs-on: warp-ubuntu-2204-x64-2x
     container:
-      image: alpine:3.18
+      image: alpine:3.20
 
     steps:
       - name: Cancel Previous Runs
@@ -57,7 +57,7 @@ jobs:
     needs: deps
     runs-on: warp-ubuntu-2204-x64-2x
     container:
-      image: alpine:3.18
+      image: alpine:3.20
 
     steps:
       - name: Cancel Previous Runs
@@ -98,7 +98,7 @@ jobs:
     needs: deps
     runs-on: warp-ubuntu-2204-x64-2x
     container:
-      image: alpine:3.18
+      image: alpine:3.20
 
     services:
       postgres:

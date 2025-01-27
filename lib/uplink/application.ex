@@ -42,7 +42,8 @@ defmodule Uplink.Application do
         key: {:RSAPrivateKey, key},
         cert: cert
       },
-      {Uplink.Data.Provisioner, []}
+      {Uplink.Data.Provisioner, []},
+      Opsmo.spec(Opsmo.CRPM)
     ]
 
     opts = [strategy: :one_for_one, name: Uplink.Supervisor]
