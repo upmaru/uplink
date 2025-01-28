@@ -26,25 +26,29 @@ defmodule Uplink.Application do
 
     topologies = Application.get_env(:libcluster, :topologies, [])
 
-    children = [
-      {Uplink.Cache, []},
-      {Cluster.Supervisor, [topologies, [name: Uplink.ClusterSupervisor]]},
-      {Task.Supervisor, name: Uplink.TaskSupervisor},
-      {Plug.Cowboy, plug: Uplink.Internal, scheme: :http, port: internal_port},
-      {Pogo.DynamicSupervisor,
-       name: @pipeline_supervisor, scope: :uplink, sync_interval: sync_interval},
-      {Uplink.Monitors, []},
-      {
-        Plug.Cowboy,
-        plug: Uplink.Router,
-        scheme: :https,
-        port: port,
-        key: {:RSAPrivateKey, key},
-        cert: cert
-      },
-      {Uplink.Data.Provisioner, []},
-      Opsmo.spec(Opsmo.CRPM)
-    ]
+    children =
+      [
+        {Uplink.Cache, []},
+        {Cluster.Supervisor, [topologies, [name: Uplink.ClusterSupervisor]]},
+        {Task.Supervisor, name: Uplink.TaskSupervisor},
+        {Plug.Cowboy,
+         plug: Uplink.Internal, scheme: :http, port: internal_port},
+        {Pogo.DynamicSupervisor,
+         name: @pipeline_supervisor,
+         scope: :uplink,
+         sync_interval: sync_interval},
+        {Uplink.Monitors, []},
+        {
+          Plug.Cowboy,
+          plug: Uplink.Router,
+          scheme: :https,
+          port: port,
+          key: {:RSAPrivateKey, key},
+          cert: cert
+        },
+        {Uplink.Data.Provisioner, []}
+      ]
+      |> Opsmo.append_model_spec(Opsmo.CRPM)
 
     opts = [strategy: :one_for_one, name: Uplink.Supervisor]
     Supervisor.start_link(children, opts)

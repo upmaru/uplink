@@ -8,6 +8,7 @@ defmodule Uplink.Availability do
   alias __MODULE__.Query
   alias __MODULE__.Response
   alias __MODULE__.Resource
+  alias __MODULE__.Placeability
 
   def check! do
     case get_monitor() do
@@ -45,6 +46,8 @@ defmodule Uplink.Availability do
           |> Response.parse(responses)
           |> Enum.map(&Resource.parse/1)
 
+        resources = compute_placeability(resources)
+
         {:ok, resources}
 
       _ ->
@@ -60,5 +63,39 @@ defmodule Uplink.Availability do
     else
       List.first(monitors)
     end
+  end
+
+  defp compute_placeability(resources) do
+    template = %{"cpu" => [], "memory" => [], "disk" => []}
+
+    inputs = Enum.reduce(resources, template, &to_inputs/2)
+
+    predictions = Opsmo.predict(Opsmo.CRPM, inputs)
+
+    resources
+    |> Enum.zip(predictions)
+    |> Enum.map(&patch_with_placeability/1)
+  end
+
+  defp to_inputs(resource, acc) do
+    %{
+      "cpu" =>
+        acc["cpu"] ++ [[0.013, Decimal.to_float(resource.used.load_norm_5)]],
+      "memory" =>
+        acc["memory"] ++
+          [
+            [
+              0.013,
+              Decimal.to_float(resource.used.memory),
+              Decimal.to_float(resource.total.memory_normalized)
+            ]
+          ],
+      "disk" =>
+        acc["disk"] ++ [[0.013, Decimal.to_float(resource.used.storage)]]
+    }
+  end
+
+  defp patch_with_placeability({resource, prediction}) do
+    %{resource | placeability: Placeability.parse(prediction)}
   end
 end

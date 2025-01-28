@@ -39,32 +39,42 @@ defmodule Uplink.Availability.Response do
     used_memory_bytes = Map.get(usage_params, "memory_used_bytes", 0)
     used_storage_bytes = Map.get(usage_params, "filesystem_used_bytes", 0)
 
+    memory_normalized =
+      node.total_memory
+      # Convert bytes to megabytes
+      |> div(1024 * 1024)
+      |> trunc()
+      |> Opsmo.CRPM.normalize_memory()
+      |> Nx.to_number()
+
     %{
       "node" => node.name,
       "total" => %{
         "cpu_cores" => node.cpu_cores_count,
         "memory_bytes" => node.total_memory,
+        "memory_normalized" => memory_normalized,
         "storage_bytes" => node.total_storage
       },
       "used" => %{
         "load_norm_5" => load_norm_5,
-        "memory_bytes" => used_memory_bytes,
-        "storage_bytes" => used_storage_bytes
+        "memory" => normalize_value(used_memory_bytes, node.total_memory),
+        "storage" => normalize_value(used_storage_bytes, node.total_storage)
       },
       "available" => %{
         "processing" => 1 - load_norm_5,
-        "memory" => compute_available(node.total_memory, used_memory_bytes),
-        "storage" => compute_available(node.total_storage, used_storage_bytes)
+        "memory" => compute_available(used_memory_bytes, node.total_memory),
+        "storage" => compute_available(used_storage_bytes, node.total_storage)
       }
     }
   end
 
-  defp compute_available(total, used) do
-    total = Decimal.new("#{total}")
+  defp normalize_value(used, total) do
     used = Decimal.new("#{used}")
+    total = Decimal.new("#{total}")
+    Decimal.div(used, total)
+  end
 
-    available = Decimal.sub(total, used)
-
-    Decimal.div(available, total)
+  defp compute_available(used, total) do
+    Decimal.sub(Decimal.new("1"), normalize_value(used, total))
   end
 end

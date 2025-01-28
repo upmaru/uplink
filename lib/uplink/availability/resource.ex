@@ -2,6 +2,8 @@ defmodule Uplink.Availability.Resource do
   use Ecto.Schema
   import Ecto.Changeset
 
+  alias Uplink.Availability.Placeability
+
   @derive Jason.Encoder
 
   @primary_key false
@@ -13,6 +15,8 @@ defmodule Uplink.Availability.Resource do
 
       field :cpu_cores, :integer
       field :memory_bytes, :decimal
+      field :memory_normalized, :decimal
+
       field :storage_bytes, :decimal
     end
 
@@ -20,8 +24,8 @@ defmodule Uplink.Availability.Resource do
       @derive Jason.Encoder
 
       field :load_norm_5, :decimal
-      field :memory_bytes, :decimal
-      field :storage_bytes, :decimal
+      field :memory, :decimal
+      field :storage, :decimal
     end
 
     embeds_one :available, Available, primary_key: false do
@@ -31,6 +35,8 @@ defmodule Uplink.Availability.Resource do
       field :memory, :decimal
       field :storage, :decimal
     end
+
+    embeds_one :placeability, Placeability
   end
 
   def changeset(resource, params) do
@@ -39,21 +45,32 @@ defmodule Uplink.Availability.Resource do
     |> cast_embed(:total, with: &total_changeset/2)
     |> cast_embed(:used, with: &used_changeset/2)
     |> cast_embed(:available, with: &available_changeset/2)
+    |> cast_embed(:placeability)
   end
 
   def total_changeset(available, params) do
     available
-    |> cast(params, [:cpu_cores, :memory_bytes, :storage_bytes])
+    |> cast(params, [
+      :cpu_cores,
+      :memory_bytes,
+      :memory_normalized,
+      :storage_bytes
+    ])
   end
 
   def used_changeset(used, params) do
     used
-    |> cast(params, [:load_norm_5, :memory_bytes, :storage_bytes])
+    |> cast(params, [:load_norm_5, :memory, :storage])
   end
 
   def available_changeset(available, params) do
     available
     |> cast(params, [:processing, :memory, :storage])
+  end
+
+  def placeability_changeset(placeability, params) do
+    placeability
+    |> cast(params, [:cpu, :memory, :disk, :score])
   end
 
   def parse(params) do
