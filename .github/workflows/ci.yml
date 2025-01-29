@@ -39,7 +39,7 @@ jobs:
             deps
             _build
             priv/plts
-          key: ${{ runner.os }}-uplink-${{ hashFiles('mix.lock') }}-v2
+          key: ${{ runner.os }}-uplink-${{ hashFiles('mix.lock') }}-v3
 
       - name: Install Dependencies
         if: steps.mix-cache.outputs.cache-hit != 'true'
@@ -86,7 +86,7 @@ jobs:
             deps
             _build
             priv/plts
-          key: ${{ runner.os }}-uplink-${{ hashFiles('mix.lock') }}-v2
+          key: ${{ runner.os }}-uplink-${{ hashFiles('mix.lock') }}-v3
 
       - name: Check Code Format
         run: mix format --check-formatted
@@ -139,7 +139,7 @@ jobs:
             deps
             _build
             priv/plts
-          key: ${{ runner.os }}-uplink-${{ hashFiles('mix.lock') }}-v2
+          key: ${{ runner.os }}-uplink-${{ hashFiles('mix.lock') }}-v3
 
       - name: Run Tests
         run: mix test --trace --slowest 10
