@@ -17,7 +17,14 @@ defmodule Uplink.Availability.Router do
   plug :dispatch
 
   post "/resources" do
-    case Availability.check!() do
+    %{
+      "requirement" => requirement_params
+    } = conn.body_params
+
+    requirement_params
+    |> Availability.process_requirement()
+    |> Availability.check!()
+    |> case do
       {:ok, resources} ->
         json(conn, :ok, resources)
 
