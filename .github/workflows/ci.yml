@@ -50,6 +50,7 @@ jobs:
           mix deps.get
           mix deps.compile
           MIX_ENV=test mix deps.compile
+          mix opsmo.embed
           mix dialyzer --plt
 
   static_code_analysis:
