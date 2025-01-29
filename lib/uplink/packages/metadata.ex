@@ -114,7 +114,10 @@ defmodule Uplink.Packages.Metadata do
     package
     |> cast(params, [:slug])
     |> validate_required([:slug])
-    |> cast_embed(:organization, required: true, with: &organization_changeset/2)
+    |> cast_embed(:organization,
+      required: true,
+      with: &organization_changeset/2
+    )
     |> cast_embed(:credential,
       required: true,
       with: &package_credential_changeset/2

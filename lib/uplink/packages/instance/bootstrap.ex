@@ -48,9 +48,13 @@ defmodule Uplink.Packages.Instance.Bootstrap do
           "actor_id" => actor_id
         }
       }) do
-    Cache.put_new({:install, install_id, "completed"}, [], ttl: :timer.hours(24))
+    Cache.put_new({:install, install_id, "completed"}, [],
+      ttl: :timer.hours(24)
+    )
 
-    Cache.put_new({:install, install_id, "executing"}, [], ttl: :timer.hours(24))
+    Cache.put_new({:install, install_id, "executing"}, [],
+      ttl: :timer.hours(24)
+    )
 
     %Actor{} = actor = Repo.get(Actor, actor_id)
 
