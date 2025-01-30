@@ -13,7 +13,19 @@ jobs:
     name: Dependencies
     runs-on: warp-ubuntu-2204-x64-2x
     container:
-      image: alpine:3.18
+      image: alpine:3.20
+
+    services:
+      postgres:
+        image: postgres:15.4
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        # needed because the postgres container does not provide a healthcheck
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
 
     steps:
       - name: Cancel Previous Runs
@@ -39,7 +51,7 @@ jobs:
             deps
             _build
             priv/plts
-          key: ${{ runner.os }}-uplink-${{ hashFiles('mix.lock') }}-v2
+          key: ${{ runner.os }}-uplink-${{ hashFiles('mix.lock') }}-v4
 
       - name: Install Dependencies
         if: steps.mix-cache.outputs.cache-hit != 'true'
@@ -50,14 +62,21 @@ jobs:
           mix deps.get
           mix deps.compile
           MIX_ENV=test mix deps.compile
+          MIX_ENV=test mix opsmo.embed
           mix dialyzer --plt
+
+        env:
+          POSTGRES_HOST: postgres
+          POSTGRES_USERNAME: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_PORT: ${{ job.services.postgres.ports[5432] }}
 
   static_code_analysis:
     name: Static Code Analysis
     needs: deps
     runs-on: warp-ubuntu-2204-x64-2x
     container:
-      image: alpine:3.18
+      image: alpine:3.20
 
     steps:
       - name: Cancel Previous Runs
@@ -85,7 +104,7 @@ jobs:
             deps
             _build
             priv/plts
-          key: ${{ runner.os }}-uplink-${{ hashFiles('mix.lock') }}-v2
+          key: ${{ runner.os }}-uplink-${{ hashFiles('mix.lock') }}-v4
 
       - name: Check Code Format
         run: mix format --check-formatted
@@ -98,7 +117,7 @@ jobs:
     needs: deps
     runs-on: warp-ubuntu-2204-x64-2x
     container:
-      image: alpine:3.18
+      image: alpine:3.20
 
     services:
       postgres:
@@ -138,10 +157,12 @@ jobs:
             deps
             _build
             priv/plts
-          key: ${{ runner.os }}-uplink-${{ hashFiles('mix.lock') }}-v2
+          key: ${{ runner.os }}-uplink-${{ hashFiles('mix.lock') }}-v4
 
       - name: Run Tests
-        run: mix test --trace --slowest 10
+        run: |
+          mix test --trace --slowest 10
+
         env:
           POSTGRES_HOST: postgres
           POSTGRES_USERNAME: postgres

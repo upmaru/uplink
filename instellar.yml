@@ -10,12 +10,12 @@ dependencies:
     - inotify-tools
     - s6
     - uplink-openrc
-    
-stack: alpine/3.18
+
+stack: alpine/3.20
 
 build:
-  destinations: 
-    - '_build/prod/rel/uplink/*'
+  destinations:
+    - "_build/prod/rel/uplink/*"
   command: |
     export MIX_ENV=prod
 
@@ -25,24 +25,24 @@ build:
 
     mix release
 
-run: 
+run:
   name: uplink
   commands:
-  - name: migrate
-    binary: uplink
-    call: 'eval Uplink.Release.Tasks.migrate'
-  - name: console
-    binary: uplink
-    call: remote
-  - name: logs
-    binary: tail
-    path: /usr/bin
-    call: -f -n 100 /var/log/uplink/current
+    - name: migrate
+      binary: uplink
+      call: "eval Uplink.Release.Tasks.migrate"
+    - name: console
+      binary: uplink
+      call: remote
+    - name: logs
+      binary: tail
+      path: /usr/bin
+      call: -f -n 100 /var/log/uplink/current
   services:
-  - name: web
-    binary: uplink
-    start:
-      call: 'start'
+    - name: web
+      binary: uplink
+      start:
+        call: "start"
 
 hook:
   post-install: |
@@ -63,7 +63,7 @@ kits:
     main: true
     name: lite
     max_instances_count: 1
-    ports: 
+    ports:
       - name: web
         target: 4040
     variables:

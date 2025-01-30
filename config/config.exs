@@ -6,6 +6,13 @@ config :uplink, Uplink.Cache,
     backend: :shards
   ]
 
+config :opsmo, :mode, :inference
+
+config :opsmo,
+  models: %{
+    "crpm" => "0.3.7"
+  }
+
 config :uplink, Uplink.Internal, port: 4080
 
 config :uplink, Uplink.Router, port: 4040

@@ -4,13 +4,12 @@ defmodule Uplink.Metrics.PipelineTest do
   import Uplink.Scenarios.Pipeline
   import AssertAsync
 
-  alias Uplink.Cache
   alias Uplink.Pipelines
 
   setup [:self, :messages]
 
   setup do
-    Cache.put_new({:monitors, :metrics}, [])
+    Pipelines.update_monitors(:metrics, [])
 
     Pipelines.start(Uplink.Metrics.Pipeline)
 

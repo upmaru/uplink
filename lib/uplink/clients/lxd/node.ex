@@ -2,6 +2,8 @@ defmodule Uplink.Clients.LXD.Node do
   use Ecto.Schema
   import Ecto.Changeset
 
+  @type t :: %__MODULE__{}
+
   @derive Jason.Encoder
 
   @primary_key false

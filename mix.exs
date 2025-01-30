@@ -58,6 +58,7 @@ defmodule Uplink.MixProject do
       # Clustering
       {:libcluster, "~> 3.0"},
       {:pogo, "~> 0.3.0"},
+      {:libring, "~> 1.7", override: true},
 
       # One time password
       {:pot, "~> 1.0.2"},
@@ -72,6 +73,9 @@ defmodule Uplink.MixProject do
       {:mint_web_socket, "~> 1.0.2"},
       {:broadway, "~> 1.0"},
       {:prometheus_parser, "~> 0.1.10"},
+
+      # Opsmo
+      {:opsmo, "~> 0.3"},
 
       # Test
       {:bypass, "~> 2.1", only: :test},
