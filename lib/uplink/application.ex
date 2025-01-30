@@ -7,6 +7,8 @@ defmodule Uplink.Application do
 
   @pipeline_supervisor Uplink.PipelineSupervisor
 
+  require Logger
+
   def start(_type, _args) do
     %{key: key, cert: cert} = Web.Certificate.generate()
 
@@ -27,28 +29,34 @@ defmodule Uplink.Application do
     topologies = Application.get_env(:libcluster, :topologies, [])
 
     children =
-      [
-        {Uplink.Cache, []},
-        {Cluster.Supervisor, [topologies, [name: Uplink.ClusterSupervisor]]},
-        {Task.Supervisor, name: Uplink.TaskSupervisor},
-        {Plug.Cowboy,
-         plug: Uplink.Internal, scheme: :http, port: internal_port},
-        {Pogo.DynamicSupervisor,
-         name: @pipeline_supervisor,
-         scope: :uplink,
-         sync_interval: sync_interval},
-        {Uplink.Monitors, []},
-        {
-          Plug.Cowboy,
-          plug: Uplink.Router,
-          scheme: :https,
-          port: port,
-          key: {:RSAPrivateKey, key},
-          cert: cert
-        },
-        {Uplink.Data.Provisioner, []}
-      ]
-      |> Opsmo.append_model_spec(Opsmo.CRPM)
+      if System.get_env("MIX_TASK") == "opsmo.embed" do
+        Logger.info("Running opsmo.embed not starting entire application...")
+
+        []
+      else
+        [
+          {Uplink.Cache, []},
+          {Cluster.Supervisor, [topologies, [name: Uplink.ClusterSupervisor]]},
+          {Task.Supervisor, name: Uplink.TaskSupervisor},
+          {Plug.Cowboy,
+           plug: Uplink.Internal, scheme: :http, port: internal_port},
+          {Pogo.DynamicSupervisor,
+           name: @pipeline_supervisor,
+           scope: :uplink,
+           sync_interval: sync_interval},
+          {Uplink.Monitors, []},
+          {
+            Plug.Cowboy,
+            plug: Uplink.Router,
+            scheme: :https,
+            port: port,
+            key: {:RSAPrivateKey, key},
+            cert: cert
+          },
+          {Uplink.Data.Provisioner, []},
+          Opsmo.spec(Opsmo.CRPM)
+        ]
+      end
 
     opts = [strategy: :one_for_one, name: Uplink.Supervisor]
     Supervisor.start_link(children, opts)
