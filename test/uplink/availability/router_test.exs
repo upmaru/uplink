@@ -12,8 +12,25 @@ defmodule Uplink.Availability.RouterTest do
                   "provider" => "instellar",
                   "identifier" => "zacksiri",
                   "id" => "1"
+                },
+                "requirement" => %{
+                  "project" => "test",
+                  "cpu" => 1,
+                  "memory" => 128_000_000,
+                  "disk" => 300_000_000
                 }
               })
+
+  @invalid_body Jason.encode!(%{
+                  "actor" => %{
+                    "provider" => "instellar",
+                    "identifier" => "zacksiri",
+                    "id" => "1"
+                  },
+                  "requirement" => %{
+                    "project" => "test"
+                  }
+                })
 
   setup do
     bypass = Bypass.open()
@@ -32,7 +49,7 @@ defmodule Uplink.Availability.RouterTest do
     })
 
     cluster_members_response =
-      File.read!("test/fixtures/lxd/cluster/members/list.json")
+      File.read!("test/fixtures/lxd/cluster/members/arrakis.json")
 
     monitors_list_response =
       File.read!("test/fixtures/instellar/monitors/list.json")
@@ -51,10 +68,12 @@ defmodule Uplink.Availability.RouterTest do
         ]
       })
 
-    resources_response = File.read!("test/fixtures/lxd/resources/show.json")
+    resources_response = File.read!("test/fixtures/lxd/resources/arrakis.json")
 
     availability_query_response =
       File.read!("test/fixtures/elastic/availability.json")
+
+    instances_response = File.read!("test/fixtures/lxd/instances/list.json")
 
     Cache.delete(:cluster_members)
     Cache.delete({:monitors, :metrics})
@@ -64,26 +83,18 @@ defmodule Uplink.Availability.RouterTest do
      resources_response: resources_response,
      cluster_members_response: cluster_members_response,
      availability_query_response: availability_query_response,
-     monitors_list_response: monitors_list_response}
+     monitors_list_response: monitors_list_response,
+     instances_response: instances_response}
   end
 
   describe "POST /resources" do
-    setup do
-      signature =
-        :crypto.mac(:hmac, :sha256, Uplink.Secret.get(), @valid_body)
-        |> Base.encode16()
-        |> String.downcase()
-
-      {:ok, signature: signature}
-    end
-
-    test "can successfully fetch resources with availability", %{
+    setup %{
       bypass: bypass,
-      signature: signature,
       resources_response: resource_response,
       availability_query_response: availability_query_response,
       cluster_members_response: cluster_members_response,
-      monitors_list_response: monitors_list_response
+      monitors_list_response: monitors_list_response,
+      instances_response: instances_response
     } do
       Bypass.expect_once(bypass, "GET", "/uplink/self/monitors", fn conn ->
         conn
@@ -99,7 +110,7 @@ defmodule Uplink.Availability.RouterTest do
         |> Plug.Conn.resp(200, cluster_members_response)
       end)
 
-      Bypass.expect_once(bypass, "GET", "/1.0/resources", fn conn ->
+      Bypass.expect(bypass, "GET", "/1.0/resources", fn conn ->
         assert %{"target" => _target} = conn.query_params
 
         conn
@@ -113,6 +124,25 @@ defmodule Uplink.Availability.RouterTest do
         |> Plug.Conn.resp(200, availability_query_response)
       end)
 
+      Bypass.expect_once(bypass, "GET", "/1.0/instances", fn conn ->
+        assert %{"project" => "test"} = conn.query_params
+
+        conn
+        |> Plug.Conn.put_resp_header("content-type", "application/json")
+        |> Plug.Conn.resp(200, instances_response)
+      end)
+
+      signature =
+        :crypto.mac(:hmac, :sha256, Uplink.Secret.get(), @valid_body)
+        |> Base.encode16()
+        |> String.downcase()
+
+      {:ok, signature: signature}
+    end
+
+    test "can successfully fetch resources with availability", %{
+      signature: signature
+    } do
       conn =
         conn(:post, "/resources", @valid_body)
         |> put_req_header("x-uplink-signature-256", "sha256=#{signature}")
@@ -127,8 +157,54 @@ defmodule Uplink.Availability.RouterTest do
                "node" => _node,
                "total" => _total,
                "used" => _used,
-               "available" => _available
+               "available" => _available,
+               "placeability" => _placeability
              } = resource
+    end
+  end
+
+  describe "invalid request" do
+    setup do
+      signature =
+        :crypto.mac(:hmac, :sha256, Uplink.Secret.get(), @invalid_body)
+        |> Base.encode16()
+        |> String.downcase()
+
+      {:ok, signature: signature}
+    end
+
+    test "return error when signature is invalid", %{
+      signature: signature
+    } do
+      conn =
+        conn(:post, "/resources", Jason.encode!(%{}))
+        |> put_req_header("x-uplink-signature-256", "sha256=#{signature}")
+        |> put_req_header("content-type", "application/json")
+        |> Router.call(@opts)
+
+      assert %{"data" => error} = Jason.decode!(conn.resp_body)
+
+      assert %{"error" => %{"message" => "invalid signature"}} = error
+    end
+
+    test "return error when requirement is invalid", %{
+      signature: signature
+    } do
+      conn =
+        conn(:post, "/resources", @invalid_body)
+        |> put_req_header("x-uplink-signature-256", "sha256=#{signature}")
+        |> put_req_header("content-type", "application/json")
+        |> Router.call(@opts)
+
+      assert %{"data" => errors} = Jason.decode!(conn.resp_body)
+
+      assert %{
+               "errors" => %{
+                 "cpu" => ["can't be blank"],
+                 "disk" => ["can't be blank"],
+                 "memory" => ["can't be blank"]
+               }
+             } = errors
     end
   end
 end

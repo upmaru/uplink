@@ -21,12 +21,13 @@ defmodule Uplink.Availability.Router do
       "requirement" => requirement_params
     } = conn.body_params
 
-    requirement_params
-    |> Availability.process_requirement()
-    |> Availability.check!()
-    |> case do
-      {:ok, resources} ->
-        json(conn, :ok, resources)
+    with {:ok, requirements} <-
+           Availability.process_requirement(requirement_params),
+         {:ok, resources} <- Availability.check!(requirements) do
+      json(conn, :ok, resources)
+    else
+      {:error, %Ecto.Changeset{} = error} ->
+        json(conn, :unprocessable_entity, handle_changeset(error))
 
       {:error, reason} ->
         json(conn, :service_unavailable, %{error: %{message: reason}})

@@ -15,6 +15,8 @@ defmodule Uplink.Availability do
     to: Requirement.Manager,
     as: :process
 
+  @spec check!(list(%Requirement{})) ::
+          {:ok, list(%Resource{})} | {:error, any()}
   def check!(requirements) when is_list(requirements) do
     case get_monitor() do
       %{"attributes" => _attributes} = monitor ->
@@ -89,8 +91,6 @@ defmodule Uplink.Availability do
     template = %{"cpu" => [], "memory" => [], "disk" => []}
 
     inputs = Enum.reduce(resources, template, &to_inputs(&1, &2, requirements))
-
-    IO.inspect(inputs)
 
     predictions = Opsmo.predict(Opsmo.CRPM, inputs)
 
