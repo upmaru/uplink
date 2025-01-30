@@ -23,8 +23,8 @@ build:
     mix local.rebar --force
     mix do deps.get --only prod
 
+    mix opsmo.embed
     mix release
-    MIX_ENV=prod mix opsmo.embed
 
 run:
   name: uplink
