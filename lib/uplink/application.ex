@@ -10,7 +10,19 @@ defmodule Uplink.Application do
   require Logger
 
   def start(_type, _args) do
+    children = children(System.get_env("MIX_TASK"))
+
+    opts = [strategy: :one_for_one, name: Uplink.Supervisor]
+
+    Supervisor.start_link(children, opts)
+  end
+
+  defp children("opsmo.embed"), do: []
+
+  defp children(_) do
     %{key: key, cert: cert} = Web.Certificate.generate()
+
+    topologies = Application.get_env(:libcluster, :topologies, [])
 
     pipeline_supervisor_config =
       Application.get_env(:uplink, @pipeline_supervisor, [])
@@ -26,33 +38,24 @@ defmodule Uplink.Application do
     port = Keyword.get(router_config, :port)
     internal_port = Keyword.get(internal_router_config, :port)
 
-    topologies = Application.get_env(:libcluster, :topologies, [])
-
-    children =
-      [
-        {Uplink.Cache, []},
-        {Cluster.Supervisor, [topologies, [name: Uplink.ClusterSupervisor]]},
-        {Task.Supervisor, name: Uplink.TaskSupervisor},
-        {Plug.Cowboy,
-         plug: Uplink.Internal, scheme: :http, port: internal_port},
-        {Pogo.DynamicSupervisor,
-         name: @pipeline_supervisor,
-         scope: :uplink,
-         sync_interval: sync_interval},
-        {Uplink.Monitors, []},
-        {
-          Plug.Cowboy,
-          plug: Uplink.Router,
-          scheme: :https,
-          port: port,
-          key: {:RSAPrivateKey, key},
-          cert: cert
-        },
-        {Uplink.Data.Provisioner, []},
-        Opsmo.spec(Opsmo.CRPM)
-      ]
-
-    opts = [strategy: :one_for_one, name: Uplink.Supervisor]
-    Supervisor.start_link(children, opts)
+    [
+      {Uplink.Cache, []},
+      {Cluster.Supervisor, [topologies, [name: Uplink.ClusterSupervisor]]},
+      {Task.Supervisor, name: Uplink.TaskSupervisor},
+      {Plug.Cowboy, plug: Uplink.Internal, scheme: :http, port: internal_port},
+      {Pogo.DynamicSupervisor,
+       name: @pipeline_supervisor, scope: :uplink, sync_interval: sync_interval},
+      {Uplink.Monitors, []},
+      {
+        Plug.Cowboy,
+        plug: Uplink.Router,
+        scheme: :https,
+        port: port,
+        key: {:RSAPrivateKey, key},
+        cert: cert
+      },
+      {Uplink.Data.Provisioner, []},
+      Opsmo.spec(Opsmo.CRPM)
+    ]
   end
 end
