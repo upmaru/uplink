@@ -24,7 +24,7 @@ build:
     mix do deps.get --only prod
 
     mix release
-    mix opsmo.embed
+    MIX_ENV=prod mix opsmo.embed
 
 run:
   name: uplink
