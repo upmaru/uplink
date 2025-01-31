@@ -15,9 +15,9 @@ defmodule Uplink.Availability.RouterTest do
                 },
                 "requirement" => %{
                   "project" => "test",
-                  "cpu" => 1,
+                  "processing" => 1,
                   "memory" => 128_000_000,
-                  "disk" => 300_000_000
+                  "storage" => 300_000_000
                 }
               })
 
@@ -200,8 +200,8 @@ defmodule Uplink.Availability.RouterTest do
 
       assert %{
                "errors" => %{
-                 "cpu" => ["can't be blank"],
-                 "disk" => ["can't be blank"],
+                 "processing" => ["can't be blank"],
+                 "storage" => ["can't be blank"],
                  "memory" => ["can't be blank"]
                }
              } = errors

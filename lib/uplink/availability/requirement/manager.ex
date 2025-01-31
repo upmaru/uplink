@@ -22,9 +22,10 @@ defmodule Uplink.Availability.Requirement.Manager do
             %{
               "node" => node.name,
               "instances" => instance_names,
-              "cpu" => normalize(params.cpu, node.cpu_cores_count),
+              "processing" =>
+                normalize(params.processing, node.cpu_cores_count),
               "memory" => normalize(params.memory, node.total_memory),
-              "disk" => normalize(params.disk, node.total_storage)
+              "storage" => normalize(params.storage, node.total_storage)
             }
           end)
           |> Enum.map(&Requirement.parse(&1))

@@ -4,15 +4,15 @@ defmodule Uplink.Availability.Requirement.Params do
 
   embedded_schema do
     field :project, :string
-    field :cpu, :decimal
+    field :processing, :decimal
     field :memory, :decimal
-    field :disk, :decimal
+    field :storage, :decimal
   end
 
   def changeset(params_struct, params) do
     params_struct
-    |> cast(params, [:project, :cpu, :memory, :disk])
-    |> validate_required([:project, :cpu, :memory, :disk])
+    |> cast(params, [:project, :processing, :memory, :storage])
+    |> validate_required([:project, :processing, :memory, :storage])
   end
 
   def parse(params) do

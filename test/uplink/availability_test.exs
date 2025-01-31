@@ -111,9 +111,9 @@ defmodule Uplink.AvailabilityTest do
       {:ok, requirements} =
         Availability.process_requirement(%{
           "project" => "test",
-          "cpu" => 1,
+          "processing" => 1,
           "memory" => 128_000_000,
-          "disk" => 300_000_000
+          "storage" => 300_000_000
         })
 
       assert {:ok, resources} = Availability.check!(requirements)
@@ -121,9 +121,9 @@ defmodule Uplink.AvailabilityTest do
       assert [%Availability.Resource{placeability: placeability}] = resources
 
       assert %Availability.Placeability{
-               cpu: Decimal.new("1.0"),
+               processing: Decimal.new("1.0"),
                memory: Decimal.new("0.9999998211860657"),
-               disk: Decimal.new("1.0")
+               storage: Decimal.new("1.0")
              } == placeability
     end
 
@@ -131,9 +131,9 @@ defmodule Uplink.AvailabilityTest do
       {:ok, requirements} =
         Availability.process_requirement(%{
           "project" => "test",
-          "cpu" => 1,
+          "processing" => 1,
           "memory" => 64_000_000_000,
-          "disk" => 300_000_000
+          "storage" => 300_000_000
         })
 
       assert {:ok, resources} = Availability.check!(requirements)
@@ -141,9 +141,9 @@ defmodule Uplink.AvailabilityTest do
       assert [%Availability.Resource{placeability: placeability}] = resources
 
       assert %Availability.Placeability{
-               cpu: Decimal.new("1.0"),
+               processing: Decimal.new("1.0"),
                memory: Decimal.new("0.0"),
-               disk: Decimal.new("1.0")
+               storage: Decimal.new("1.0")
              } == placeability
     end
 
@@ -151,9 +151,9 @@ defmodule Uplink.AvailabilityTest do
       {:ok, requirements} =
         Availability.process_requirement(%{
           "project" => "test",
-          "cpu" => 36,
+          "processing" => 36,
           "memory" => 64_000_000_000,
-          "disk" => 300_000_000
+          "storage" => 300_000_000
         })
 
       assert {:ok, resources} = Availability.check!(requirements)
@@ -161,9 +161,9 @@ defmodule Uplink.AvailabilityTest do
       assert [%Availability.Resource{placeability: placeability}] = resources
 
       assert %Availability.Placeability{
-               cpu: Decimal.new("7.951236069532033E-35"),
+               processing: Decimal.new("7.951236069532033E-35"),
                memory: Decimal.new("0.0"),
-               disk: Decimal.new("1.0")
+               storage: Decimal.new("1.0")
              } == placeability
     end
 
@@ -171,11 +171,11 @@ defmodule Uplink.AvailabilityTest do
       {:ok, requirements} =
         Availability.process_requirement(%{
           "project" => "test",
-          "cpu" => 36,
+          "processing" => 36,
           # 64GB requested
           "memory" => 64_000_000_000,
           # 24TB requested
-          "disk" => 24_000_000_000_000
+          "storage" => 24_000_000_000_000
         })
 
       assert {:ok, resources} = Availability.check!(requirements)
@@ -183,9 +183,9 @@ defmodule Uplink.AvailabilityTest do
       assert [%Availability.Resource{placeability: placeability}] = resources
 
       assert %Availability.Placeability{
-               cpu: Decimal.new("7.951236069532033E-35"),
+               processing: Decimal.new("7.951236069532033E-35"),
                memory: Decimal.new("0.0"),
-               disk: Decimal.new("0.0")
+               storage: Decimal.new("0.0")
              } == placeability
     end
   end

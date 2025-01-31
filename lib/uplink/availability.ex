@@ -88,7 +88,7 @@ defmodule Uplink.Availability do
   end
 
   defp compute_placeability(resources, requirements) do
-    template = %{"cpu" => [], "memory" => [], "disk" => []}
+    template = %{"processing" => [], "memory" => [], "storage" => []}
 
     inputs = Enum.reduce(resources, template, &to_inputs(&1, &2, requirements))
 
@@ -104,11 +104,12 @@ defmodule Uplink.Availability do
 
     zero = Decimal.new("0")
 
-    requested_cpu =
-      if requirement.actual_cpu && Decimal.gt?(requirement.actual_cpu, zero) do
-        Decimal.to_float(requirement.actual_cpu)
+    requested_processing =
+      if requirement.actual_processing &&
+           Decimal.gt?(requirement.actual_processing, zero) do
+        Decimal.to_float(requirement.actual_processing)
       else
-        Decimal.to_float(requirement.cpu)
+        Decimal.to_float(requirement.processing)
       end
 
     requested_memory =
@@ -119,17 +120,18 @@ defmodule Uplink.Availability do
         Decimal.to_float(requirement.memory)
       end
 
-    requested_disk =
-      if requirement.actual_disk && Decimal.gt?(requirement.actual_disk, zero) do
-        Decimal.to_float(requirement.actual_disk)
+    requested_storage =
+      if requirement.actual_storage &&
+           Decimal.gt?(requirement.actual_storage, zero) do
+        Decimal.to_float(requirement.actual_storage)
       else
-        Decimal.to_float(requirement.disk)
+        Decimal.to_float(requirement.storage)
       end
 
     %{
       "cpu" =>
-        acc["cpu"] ++
-          [[requested_cpu, Decimal.to_float(resource.used.load_norm_5)]],
+        acc["processing"] ++
+          [[requested_processing, Decimal.to_float(resource.used.load_norm_5)]],
       "memory" =>
         acc["memory"] ++
           [
@@ -140,12 +142,18 @@ defmodule Uplink.Availability do
             ]
           ],
       "disk" =>
-        acc["disk"] ++
-          [[requested_disk, Decimal.to_float(resource.used.storage)]]
+        acc["storage"] ++
+          [[requested_storage, Decimal.to_float(resource.used.storage)]]
     }
   end
 
   defp patch_with_placeability({resource, prediction}) do
+    prediction = %{
+      "processing" => prediction.cpu,
+      "memory" => prediction.memory,
+      "storage" => prediction.disk
+    }
+
     %{resource | placeability: Placeability.parse(prediction)}
   end
 
@@ -173,59 +181,65 @@ defmodule Uplink.Availability do
       |> Enum.filter(fn {key, _} -> key in requirement.instances end)
 
     summed_metrics =
-      Enum.reduce(metrics, %{cpu: 0.0, memory: 0.0, disk: 0.0}, fn {_key,
-                                                                    values},
-                                                                   acc ->
-        cpu = Enum.find(values, fn v -> Map.has_key?(v, "load_norm_5") end)
+      Enum.reduce(
+        metrics,
+        %{processing: 0.0, memory: 0.0, storage: 0.0},
+        fn {_key, values}, acc ->
+          processing =
+            Enum.find(values, fn v -> Map.has_key?(v, "load_norm_5") end)
 
-        memory =
-          Enum.find(values, fn v -> Map.has_key?(v, "memory_used_bytes") end)
+          memory =
+            Enum.find(values, fn v -> Map.has_key?(v, "memory_used_bytes") end)
 
-        disk =
-          Enum.find(values, fn v -> Map.has_key?(v, "filesystem_used_bytes") end)
+          storage =
+            Enum.find(values, fn v ->
+              Map.has_key?(v, "filesystem_used_bytes")
+            end)
 
-        cpu = cpu["load_norm_5"]
-        memory = memory["memory_used_bytes"]
-        disk = disk["filesystem_used_bytes"]
+          processing = processing["load_norm_5"]
+          memory = memory["memory_used_bytes"]
+          storage = storage["filesystem_used_bytes"]
 
-        cpu = cpu["top"]
-        memory = memory["top"]
-        disk = disk["top"]
+          processing = processing["top"]
+          memory = memory["top"]
+          storage = storage["top"]
 
-        cpu = List.first(cpu)
-        memory = List.first(memory)
-        disk = List.first(disk)
+          processing = List.first(processing)
+          memory = List.first(memory)
+          storage = List.first(storage)
 
-        cpu = cpu["metrics"]["system.load.norm.5"] || 0.0
-        memory = memory["metrics"]["system.memory.actual.used.bytes"] || 0.0
-        disk = disk["metrics"]["system.filesystem.used.bytes"] || 0.0
+          processing = processing["metrics"]["system.load.norm.5"] || 0.0
+          memory = memory["metrics"]["system.memory.actual.used.bytes"] || 0.0
+          storage = storage["metrics"]["system.filesystem.used.bytes"] || 0.0
 
-        Map.merge(acc, %{
-          cpu: acc.cpu + cpu,
-          memory: acc.memory + memory,
-          disk: acc.disk + disk
-        })
-      end)
+          Map.merge(acc, %{
+            processing: acc.processing + processing,
+            memory: acc.memory + memory,
+            storage: acc.storage + storage
+          })
+        end
+      )
 
     node = Enum.find(nodes, fn n -> n.name == requirement.node end)
 
     mean_metrics =
       if length(metrics) > 0 do
         %{
-          cpu: summed_metrics.cpu / length(metrics),
+          processing: summed_metrics.processing / length(metrics),
           memory: summed_metrics.memory / length(metrics),
-          disk: summed_metrics.disk / length(metrics)
+          storage: summed_metrics.storage / length(metrics)
         }
       else
-        %{cpu: 0.0, memory: 0.0, disk: 0.0}
+        %{processing: 0.0, memory: 0.0, storage: 0.0}
       end
 
     %{
       requirement
-      | actual_cpu: Decimal.new("#{mean_metrics.cpu}"),
+      | actual_processing: Decimal.new("#{mean_metrics.processing}"),
         actual_memory:
           Decimal.new("#{mean_metrics.memory / node.total_memory}"),
-        actual_disk: Decimal.new("#{mean_metrics.disk / node.total_storage}")
+        actual_storage:
+          Decimal.new("#{mean_metrics.storage / node.total_storage}")
     }
   end
 end
