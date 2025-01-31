@@ -67,7 +67,7 @@ defmodule Uplink.MixProject do
       {:x509, "~> 0.8.4"},
 
       # Infrastructure
-      {:formation, "~> 0.15"},
+      {:formation, "~> 0.16"},
       {:lexdee, "~> 2.4.4"},
       {:plug_cowboy, "~> 2.0"},
       {:mint_web_socket, "~> 1.0.2"},
