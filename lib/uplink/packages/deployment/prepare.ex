@@ -46,10 +46,11 @@ defmodule Uplink.Packages.Deployment.Prepare do
     state = {deployment, actor, identifier}
 
     tmp_path = Path.join("tmp", "archives")
-    archive_file_path = Path.join(tmp_path, "#{hash}.zip")
-    extraction_path = Path.join(tmp_path, "#{hash}")
+    archive_file_path = Path.join(tmp_path, "#{hash}-#{deployment.id}.zip")
+    extraction_path = Path.join(tmp_path, "#{hash}-#{deployment.id}")
 
     File.mkdir_p!(tmp_path)
+    File.rm_rf!(extraction_path)
 
     Logger.info("#{@logger_prefix} Downloading archive - #{identifier}")
 
@@ -89,9 +90,11 @@ defmodule Uplink.Packages.Deployment.Prepare do
 
         destination = Path.join([tmp_path, org, package])
 
-        paths
+        file_paths = Enum.filter(paths, &File.regular?(to_string(&1)))
+
+        file_paths
         |> Enum.map(&process_extracted_file(&1, destination))
-        |> validate_and_finalize_deployment(paths, state)
+        |> validate_and_finalize_deployment(file_paths, state)
 
       _ ->
         comment = "Unzipping archive failed"
@@ -117,7 +120,7 @@ defmodule Uplink.Packages.Deployment.Prepare do
 
     File.mkdir_p!(Path.dirname(storage_path))
 
-    case File.rename(path, storage_path) do
+    case File.cp(path, storage_path) do
       :ok ->
         {:ok, storage_path}
 

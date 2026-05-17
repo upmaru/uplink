@@ -12,9 +12,11 @@ config :uplink, Uplink.PipelineSupervisor, sync_interval: 100
 
 config :uplink, Uplink.Repo,
   username:
-    System.get_env("UPLINK_DB_USERNAME") || System.get_env("POSTGRES_USERNAME"),
+    System.get_env("UPLINK_DB_USERNAME") ||
+      System.get_env("POSTGRES_USERNAME", "postgres"),
   password:
-    System.get_env("UPLINK_DB_PASSWORD") || System.get_env("POSTGRES_PASSWORD"),
+    System.get_env("UPLINK_DB_PASSWORD") ||
+      System.get_env("POSTGRES_PASSWORD", "postgres"),
   hostname:
     System.get_env("UPLINK_DB_HOST") || System.get_env("POSTGRES_HOST") ||
       "localhost",

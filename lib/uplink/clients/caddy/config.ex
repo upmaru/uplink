@@ -10,17 +10,17 @@ defmodule Uplink.Clients.Caddy.Config do
   @mappings %{
     "admin" => {:admin, Admin},
     "apps" => {:apps, Apps},
+    "logging" => {:logging, nil},
     "storage" => {:storage, Storage}
   }
 
   def parse(body) do
     body
     |> Enum.map(fn {key, result} ->
-      if mapping = Map.get(@mappings, key) do
-        {atom_key, module} = mapping
-        {atom_key, module.parse(result)}
-      else
-        {String.to_existing_atom(key), result}
+      case Map.get(@mappings, key) do
+        {atom_key, nil} -> {atom_key, result}
+        {atom_key, module} -> {atom_key, module.parse(result)}
+        nil -> {String.to_existing_atom(key), result}
       end
     end)
     |> Enum.into(%{})

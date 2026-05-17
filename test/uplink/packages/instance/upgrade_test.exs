@@ -251,7 +251,7 @@ defmodule Uplink.Packages.Instance.UpgradeTest do
           assert command == [
                    "/bin/sh",
                    "-c",
-                   "apk update && apk add --upgrade #{metadata.channel.package.slug}\n"
+                   "apk add --no-cache --upgrade #{metadata.channel.package.slug}\n"
                  ]
 
           conn
@@ -402,7 +402,7 @@ defmodule Uplink.Packages.Instance.UpgradeTest do
           assert command == [
                    "/bin/sh",
                    "-c",
-                   "apk update && apk add --upgrade #{metadata.channel.package.slug}\n"
+                   "apk add --no-cache --upgrade #{metadata.channel.package.slug}\n"
                  ]
 
           conn
@@ -551,7 +551,7 @@ defmodule Uplink.Packages.Instance.UpgradeTest do
           assert command == [
                    "/bin/sh",
                    "-c",
-                   "apk update && apk add --upgrade #{metadata.channel.package.slug}\n"
+                   "apk add --no-cache --upgrade #{metadata.channel.package.slug}\n"
                  ]
 
           conn
@@ -709,7 +709,7 @@ defmodule Uplink.Packages.Instance.UpgradeTest do
           assert command == [
                    "/bin/sh",
                    "-c",
-                   "apk update && apk add --upgrade #{metadata.channel.package.slug}\n"
+                   "apk add --no-cache --upgrade #{metadata.channel.package.slug}\n"
                  ]
 
           conn
@@ -970,7 +970,7 @@ defmodule Uplink.Packages.Instance.UpgradeTest do
           assert command == [
                    "/bin/sh",
                    "-c",
-                   "apk update && apk add --upgrade #{metadata.channel.package.slug}\n"
+                   "apk add --no-cache --upgrade #{metadata.channel.package.slug}\n"
                  ]
 
           conn

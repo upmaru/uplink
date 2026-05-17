@@ -13,6 +13,8 @@ config :opsmo,
     "crpm" => "0.3.7"
   }
 
+config :tesla, disable_deprecated_builder_warning: true
+
 config :uplink, Uplink.Internal, port: 4080
 
 config :uplink, Uplink.Router, port: 4040

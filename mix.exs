@@ -54,6 +54,7 @@ defmodule Uplink.MixProject do
       # HTTP Client
       {:req, "~> 0.4"},
       {:httpoison, "~> 2.2"},
+      {:tesla, "~> 1.18", override: true},
 
       # Clustering
       {:libcluster, "~> 3.0"},
