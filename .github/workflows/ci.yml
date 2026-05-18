@@ -8,6 +8,10 @@ on:
       - "feature/**"
       - "hotfix/**"
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   deps:
     name: Dependencies
@@ -28,11 +32,6 @@ jobs:
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
 
     steps:
-      - name: Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.12.1
-        with:
-          access_token: ${{ github.token }}
-
       - name: Checkout
         uses: actions/checkout@v6
         with:
@@ -44,7 +43,7 @@ jobs:
             elixir nodejs npm erlang-dialyzer
 
       - name: Retrieve Cached Dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         id: mix-cache
         with:
           path: |
@@ -79,11 +78,6 @@ jobs:
       image: alpine:3.20
 
     steps:
-      - name: Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.12.1
-        with:
-          access_token: ${{ github.token }}
-
       - name: Checkout
         uses: actions/checkout@v6
         with:
@@ -97,7 +91,7 @@ jobs:
           mix local.hex --force
 
       - name: Retrieve Cached Dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         id: mix-cache
         with:
           path: |
@@ -132,11 +126,6 @@ jobs:
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
 
     steps:
-      - name: Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.12.1
-        with:
-          access_token: ${{ github.token }}
-
       - name: Checkout
         uses: actions/checkout@v6
         with:
@@ -150,7 +139,7 @@ jobs:
           mix local.hex --force
 
       - name: Retrieve Cached Dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         id: mix-cache
         with:
           path: |
