@@ -59,6 +59,7 @@ jobs:
 
       - uses: actions/download-artifact@v8
         with:
+          name: ${{ runner.arch }}
           path: /home/runner/artifacts
 
       - name: Setup Pakman
@@ -68,7 +69,7 @@ jobs:
 
       - name: Merge Artifact
         run: |
-          cp -R /home/runner/artifacts/X64/. /home/runner/packages/
+          cp -R /home/runner/artifacts/. /home/runner/packages/
           sudo zip -r /home/runner/packages.zip "$HOME"/packages
         shell: alpine.sh {0}
 
