@@ -1,0 +1,21 @@
+{
+  "data": [
+    {
+      "attributes": {
+        "current_state": "active",
+        "endpoint": "https://elastic:9200",
+        "expires_at": "2024-11-21T03:14:17Z",
+        "id": 1,
+        "token": "some-token",
+        "type": "metrics",
+        "uid": "some-uid"
+      },
+      "id": "1",
+      "links": {
+        "self": "http://localhost:4000/uplink/self/monitors/1"
+      },
+      "relationships": {},
+      "type": "monitors"
+    }
+  ]
+}

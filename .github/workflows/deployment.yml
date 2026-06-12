@@ -14,7 +14,7 @@ jobs:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     steps:
       - name: "Checkout"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: ${{ github.event.workflow_run.head_branch }}
           fetch-depth: 0
@@ -22,7 +22,7 @@ jobs:
       - name: Setup Pakman
         uses: upmaru/pakman@v8
         with:
-          alpine: v3.18
+          alpine: v3.20
 
       - name: Bootstrap Configuration
         run: |
@@ -41,7 +41,7 @@ jobs:
         shell: alpine.sh {0}
 
       - name: Upload Artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: ${{ runner.arch }}
           path: /home/runner/packages
@@ -52,23 +52,24 @@ jobs:
     runs-on: warp-ubuntu-2204-x64-2x
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           ref: ${{ github.event.workflow_run.head_branch }}
           fetch-depth: 0
 
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         with:
+          name: ${{ runner.arch }}
           path: /home/runner/artifacts
 
       - name: Setup Pakman
         uses: upmaru/pakman@v8
         with:
-          alpine: v3.18
+          alpine: v3.20
 
       - name: Merge Artifact
         run: |
-          cp -R /home/runner/artifacts/X64/. /home/runner/packages/
+          cp -R /home/runner/artifacts/. /home/runner/packages/
           sudo zip -r /home/runner/packages.zip "$HOME"/packages
         shell: alpine.sh {0}
 

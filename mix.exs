@@ -4,7 +4,7 @@ defmodule Uplink.MixProject do
   def project do
     [
       app: :uplink,
-      version: "0.19.1",
+      version: "0.20.0",
       elixir: "~> 1.13",
       elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
@@ -54,10 +54,12 @@ defmodule Uplink.MixProject do
       # HTTP Client
       {:req, "~> 0.4"},
       {:httpoison, "~> 2.2"},
+      {:tesla, "~> 1.18", override: true},
 
       # Clustering
       {:libcluster, "~> 3.0"},
       {:pogo, "~> 0.3.0"},
+      {:libring, "~> 1.7", override: true},
 
       # One time password
       {:pot, "~> 1.0.2"},
@@ -66,12 +68,15 @@ defmodule Uplink.MixProject do
       {:x509, "~> 0.8.4"},
 
       # Infrastructure
-      {:formation, "~> 0.15"},
+      {:formation, "~> 0.16"},
       {:lexdee, "~> 2.4.4"},
       {:plug_cowboy, "~> 2.0"},
       {:mint_web_socket, "~> 1.0.2"},
       {:broadway, "~> 1.0"},
       {:prometheus_parser, "~> 0.1.10"},
+
+      # Opsmo
+      {:opsmo, "~> 0.3"},
 
       # Test
       {:bypass, "~> 2.1", only: :test},

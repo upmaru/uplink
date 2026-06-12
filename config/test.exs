@@ -12,9 +12,11 @@ config :uplink, Uplink.PipelineSupervisor, sync_interval: 100
 
 config :uplink, Uplink.Repo,
   username:
-    System.get_env("UPLINK_DB_USERNAME") || System.get_env("POSTGRES_USERNAME"),
+    System.get_env("UPLINK_DB_USERNAME") ||
+      System.get_env("POSTGRES_USERNAME", "postgres"),
   password:
-    System.get_env("UPLINK_DB_PASSWORD") || System.get_env("POSTGRES_PASSWORD"),
+    System.get_env("UPLINK_DB_PASSWORD") ||
+      System.get_env("POSTGRES_PASSWORD", "postgres"),
   hostname:
     System.get_env("UPLINK_DB_HOST") || System.get_env("POSTGRES_HOST") ||
       "localhost",
@@ -47,4 +49,4 @@ config :uplink, :drivers, aws_s3: Uplink.Drivers.Bucket.AwsMock
 # config :plug, :validate_header_keys_during_test, false
 # Print only warnings and errors during test
 # Disable logging in tests
-config :logger, level: :warn
+config :logger, level: :warning

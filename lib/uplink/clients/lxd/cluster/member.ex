@@ -2,6 +2,8 @@ defmodule Uplink.Clients.LXD.Cluster.Member do
   use Ecto.Schema
   import Ecto.Changeset
 
+  @type t :: %__MODULE__{}
+
   @valid_attrs ~w(
     roles
     failure_domain
